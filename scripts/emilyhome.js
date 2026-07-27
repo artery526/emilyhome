@@ -1,10 +1,15 @@
 (function () {
   const defaultApiBase = "https://api.ark-os26.cc";
+  const cardSheetUrl = "https://docs.google.com/spreadsheets/d/1GQBYT2jcNa9D6G39tntT5UfetXpgwfKYZ2h5fSy3bV8/edit";
   const tags = ["工作", "家人", "感情", "健康", "睡眠", "夢境", "感謝", "低潮"];
+  const fallbackCards = ["0.愚者", "1.魔術師", "2.女祭司", "3.皇后", "4.國王 (皇帝)", "5.教皇 (大祭司)", "6.戀人", "7.戰車", "8.力量", "9.隱士", "10.命運之輪", "11.正義", "12.吊人", "13.死神", "14.節制", "15.惡魔", "16.塔", "17.星星", "18.月亮", "19.太陽", "20.審判", "21.世界"];
+  const cardPositions = ["正位", "逆位"];
+  const threePositions = ["過去 / 起點", "現在 / 核心", "未來 / 提醒"];
   const selectedLibraryImages = new Map();
   let entries = [];
   let cards = [];
   let activeDate = "";
+  let drawMode = "single";
   let apiBase = localStorage.getItem("emilyhome.apiBase") || defaultApiBase;
   let apiToken = localStorage.getItem("emilyhome.token") || "";
 
@@ -28,9 +33,17 @@
   const calendarTitle = document.getElementById("calendarTitle");
   const photoViewer = document.getElementById("photoViewer");
   const photoViewerImg = document.getElementById("photoViewerImg");
+  const journalView = document.getElementById("journalView");
+  const cardView = document.getElementById("cardView");
+  const cardForm = document.getElementById("cardForm");
+  const cardStatus = document.getElementById("cardStatus");
+  const cardDrawFields = document.getElementById("cardDrawFields");
+  const cardRecordList = document.getElementById("cardRecordList");
+  const cardSheetLink = document.getElementById("cardSheetLink");
 
   apiBaseInput.value = apiBase;
   tokenInput.value = apiToken;
+  cardSheetLink.href = cardSheetUrl;
 
   function esc(value) {
     return String(value == null ? "" : value)
@@ -108,7 +121,12 @@
   }
 
   function entriesForTimeline() {
-    return activeDate ? entries.filter((entry) => entry.date === activeDate) : entries;
+    const moodEntries = entries.filter((entry) => entry.type !== "card" && !entry.cardOnly);
+    return activeDate ? moodEntries.filter((entry) => entry.date === activeDate) : moodEntries;
+  }
+
+  function cardEntries() {
+    return entries.filter((entry) => entry.type === "card" || entry.cardOnly || entry.cardDraw);
   }
 
   function renderEntries() {
@@ -137,7 +155,7 @@
     const year = now.getFullYear();
     const month = now.getMonth();
     const days = new Date(year, month + 1, 0).getDate();
-    const byDate = entries.reduce((map, entry) => {
+    const byDate = entries.filter((entry) => entry.type !== "card" && !entry.cardOnly).reduce((map, entry) => {
       map.set(entry.date, (map.get(entry.date) || 0) + 1);
       return map;
     }, new Map());
@@ -165,6 +183,7 @@
     entries = Array.isArray(body.entries) ? body.entries : [];
     renderEntries();
     renderCalendar();
+    renderCardRecords();
   }
 
   function markdownBody(markdown) {
@@ -208,7 +227,6 @@
       }
       const body = await fetch(url, { cache: "no-store", headers: headers() }).then(readJson);
       const loaded = body.entry || {};
-      const card = loaded.cardDraw || {};
       detailEl.innerHTML = '<form id="editEntryForm" class="form-grid" data-entry-id="' + esc(loaded.id) + '">'
         + '<label>標題<input name="title" value="' + esc(loaded.title || "") + '"></label>'
         + '<label>文章權限<select name="visibility">'
@@ -223,11 +241,6 @@
         + '<div class="full"><h3>照片與語音</h3><div class="edit-media-grid">' + ((loaded.media || []).map(mediaPreview).join("") || '<p class="muted">沒有附件</p>') + '</div></div>'
         + '<label>新增照片<input name="media" type="file" accept="image/*,.heic,.heif" multiple></label>'
         + '<label>新增語音<input name="media" type="file" accept="audio/*,.m4a,.mp3,.wav,.webm" multiple></label>'
-        + '<label>抽牌牌名<input name="cardName" value="' + esc(card.cardName || "") + '"></label>'
-        + '<label>正逆位<input name="cardPosition" value="' + esc(card.position || "") + '"></label>'
-        + '<input name="cardId" type="hidden" value="' + esc(card.cardId || "") + '">'
-        + '<label class="full">抽牌問題<input name="cardQuestion" value="' + esc(card.question || "") + '"></label>'
-        + '<label class="full">抽牌解讀<textarea name="cardReading">' + esc(card.reading || "") + '</textarea></label>'
         + '<button class="primary full" type="submit">🧸 儲存編輯</button>'
       + '</form>';
     } catch (error) {
@@ -296,13 +309,107 @@
     try {
       const body = await fetch(apiUrl("/api/wife-journal/cards"), { cache: "no-store", headers: headers() }).then(readJson);
       cards = Array.isArray(body.cards) ? body.cards : [];
-      cardOptions.innerHTML = cards.map((card) => {
+      const optionCards = cards.length ? cards : fallbackCards.map((name) => ({ name }));
+      cardOptions.innerHTML = optionCards.map((card) => {
         const name = card.name || card.cardName || card.title || card.label || card.id || "";
         return '<option value="' + esc(name) + '"></option>';
       }).join("");
     } catch (_error) {
-      cards = [];
+      cards = fallbackCards.map((name) => ({ name }));
+      cardOptions.innerHTML = fallbackCards.map((name) => '<option value="' + esc(name) + '"></option>').join("");
     }
+    renderCardDrawFields();
+  }
+
+  function setView(view) {
+    const next = view === "cards" ? "cards" : "journal";
+    journalView.hidden = next !== "journal";
+    cardView.hidden = next !== "cards";
+    document.querySelectorAll("[data-view]").forEach((button) => {
+      button.classList.toggle("active", button.dataset.view === next);
+    });
+  }
+
+  function cardNameOptions() {
+    const names = cards.map((card) => card.name || card.cardName || card.title || card.label || card.id || "").filter(Boolean);
+    return (names.length ? names : fallbackCards).map((name) => '<option value="' + esc(name) + '">' + esc(name) + '</option>').join("");
+  }
+
+  function cardPositionOptions(selected) {
+    return '<option value="">未指定</option>' + cardPositions.map((position) => (
+      '<option value="' + esc(position) + '"' + (selected === position ? " selected" : "") + '>' + esc(position) + '</option>'
+    )).join("");
+  }
+
+  function renderCardDrawFields() {
+    if (!cardDrawFields) return;
+    const count = drawMode === "three" ? 3 : 1;
+    cardDrawFields.innerHTML = Array.from({ length: count }, (_unused, index) => {
+      const label = drawMode === "three" ? threePositions[index] : "單張";
+      return '<div class="card-draw-set">'
+        + '<strong>' + esc(label) + '</strong>'
+        + '<label>牌卡<input name="cardName' + index + '" list="cardOptions" placeholder="選擇或輸入牌名"></label>'
+        + '<label>正逆位<select name="cardPosition' + index + '">' + cardPositionOptions("") + '</select></label>'
+      + '</div>';
+    }).join("");
+  }
+
+  function setDrawMode(mode) {
+    drawMode = mode === "three" ? "three" : "single";
+    document.querySelectorAll("[data-draw-mode]").forEach((button) => {
+      button.classList.toggle("active", button.dataset.drawMode === drawMode);
+    });
+    renderCardDrawFields();
+  }
+
+  function splitCardLabel(label) {
+    const raw = String(label || "").trim();
+    const match = raw.match(/^(\d+)\.(.+)$/);
+    return {
+      id: match ? match[1] : "",
+      name: match ? match[2].trim() : raw,
+      label: raw,
+    };
+  }
+
+  function collectCardDraws(sourceForm) {
+    const count = drawMode === "three" ? 3 : 1;
+    return Array.from({ length: count }, (_unused, index) => {
+      const rawName = sourceForm.elements["cardName" + index]?.value || "";
+      const position = sourceForm.elements["cardPosition" + index]?.value || "";
+      const parsed = splitCardLabel(rawName);
+      return {
+        positionIndex: index + 1,
+        positionName: drawMode === "three" ? threePositions[index] : "單張",
+        cardId: parsed.id,
+        cardName: parsed.name || rawName || "未抽取",
+        cardLabel: parsed.label || rawName || "未抽取",
+        orientation: position,
+        displayName: (parsed.name || rawName || "未抽取") + (position ? position : ""),
+      };
+    });
+  }
+
+  function renderCardRecords() {
+    const records = cardEntries();
+    if (!cardRecordList) return;
+    if (!records.length) {
+      cardRecordList.innerHTML = '<p class="muted">目前還沒有卡牌記錄 🔮</p>';
+      return;
+    }
+    cardRecordList.innerHTML = records.map((entry) => {
+      const draw = entry.cardDraw || {};
+      const drawCards = Array.isArray(draw.cards) && draw.cards.length
+        ? draw.cards
+        : [{ displayName: [draw.cardName, draw.position].filter(Boolean).join("") || "未抽取" }];
+      const chips = drawCards.map((card) => '<span class="chip">' + esc(card.positionName ? card.positionName + "：" + card.displayName : card.displayName) + '</span>').join("");
+      return '<article class="card-record">'
+        + '<div class="entry-title">' + esc(entry.title || "卡牌記錄") + '</div>'
+        + '<div class="entry-meta">' + esc(entry.date || "") + ' · ' + esc(draw.spreadType || (drawCards.length >= 3 ? "三張" : "單張")) + '</div>'
+        + '<div class="chip-row">' + chips + '</div>'
+        + '<div class="entry-meta">' + esc(draw.question || entry.excerpt || "") + '</div>'
+      + '</article>';
+    }).join("");
   }
 
   async function connect() {
@@ -400,14 +507,6 @@
     try {
       const data = new FormData(form);
       selectedLibraryImages.forEach((_value, id) => data.append("libraryImageIds", id));
-      const matchedCard = cards.find((card) => {
-        const name = card.name || card.cardName || card.title || card.label || card.id || "";
-        return name === form.elements.cardName.value;
-      });
-      if (matchedCard) {
-        data.set("cardId", matchedCard.id || matchedCard.cardId || matchedCard.key || form.elements.cardName.value);
-        data.set("cardDeck", matchedCard.deck || matchedCard.type || "");
-      }
       const body = await fetch(apiUrl("/api/wife-journal/entries"), { method: "POST", headers: headers(), body: data }).then(readJson);
       statusEl.className = "status ok";
       statusEl.textContent = "已記錄：" + body.entry.title + " ✨";
@@ -434,6 +533,65 @@
   });
   document.getElementById("refreshBtn").addEventListener("click", loadEntries);
   document.getElementById("jumpCreateBtn").addEventListener("click", () => document.getElementById("createCard").scrollIntoView({ behavior: "smooth" }));
+  document.getElementById("jumpCardsBtn").addEventListener("click", () => {
+    setView("cards");
+    document.getElementById("cardView").scrollIntoView({ behavior: "smooth" });
+  });
+  document.querySelectorAll("[data-view]").forEach((button) => {
+    button.addEventListener("click", () => setView(button.dataset.view));
+  });
+  document.querySelectorAll("[data-draw-mode]").forEach((button) => {
+    button.addEventListener("click", () => setDrawMode(button.dataset.drawMode));
+  });
+  cardForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const button = cardForm.querySelector("button[type='submit']");
+    const data = new FormData();
+    const cardsDrawn = collectCardDraws(cardForm);
+    const date = cardForm.elements.date.value;
+    const time = cardForm.elements.time.value;
+    const question = cardForm.elements.cardQuestion.value.trim();
+    const reading = cardForm.elements.cardReading.value.trim();
+    const spreadType = drawMode === "three" ? "三張" : "單張";
+    data.set("type", "card");
+    data.set("date", date);
+    data.set("time", time);
+    data.set("title", "🔮 " + spreadType + "卡牌記錄");
+    data.set("content", [question, reading].filter(Boolean).join("\n\n") || spreadType + "卡牌記錄");
+    data.set("cardQuestion", question);
+    data.set("cardReading", reading);
+    data.set("drawType", drawMode);
+    data.set("spreadType", spreadType);
+    data.set("cards", JSON.stringify(cardsDrawn));
+    data.set("cardName", cardsDrawn.map((card) => card.displayName).join("、"));
+    data.set("cardPosition", drawMode === "three" ? "三張" : (cardsDrawn[0]?.orientation || ""));
+    data.set("cardId", cardsDrawn[0]?.cardId || "");
+    button.disabled = true;
+    cardStatus.className = "status";
+    cardStatus.textContent = "卡牌記錄中... 🔮";
+    try {
+      const body = await fetch(apiUrl("/api/wife-journal/card-records"), { method: "POST", headers: headers(), body: data }).then(readJson);
+      cardStatus.className = "status ok";
+      cardStatus.textContent = "已記錄：" + (body.entry.title || "卡牌記錄") + " ✨";
+      cardForm.reset();
+      cardForm.elements.date.valueAsDate = new Date();
+      cardForm.elements.time.value = currentTime();
+      setDrawMode("single");
+      await loadEntries();
+    } catch (error) {
+      cardStatus.className = "status error";
+      cardStatus.textContent = error.message;
+    } finally {
+      button.disabled = false;
+    }
+  });
+  function currentTime() {
+    const now = new Date();
+    return String(now.getHours()).padStart(2, "0") + ":" + String(now.getMinutes()).padStart(2, "0");
+  }
   form.elements.date.valueAsDate = new Date();
+  cardForm.elements.date.valueAsDate = new Date();
+  cardForm.elements.time.value = currentTime();
+  renderCardDrawFields();
   renderTagPicker();
 })();

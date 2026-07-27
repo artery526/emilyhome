@@ -24,6 +24,8 @@ Expected ArkOS API routes:
 GET  /api/wife-journal/entries
 GET  /api/wife-journal/entries/:id
 POST /api/wife-journal/entries
+GET  /api/wife-journal/card-records
+POST /api/wife-journal/card-records
 GET  /api/wife-journal/cards
 GET  /api/photo-library/summary
 GET  /api/photo-library/months/:year/:month
@@ -38,6 +40,8 @@ GET  /api/photo-library/months/:year/:month
 
 ## Card Database
 
+The card record page is separated from the mood journal. Mood entries use `type: "mood"` and card records use `type: "card"`, so the timeline and calendar can stay focused on mood journal entries.
+
 The card picker reads from the ArkOS API. The API currently checks the configured card database root for:
 
 ```text
@@ -48,3 +52,22 @@ deck.json
 ```
 
 The frontend accepts common fields such as `id`, `cardId`, `name`, `cardName`, `title`, `label`, `deck`, and `type`.
+
+## Card Spreadsheet
+
+Dedicated Google Sheet:
+
+```text
+https://docs.google.com/spreadsheets/d/1GQBYT2jcNa9D6G39tntT5UfetXpgwfKYZ2h5fSy3bV8/edit
+```
+
+Observed workbook title: `Emily卡牌空間`.
+
+Useful tabs:
+
+```text
+卡片圖案連結 - tarot / oracle card names and Google Drive image links
+牌卡統計 - card draw rows and monthly report area
+```
+
+Recommendation: keep the public GitHub Pages frontend read-only for Google credentials. Formal spreadsheet writes should be performed by ArkOS server-side code or a private Apps Script endpoint, using the same row shape as `牌卡統計`.

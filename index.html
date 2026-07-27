@@ -130,6 +130,62 @@
       background: var(--sage);
       color: #fff;
     }
+    .view-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 0 0 16px;
+    }
+    .view-tab.active {
+      background: var(--rose);
+      border-color: var(--rose);
+      color: #fff;
+    }
+    .view-panel[hidden] { display: none; }
+    .draw-mode {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .draw-mode button.active {
+      background: var(--sage);
+      border-color: var(--sage);
+      color: #fff;
+    }
+    .card-draw-set {
+      display: grid;
+      grid-template-columns: 88px 1fr 120px;
+      gap: 10px;
+      align-items: end;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      background: #fff;
+    }
+    .card-record-list {
+      display: grid;
+      gap: 10px;
+    }
+    .card-record {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      padding: 12px;
+    }
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .chip {
+      border: 1px solid #ead0da;
+      border-radius: 999px;
+      background: #fff6f8;
+      color: var(--rose);
+      padding: 4px 8px;
+      font-size: 12px;
+    }
     .entry-list {
       display: grid;
       gap: 10px;
@@ -305,7 +361,7 @@
     .app[hidden], .gate[hidden] { display: none; }
     @media (max-width: 900px) {
       .span-4, .span-5, .span-7, .span-8 { grid-column: span 12; }
-      .form-grid, .library-controls { grid-template-columns: 1fr; }
+      .form-grid, .library-controls, .card-draw-set { grid-template-columns: 1fr; }
       main { padding: 14px; }
       header { align-items: start; flex-direction: column; }
     }
@@ -320,6 +376,7 @@
     <div class="toolbar">
       <button class="ghost" type="button" id="refreshBtn">🔄 重新整理</button>
       <button class="primary" type="button" id="jumpCreateBtn">💌 新增心情</button>
+      <button class="ghost" type="button" id="jumpCardsBtn">🔮 記錄卡牌</button>
     </div>
   </header>
 
@@ -349,6 +406,12 @@
           <p>先看最近狀態，再決定是否新增今天的記錄 🧸</p>
         </div>
       </section>
+      <div class="view-tabs">
+        <button class="view-tab active" type="button" data-view="journal">🌿 心情日記</button>
+        <button class="view-tab" type="button" data-view="cards">🔮 記錄卡牌</button>
+      </div>
+
+      <section class="view-panel" id="journalView">
       <div class="grid">
         <section class="card span-7">
           <h3>🌿 時間軸</h3>
@@ -389,18 +452,6 @@
             <label class="full">日記內容<textarea name="content" required placeholder="今天發生什麼？我想留下什麼？"></textarea></label>
             <label>上傳照片<input name="media" type="file" accept="image/*,.heic,.heif" multiple></label>
             <label>語音備忘<input name="media" type="file" accept="audio/*,.m4a,.mp3,.wav,.webm" multiple></label>
-            <label>抽牌牌名<input name="cardName" list="cardOptions" placeholder="可從醫館牌卡資料庫選擇"></label>
-            <label>正逆位
-              <select name="cardPosition">
-                <option value="">未指定</option>
-                <option value="正位">正位</option>
-                <option value="逆位">逆位</option>
-              </select>
-            </label>
-            <input name="cardId" type="hidden">
-            <datalist id="cardOptions"></datalist>
-            <label class="full">抽牌問題<input name="cardQuestion" placeholder="今天我需要知道什麼？"></label>
-            <label class="full">抽牌解讀<textarea name="cardReading" placeholder="自己的直覺解讀與感受"></textarea></label>
           <button class="primary full" type="submit">🧸 記錄</button>
           </form>
           <p class="status" id="formStatus"></p>
@@ -422,6 +473,44 @@
           <div class="detail" id="entryDetail">點選時間軸文章後進入編輯。私密密碼文章會先要求密碼 🔐</div>
         </section>
       </div>
+      </section>
+
+      <section class="view-panel" id="cardView" hidden>
+        <div class="grid">
+          <section class="card span-8">
+            <h3>🔮 記錄卡牌</h3>
+            <p class="muted">第一版沿用醫館的單張 / 三張抽牌邏輯，欄位對齊「Emily卡牌空間」的牌卡統計表 ✨</p>
+            <form id="cardForm" class="form-grid" style="margin-top:14px">
+              <label>日期<input name="date" type="date" required></label>
+              <label>時間<input name="time" type="time" step="60"></label>
+              <label class="full">抽牌模式
+                <div class="draw-mode">
+                  <button class="active" type="button" data-draw-mode="single">單張牌卡</button>
+                  <button type="button" data-draw-mode="three">三張牌卡</button>
+                </div>
+              </label>
+              <div class="full" id="cardDrawFields"></div>
+              <datalist id="cardOptions"></datalist>
+              <label class="full">提問 / 主題<input name="cardQuestion" placeholder="今天我需要知道什麼？"></label>
+              <label class="full">解讀 / 備註<textarea name="cardReading" placeholder="直覺、感受、身體訊號或想留給自己的提醒"></textarea></label>
+              <button class="primary full" type="submit">🔮 記錄卡牌</button>
+            </form>
+            <p class="status" id="cardStatus"></p>
+          </section>
+          <section class="card span-4">
+            <h3>📊 專屬試算表</h3>
+            <p class="muted">試算表：Emily卡牌空間。建議把正式卡牌紀錄寫入「牌卡統計」，牌面圖片來源使用「卡片圖案連結」 🃏</p>
+            <div class="toolbar">
+              <a class="ghost" id="cardSheetLink" href="https://docs.google.com/spreadsheets/d/1GQBYT2jcNa9D6G39tntT5UfetXpgwfKYZ2h5fSy3bV8/edit" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;text-decoration:none">開啟試算表</a>
+            </div>
+            <p class="status">正式串接建議走 ArkOS 後端或 Apps Script，避免把 Google 寫入權限放在網頁前端 🔐</p>
+          </section>
+          <section class="card span-12">
+            <h3>🃏 卡牌時間軸</h3>
+            <div class="card-record-list" id="cardRecordList"><p class="muted">載入中...</p></div>
+          </section>
+        </div>
+      </section>
     </section>
   </main>
 
