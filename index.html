@@ -346,6 +346,7 @@
       max-height: 320px;
       overflow: auto;
       padding: 4px;
+      align-items: start;
     }
     .media-card {
       position: relative;
@@ -355,6 +356,9 @@
       overflow: hidden;
       background: var(--mist);
       aspect-ratio: 1;
+      width: 100%;
+      min-height: 0;
+      height: auto;
     }
     .media-card img {
       width: 100%;
@@ -429,6 +433,16 @@
       main { padding: 14px; }
       header { align-items: start; flex-direction: column; }
       .brand-logo { width: min(210px, 76vw); }
+      .media-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        max-height: none;
+        overflow: visible;
+      }
+      .media-card {
+        aspect-ratio: 1;
+        border-width: 1px;
+      }
     }
   </style>
 </head>
@@ -503,7 +517,7 @@
                 <option value="password">私密密碼</option>
               </select>
             </label>
-            <label>標題<input name="title" placeholder="今天的心情"></label>
+            <label>標題<input name="title" placeholder="主題是?"></label>
             <label>私密密碼<input name="entryPassword" type="password" placeholder="選擇私密密碼時填寫"></label>
             <label class="full">快速標籤
               <input name="tags" id="tagsInput" placeholder="可手動補標籤，用逗號分隔">
