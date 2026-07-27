@@ -4,6 +4,7 @@
   const selectedLibraryImages = new Map();
   let entries = [];
   let cards = [];
+  let activeDate = "";
   let apiBase = localStorage.getItem("emilyhome.apiBase") || defaultApiBase;
   let apiToken = localStorage.getItem("emilyhome.token") || "";
 
@@ -24,6 +25,9 @@
   const libraryYear = document.getElementById("libraryYear");
   const libraryMonth = document.getElementById("libraryMonth");
   const cardOptions = document.getElementById("cardOptions");
+  const calendarTitle = document.getElementById("calendarTitle");
+  const photoViewer = document.getElementById("photoViewer");
+  const photoViewerImg = document.getElementById("photoViewerImg");
 
   apiBaseInput.value = apiBase;
   tokenInput.value = apiToken;
@@ -103,21 +107,26 @@
     gateStatus.className = "status" + (isError ? " error" : "");
   }
 
+  function entriesForTimeline() {
+    return activeDate ? entries.filter((entry) => entry.date === activeDate) : entries;
+  }
+
   function renderEntries() {
-    if (!entries.length) {
-      entryListEl.innerHTML = '<p class="muted">目前還沒有心情日記 🐰</p>';
+    const visibleEntries = entriesForTimeline();
+    if (!visibleEntries.length) {
+      entryListEl.innerHTML = '<p class="muted">' + (activeDate ? esc(activeDate) + ' 沒有心情日記 🐰' : '目前還沒有心情日記 🐰') + '</p>';
       return;
     }
-    entryListEl.innerHTML = entries.map((entry) => {
+    entryListEl.innerHTML = visibleEntries.map((entry) => {
       const cover = mediaUrl(entry.coverImageUrl, entry.updatedAt || entry.id);
       const visibility = entry.visibility === "password" ? "私密密碼" : (entry.visibility === "locked" ? "上鎖" : "一般");
       return '<article class="entry">'
-        + (cover ? '<img class="cover" src="' + esc(cover) + '" alt="">' : '<div class="cover"></div>')
+        + (cover ? '<button class="cover-button" type="button" data-view-url="' + esc(cover) + '"><img class="cover" src="' + esc(cover) + '" alt=""></button>' : '<div class="cover"></div>')
         + '<div>'
           + '<div class="entry-title">' + esc(entry.title || "今天的心情") + '</div>'
           + '<div class="entry-meta">' + esc(entry.date || "") + ' · ' + esc(entry.mood || "") + ' · ' + visibility + '</div>'
           + '<div class="entry-meta">' + esc(entry.excerpt || "") + '</div>'
-          + '<div class="toolbar"><button type="button" data-open-id="' + esc(entry.id) + '">閱讀</button></div>'
+          + '<div class="toolbar"><button type="button" data-edit-id="' + esc(entry.id) + '">✏️ 編輯</button></div>'
         + '</div>'
       + '</article>';
     }).join("");
@@ -128,12 +137,26 @@
     const year = now.getFullYear();
     const month = now.getMonth();
     const days = new Date(year, month + 1, 0).getDate();
-    const byDate = new Set(entries.map((entry) => entry.date));
-    calendarEl.innerHTML = Array.from({ length: days }, (_unused, index) => {
+    const byDate = entries.reduce((map, entry) => {
+      map.set(entry.date, (map.get(entry.date) || 0) + 1);
+      return map;
+    }, new Map());
+    const firstDay = new Date(year, month, 1).getDay();
+    const leadingBlanks = (firstDay + 6) % 7;
+    const weekdayNames = ["一", "二", "三", "四", "五", "六", "日"];
+    calendarTitle.textContent = "🌙 " + String(month + 1) + "月時光長廊";
+    const head = weekdayNames.map((name, index) => '<div class="weekday' + (index >= 5 ? ' weekend' : '') + '">週' + name + '</div>');
+    const blanks = Array.from({ length: leadingBlanks }, () => '<div class="day"></div>');
+    const dayCells = Array.from({ length: days }, (_unused, index) => {
       const day = index + 1;
       const date = year + "-" + String(month + 1).padStart(2, "0") + "-" + String(day).padStart(2, "0");
-      return '<div class="day' + (byDate.has(date) ? ' has-entry' : '') + '">' + day + '</div>';
-    }).join("");
+      const weekday = new Date(year, month, day).getDay();
+      const isWeekend = weekday === 0 || weekday === 6;
+      const count = byDate.get(date) || 0;
+      const dots = count ? '<div class="dot-row">' + Array.from({ length: Math.min(count, 6) }, () => '<span class="dot"></span>').join("") + (count > 6 ? '<span class="entry-meta">+' + (count - 6) + '</span>' : '') + '</div>' : '';
+      return '<button type="button" class="day' + (isWeekend ? ' weekend' : '') + (count ? ' has-entry' : '') + (activeDate === date ? ' active' : '') + '" data-date="' + date + '">' + day + dots + '</button>';
+    });
+    calendarEl.innerHTML = head.concat(blanks, dayCells).join("");
   }
 
   async function loadEntries() {
@@ -148,7 +171,29 @@
     return String(markdown || "").replace(/^---[\s\S]*?---\s*/, "").trim();
   }
 
-  async function openEntry(id) {
+  function openPhoto(url) {
+    if (!url) return;
+    photoViewerImg.src = url;
+    photoViewer.showModal();
+  }
+
+  function mediaPreview(item, index) {
+    const key = item.libraryId || item.legacyLibraryId || item.fileName || item.url || item.originalUrl || item.thumbnailUrl || "";
+    if (item.type === "audio") {
+      return '<div class="edit-media-card">'
+        + '<label><input type="checkbox" name="removeMedia" value="' + esc(key) + '"> 移除語音 ' + (index + 1) + '</label>'
+        + '<audio controls src="' + esc(mediaUrl(item.url || "", item.updatedAt || key)) + '"></audio>'
+      + '</div>';
+    }
+    const thumb = mediaUrl(item.thumbnailUrl || item.originalUrl || "", item.updatedAt || key);
+    const original = mediaUrl(item.originalUrl || item.thumbnailUrl || "", item.updatedAt || key);
+    return '<div class="edit-media-card">'
+      + '<button class="media-card" type="button" data-view-url="' + esc(original) + '"><img src="' + esc(thumb) + '" alt=""></button>'
+      + '<label><input type="checkbox" name="removeMedia" value="' + esc(key) + '"> 移除照片</label>'
+    + '</div>';
+  }
+
+  async function openEditEntry(id) {
     detailEl.textContent = "讀取中... 📖";
     try {
       let url = apiUrl("/api/wife-journal/entries/" + encodeURIComponent(id));
@@ -162,12 +207,29 @@
         url += "?password=" + encodeURIComponent(password);
       }
       const body = await fetch(url, { cache: "no-store", headers: headers() }).then(readJson);
-      const media = (body.entry.media || []).map((item) => {
-        if (item.type === "audio") return "\n[語音] " + (item.fileName || item.url);
-        return "\n[照片] " + (item.fileName || item.relativePath || item.libraryId || "");
-      }).join("");
-      const card = body.entry.cardDraw ? "\n\n抽牌：" + (body.entry.cardDraw.cardName || body.entry.cardDraw.cardId || "") + "\n問題：" + (body.entry.cardDraw.question || "") + "\n解讀：" + (body.entry.cardDraw.reading || "") : "";
-      detailEl.textContent = markdownBody(body.markdown || "") + media + card;
+      const loaded = body.entry || {};
+      const card = loaded.cardDraw || {};
+      detailEl.innerHTML = '<form id="editEntryForm" class="form-grid" data-entry-id="' + esc(loaded.id) + '">'
+        + '<label>標題<input name="title" value="' + esc(loaded.title || "") + '"></label>'
+        + '<label>文章權限<select name="visibility">'
+          + '<option value="normal"' + (loaded.visibility === "normal" ? " selected" : "") + '>一般</option>'
+          + '<option value="locked"' + (loaded.visibility === "locked" ? " selected" : "") + '>上鎖</option>'
+          + '<option value="password"' + (loaded.visibility === "password" ? " selected" : "") + '>私密密碼</option>'
+        + '</select></label>'
+        + '<label>心情<input name="mood" value="' + esc(loaded.mood || "") + '"></label>'
+        + '<label>私密密碼<input name="entryPassword" type="password" placeholder="要更換密碼時填寫"></label>'
+        + '<label class="full">快速標籤<input name="tags" value="' + esc((loaded.tags || []).join(",")) + '"></label>'
+        + '<label class="full">日記內容<textarea name="content">' + esc(markdownBody(body.markdown || "")) + '</textarea></label>'
+        + '<div class="full"><h3>照片與語音</h3><div class="edit-media-grid">' + ((loaded.media || []).map(mediaPreview).join("") || '<p class="muted">沒有附件</p>') + '</div></div>'
+        + '<label>新增照片<input name="media" type="file" accept="image/*,.heic,.heif" multiple></label>'
+        + '<label>新增語音<input name="media" type="file" accept="audio/*,.m4a,.mp3,.wav,.webm" multiple></label>'
+        + '<label>抽牌牌名<input name="cardName" value="' + esc(card.cardName || "") + '"></label>'
+        + '<label>正逆位<input name="cardPosition" value="' + esc(card.position || "") + '"></label>'
+        + '<input name="cardId" type="hidden" value="' + esc(card.cardId || "") + '">'
+        + '<label class="full">抽牌問題<input name="cardQuestion" value="' + esc(card.question || "") + '"></label>'
+        + '<label class="full">抽牌解讀<textarea name="cardReading">' + esc(card.reading || "") + '</textarea></label>'
+        + '<button class="primary full" type="submit">🧸 儲存編輯</button>'
+      + '</form>';
     } catch (error) {
       detailEl.textContent = error.message;
     }
@@ -280,16 +342,60 @@
     card.classList.toggle("active", selectedLibraryImages.has(id));
   });
 
+  calendarEl.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-date]");
+    if (!button) return;
+    activeDate = activeDate === button.dataset.date ? "" : button.dataset.date;
+    renderCalendar();
+    renderEntries();
+  });
+
   entryListEl.addEventListener("click", (event) => {
-    const button = event.target.closest("[data-open-id]");
-    if (button) openEntry(button.dataset.openId);
+    const viewButton = event.target.closest("[data-view-url]");
+    if (viewButton) {
+      openPhoto(viewButton.dataset.viewUrl);
+      return;
+    }
+    const button = event.target.closest("[data-edit-id]");
+    if (button) openEditEntry(button.dataset.editId);
+  });
+
+  detailEl.addEventListener("click", (event) => {
+    const viewButton = event.target.closest("[data-view-url]");
+    if (viewButton) openPhoto(viewButton.dataset.viewUrl);
+  });
+
+  detailEl.addEventListener("submit", async (event) => {
+    const editForm = event.target.closest("#editEntryForm");
+    if (!editForm) return;
+    event.preventDefault();
+    const button = editForm.querySelector("button[type='submit']");
+    button.disabled = true;
+    button.textContent = "儲存中... ✨";
+    try {
+      const data = new FormData(editForm);
+      editForm.querySelectorAll("input[name='removeMedia']:checked").forEach((input) => {
+        data.append("removeMedia", input.value);
+      });
+      const body = await fetch(apiUrl("/api/wife-journal/entries/" + encodeURIComponent(editForm.dataset.entryId)), {
+        method: "PUT",
+        headers: headers(),
+        body: data,
+      }).then(readJson);
+      detailEl.innerHTML = '<p class="status ok">已更新：' + esc(body.entry.title || "心情日記") + ' ✨</p>';
+      await loadEntries();
+    } catch (error) {
+      button.disabled = false;
+      button.textContent = "🧸 儲存編輯";
+      detailEl.insertAdjacentHTML("beforeend", '<p class="status error">' + esc(error.message) + '</p>');
+    }
   });
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     const button = form.querySelector("button[type='submit']");
     button.disabled = true;
-      statusEl.textContent = "寫入 NAS 中... 📮";
+      statusEl.textContent = "記錄中... 🧸";
     statusEl.className = "status";
     try {
       const data = new FormData(form);
@@ -304,7 +410,7 @@
       }
       const body = await fetch(apiUrl("/api/wife-journal/entries"), { method: "POST", headers: headers(), body: data }).then(readJson);
       statusEl.className = "status ok";
-      statusEl.textContent = "已寫入 NAS：" + body.entry.title + " ✨";
+      statusEl.textContent = "已記錄：" + body.entry.title + " ✨";
       form.reset();
       form.elements.date.valueAsDate = new Date();
       selectedLibraryImages.clear();
@@ -319,6 +425,7 @@
   });
 
   document.getElementById("connectBtn").addEventListener("click", connect);
+  document.getElementById("closePhotoViewer").addEventListener("click", () => photoViewer.close());
   document.getElementById("clearTokenBtn").addEventListener("click", () => {
     localStorage.removeItem("emilyhome.token");
     apiToken = "";

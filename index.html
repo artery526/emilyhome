@@ -151,6 +151,13 @@
       object-fit: cover;
       background: var(--mist);
     }
+    .cover-button {
+      border: 0;
+      padding: 0;
+      min-height: 0;
+      border-radius: 8px;
+      background: transparent;
+    }
     .entry-title {
       font-weight: 700;
       margin-bottom: 4px;
@@ -165,6 +172,12 @@
       grid-template-columns: repeat(7, 1fr);
       gap: 8px;
     }
+    .weekday {
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+      padding: 4px;
+    }
     .day {
       min-height: 50px;
       border: 1px solid var(--line);
@@ -173,11 +186,32 @@
       background: #fff;
       color: var(--muted);
       font-size: 12px;
+      text-align: left;
+    }
+    .day.weekend {
+      background: #fff3f3;
+      border-color: #efcfcf;
     }
     .day.has-entry {
       background: #f4e9ed;
       color: var(--rose);
       border-color: #e6cdd5;
+    }
+    .day.active {
+      outline: 2px solid var(--rose);
+    }
+    .dot-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 3px;
+      margin-top: 6px;
+    }
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: var(--rose);
+      display: inline-block;
     }
     .library-controls {
       display: grid;
@@ -221,6 +255,44 @@
       white-space: pre-wrap;
       line-height: 1.7;
       color: var(--ink);
+    }
+    .edit-media-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+      gap: 10px;
+      margin: 12px 0;
+    }
+    .edit-media-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      background: #fff;
+    }
+    .edit-media-card img {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      display: block;
+    }
+    .edit-media-card label {
+      padding: 8px;
+    }
+    dialog.photo-viewer {
+      width: min(920px, calc(100vw - 28px));
+      border: 0;
+      border-radius: 8px;
+      padding: 12px;
+      background: #fff;
+    }
+    dialog.photo-viewer::backdrop {
+      background: rgba(20, 24, 22, .62);
+    }
+    .photo-viewer img {
+      width: 100%;
+      max-height: 78vh;
+      object-fit: contain;
+      display: block;
+      border-radius: 8px;
     }
     .gate {
       min-height: 52vh;
@@ -283,7 +355,7 @@
           <div class="entry-list" id="entryList"><p class="muted">載入中...</p></div>
         </section>
         <section class="card span-5">
-          <h3>🌙 本月月曆</h3>
+          <h3 id="calendarTitle">🌙 本月月曆</h3>
           <div class="calendar" id="calendar"></div>
         </section>
 
@@ -329,13 +401,13 @@
             <datalist id="cardOptions"></datalist>
             <label class="full">抽牌問題<input name="cardQuestion" placeholder="今天我需要知道什麼？"></label>
             <label class="full">抽牌解讀<textarea name="cardReading" placeholder="自己的直覺解讀與感受"></textarea></label>
-          <button class="primary full" type="submit">📮 寫入 NAS</button>
+          <button class="primary full" type="submit">🧸 記錄</button>
           </form>
           <p class="status" id="formStatus"></p>
         </section>
 
         <section class="card span-4">
-          <h3>🖼️ NAS Photos 選圖</h3>
+          <h3>🖼️找尋歷史軌跡</h3>
           <div class="library-controls">
             <select id="libraryYear"></select>
             <select id="libraryMonth"></select>
@@ -346,12 +418,19 @@
         </section>
 
         <section class="card span-12">
-          <h3>📖 文章內容</h3>
-          <div class="detail" id="entryDetail">點選時間軸文章後顯示全文。私密密碼文章會先要求密碼 🔐</div>
+          <h3>✏️ 編輯文章</h3>
+          <div class="detail" id="entryDetail">點選時間軸文章後進入編輯。私密密碼文章會先要求密碼 🔐</div>
         </section>
       </div>
     </section>
   </main>
+
+  <dialog class="photo-viewer" id="photoViewer">
+    <div class="toolbar">
+      <button class="ghost" type="button" id="closePhotoViewer">關閉</button>
+    </div>
+    <img id="photoViewerImg" alt="">
+  </dialog>
 
   <script src="scripts/emilyhome.js"></script>
 </body>
