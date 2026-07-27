@@ -95,16 +95,14 @@
     }
     .art-title {
       display: block;
-      width: min(340px, 82vw);
-      padding: 3px;
-      border-radius: 999px;
+      width: min(260px, 64vw);
+      padding: 2px;
+      border-radius: 8px;
       background:
-        linear-gradient(135deg, rgba(255, 250, 240, .58), rgba(247, 236, 224, .36)),
-        rgba(255, 255, 255, .1);
-      box-shadow:
-        0 8px 22px rgba(156, 96, 91, .1),
-        inset 0 1px 0 rgba(255, 255, 255, .5);
-      backdrop-filter: blur(2px);
+        linear-gradient(135deg, rgba(255, 250, 240, .3), rgba(247, 236, 224, .18)),
+        rgba(255, 255, 255, .08);
+      box-shadow: 0 5px 12px rgba(156, 96, 91, .055);
+      backdrop-filter: blur(1px);
     }
     .art-title img {
       display: block;
@@ -112,7 +110,8 @@
       height: auto;
       border-radius: 8px;
       mix-blend-mode: multiply;
-      filter: saturate(1.02) contrast(.97) drop-shadow(0 6px 10px rgba(183, 92, 115, .1));
+      opacity: .9;
+      filter: saturate(.98) contrast(.96);
     }
     .section-head p, .muted { color: var(--muted); line-height: 1.55; }
     .toolbar {
