@@ -155,9 +155,11 @@
     .view-tabs {
       display: flex;
       flex-wrap: wrap;
+      align-items: center;
       gap: 8px;
       margin: 0 0 16px;
     }
+    .view-tabs #refreshBtn { margin-left: auto; }
     .view-tab.active {
       background: var(--rose);
       border-color: var(--rose);
@@ -416,9 +418,16 @@
     @media (max-width: 900px) {
       .span-4, .span-5, .span-7, .span-8 { grid-column: span 12; }
       .form-grid, .library-controls, .card-draw-set { grid-template-columns: 1fr; }
-      main { padding: 142px 14px 14px; }
-      header { align-items: start; flex-direction: column; }
+      main { padding: 104px 14px 14px; }
+      header { align-items: start; }
       .brand-logo { width: min(210px, 76vw); }
+      .view-tabs {
+        position: sticky;
+        top: 92px;
+        z-index: 3;
+        padding-bottom: 8px;
+      }
+      .view-tabs #refreshBtn { margin-left: 0; }
       .media-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 10px;
@@ -435,9 +444,6 @@
 <body>
   <header>
     <h1 class="brand-logo"><img src="cssindex.png" alt="Emily's Home"></h1>
-    <div class="toolbar">
-      <button class="ghost" type="button" id="refreshBtn">🔄 重新整理</button>
-    </div>
   </header>
 
   <main>
@@ -463,6 +469,7 @@
       <div class="view-tabs">
         <button class="view-tab active" type="button" data-view="journal">🌿 心情日記</button>
         <button class="view-tab" type="button" data-view="cards">🔮 記錄卡牌</button>
+        <button class="ghost" type="button" id="refreshBtn">🔄 重新整理</button>
       </div>
 
       <section class="view-panel" id="journalView">
