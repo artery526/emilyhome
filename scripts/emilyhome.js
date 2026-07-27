@@ -1,6 +1,5 @@
 (function () {
   const defaultApiBase = "https://api.ark-os26.cc";
-  const cardSheetUrl = "https://docs.google.com/spreadsheets/d/1GQBYT2jcNa9D6G39tntT5UfetXpgwfKYZ2h5fSy3bV8/edit";
   const tags = ["工作", "家人", "感情", "健康", "睡眠", "夢境", "感謝", "低潮"];
   const fallbackCards = [
     { name: "0.愚者", imageUrl: "https://drive.google.com/file/d/1O_yGudgr5djUHNnN8o5K2x44yBj2lTgi/view?usp=sharing" },
@@ -117,11 +116,9 @@
   const cardStatus = document.getElementById("cardStatus");
   const cardDrawFields = document.getElementById("cardDrawFields");
   const cardRecordList = document.getElementById("cardRecordList");
-  const cardSheetLink = document.getElementById("cardSheetLink");
 
   apiBaseInput.value = apiBase;
   tokenInput.value = apiToken;
-  cardSheetLink.href = cardSheetUrl;
 
   function esc(value) {
     return String(value == null ? "" : value)
