@@ -2,7 +2,86 @@
   const defaultApiBase = "https://api.ark-os26.cc";
   const cardSheetUrl = "https://docs.google.com/spreadsheets/d/1GQBYT2jcNa9D6G39tntT5UfetXpgwfKYZ2h5fSy3bV8/edit";
   const tags = ["工作", "家人", "感情", "健康", "睡眠", "夢境", "感謝", "低潮"];
-  const fallbackCards = ["0.愚者", "1.魔術師", "2.女祭司", "3.皇后", "4.國王 (皇帝)", "5.教皇 (大祭司)", "6.戀人", "7.戰車", "8.力量", "9.隱士", "10.命運之輪", "11.正義", "12.吊人", "13.死神", "14.節制", "15.惡魔", "16.塔", "17.星星", "18.月亮", "19.太陽", "20.審判", "21.世界"];
+  const fallbackCards = [
+    { name: "0.愚者", imageUrl: "https://drive.google.com/file/d/1O_yGudgr5djUHNnN8o5K2x44yBj2lTgi/view?usp=sharing" },
+    { name: "1.魔術師", imageUrl: "https://drive.google.com/file/d/1FC_pBu_ebjJDg73AV0dhUT3xL5ekiIjA/view?usp=drive_link" },
+    { name: "2.女祭司", imageUrl: "https://drive.google.com/file/d/1SC2rvYoz-GvLgG30EEEXwjvYLQOeNEVB/view?usp=drive_link" },
+    { name: "3.皇后", imageUrl: "https://drive.google.com/file/d/1cl3A9S_eNZW7zEc6XcCtzsjz9TUpTBn4/view?usp=drive_link" },
+    { name: "4.國王 (皇帝)", imageUrl: "https://drive.google.com/file/d/1xkQq3nj_83ZIrm5JcE8mv-4HjQ7duif3/view?usp=drive_link" },
+    { name: "5.教皇 (大祭司)", imageUrl: "https://drive.google.com/file/d/1jmejV1tA-cW6mroX5IBBAf1nu5JN8ueH/view?usp=drive_link" },
+    { name: "6.戀人", imageUrl: "https://drive.google.com/file/d/189AGSNrCyXzIZ1I1N9i10iwnzYooRA3O/view?usp=drive_link" },
+    { name: "7.戰車", imageUrl: "https://drive.google.com/file/d/1ub4yHtkYs42C6Wm0ezcgUF3BaxzYAKuD/view?usp=drive_link" },
+    { name: "8.力量", imageUrl: "https://drive.google.com/file/d/1z4IUT0iLwEfAhQGyOHWbTJmUxMsyovdU/view?usp=drive_link" },
+    { name: "9.隱士", imageUrl: "https://drive.google.com/file/d/1n3a6DkU3YWiKEUHQdUA3N5c_lsR2BD1L/view?usp=drive_link" },
+    { name: "10.命運之輪", imageUrl: "https://drive.google.com/file/d/1Y9Doxcp-9E1VkCTa30BOZxqKsBn9CUnp/view?usp=drive_link" },
+    { name: "11.正義", imageUrl: "https://drive.google.com/file/d/158tyh-meBs6_qShphsSgzVjUxiq-rzW_/view?usp=drive_link" },
+    { name: "12.吊人", imageUrl: "https://drive.google.com/file/d/1gJoy6BSCUSKMuW8kqJB5Ss8fnN1BPZAq/view?usp=drive_link" },
+    { name: "13.死神", imageUrl: "https://drive.google.com/file/d/1coH_YuKumjnkMkMiIpINGwDEMWzkf3RN/view?usp=drive_link" },
+    { name: "14.節制", imageUrl: "https://drive.google.com/file/d/1ebmTdCqP7vJFW78omoeYGkjcVKlyO54q/view?usp=drive_link" },
+    { name: "15.惡魔", imageUrl: "https://drive.google.com/file/d/12CHiGXVMqPyAfx90YhQaEAqC-XcWDIhV/view?usp=drive_link" },
+    { name: "16.高塔", imageUrl: "https://drive.google.com/file/d/1ZNzXTpIiukBGtFg_Hcg0P01LfTFdI1la/view?usp=drive_link" },
+    { name: "17.星星", imageUrl: "https://drive.google.com/file/d/1p_RGgkijJc_h-SFHGSBhnGGRNt2GB33V/view?usp=drive_link" },
+    { name: "18.月亮", imageUrl: "https://drive.google.com/file/d/1Xz2yY2qp3PzIyMDO8FYnkC0gnsGgD46r/view?usp=drive_link" },
+    { name: "19.太陽", imageUrl: "https://drive.google.com/file/d/1B5a6O_uGQCKqj1dKDMVGicsmbGm3LC7k/view?usp=drive_link" },
+    { name: "20.審判", imageUrl: "https://drive.google.com/file/d/1N5UIs7l3jE2leQVjx-mz8pPqCnqxAycF/view?usp=drive_link" },
+    { name: "21.世界", imageUrl: "https://drive.google.com/file/d/1OL_zdMsd-wlOQ72VyuhT2bhF4SyOeiVN/view?usp=drive_link" },
+    { name: "22.權杖1", imageUrl: "https://drive.google.com/file/d/1eiV9YHgi5ruNn8pMYKF5knhPKYYii_c3/view?usp=drive_link" },
+    { name: "23.權杖2", imageUrl: "https://drive.google.com/file/d/1VTcLMTzhUX0L30OwiYLu592v17fL4e2A/view?usp=drive_link" },
+    { name: "24.權杖3", imageUrl: "https://drive.google.com/file/d/1nBDCEIuXrNDUZW3pYr15EeiaVekR7fO9/view?usp=drive_link" },
+    { name: "25.權杖4", imageUrl: "https://drive.google.com/file/d/1n1F_HQvAXvsMUW5RynqmTu55PcMKDwVc/view?usp=drive_link" },
+    { name: "26.權杖5", imageUrl: "https://drive.google.com/file/d/1mXgJuOnuWig7A7zCGSCLMtIDKV149G4Q/view?usp=drive_link" },
+    { name: "27.權杖6", imageUrl: "https://drive.google.com/file/d/1zMMYSLxl7jLFdw01PBnxnwS2fS2K_DKs/view?usp=drive_link" },
+    { name: "28.權杖7", imageUrl: "https://drive.google.com/file/d/1tWZklWXt76vza2rgKdgE7rQPGLr5Dgsx/view?usp=drive_link" },
+    { name: "29.權杖8", imageUrl: "https://drive.google.com/file/d/1otkooIEpsxEw9IblX7FGbz-irS2jlfMU/view?usp=drive_link" },
+    { name: "30.權杖9", imageUrl: "https://drive.google.com/file/d/1Qfc5useWxmQ9W_jsV50aReEnZ6nlLmNp/view?usp=drive_link" },
+    { name: "31.權杖10", imageUrl: "https://drive.google.com/file/d/1cgctCzSIfP4b6qZWAzu0DCRw0O_HHHxq/view?usp=drive_link" },
+    { name: "32.權杖侍從", imageUrl: "https://drive.google.com/file/d/1fJKsHL5PwMwCL5tiIwFTEfAXvLsvPdym/view?usp=drive_link" },
+    { name: "33.權杖騎士", imageUrl: "https://drive.google.com/file/d/1Au8Xvp-sbWzJ_WC0DEPM9DZ67eo8X3uZ/view?usp=drive_link" },
+    { name: "34.權杖皇后", imageUrl: "https://drive.google.com/file/d/1iZ7iy2lvxxvIPndek_Hv4Sdp2HnRlwVt/view?usp=drive_link" },
+    { name: "35.權杖國王", imageUrl: "https://drive.google.com/file/d/1cVc2UccSGxgdNMi_UOHilLzOTbtWMxfW/view?usp=drive_link" },
+    { name: "36.聖杯1", imageUrl: "https://drive.google.com/file/d/1NqRQQCFfXzRJh7cJ6gcj80f5QhmqkF_M/view?usp=drive_link" },
+    { name: "37.聖杯2", imageUrl: "https://drive.google.com/file/d/1mw2Hx5zwBRRSkiD0Ag07IW-4WDThcIFz/view?usp=drive_link" },
+    { name: "38.聖杯3", imageUrl: "https://drive.google.com/file/d/1RkpG5kfmH9qZ9NDU5KVa0D74Eo32fS9O/view?usp=drive_link" },
+    { name: "39.聖杯4", imageUrl: "https://drive.google.com/file/d/1dSmm1xB9Ivolt3FXAjJTtETxOpmefobI/view?usp=drive_link" },
+    { name: "40.聖杯5", imageUrl: "https://drive.google.com/file/d/171cwyNg94hHFongwO26Ih9UDedP72ILx/view?usp=drive_link" },
+    { name: "41.聖杯6", imageUrl: "https://drive.google.com/file/d/1ibtJ1WjegXczTrBm3TAKKPYhTtvsE4_V/view?usp=drive_link" },
+    { name: "42.聖杯7", imageUrl: "https://drive.google.com/file/d/1R7evsnB_gAa9ePtWUqeoYGnZixwKrNjL/view?usp=drive_link" },
+    { name: "43.聖杯8", imageUrl: "https://drive.google.com/file/d/17u5Lk8jqx-T6M1cwIfITy_WzrYqnZf13/view?usp=drive_link" },
+    { name: "44.聖杯9", imageUrl: "https://drive.google.com/file/d/1PUXbW8rp5x5l2oNu3975lgy3CLaIKCeO/view?usp=drive_link" },
+    { name: "45.聖杯10", imageUrl: "https://drive.google.com/file/d/1YtaQ6n--lGD_ldkpBNsNcpmdBlDa3-YP/view?usp=drive_link" },
+    { name: "46.聖杯侍從", imageUrl: "https://drive.google.com/file/d/1Yc0DITXo38qTs4izmt-PI-Xq6ftJCS_9/view?usp=drive_link" },
+    { name: "47.聖杯騎士", imageUrl: "https://drive.google.com/file/d/13FIH9UcEmxShbT1HzKJ2ntB7R0a3uAJ6/view?usp=drive_link" },
+    { name: "48.聖杯皇后", imageUrl: "https://drive.google.com/file/d/1Ivz69dpzyrK0IP3Njs51O-tAZXLExU2A/view?usp=drive_link" },
+    { name: "49.聖杯國王", imageUrl: "https://drive.google.com/file/d/1iFoVUx5fKlqghi1YDUax3puqJnv_wrlU/view?usp=drive_link" },
+    { name: "50.寶劍1", imageUrl: "https://drive.google.com/file/d/1lGGzdOM8W1nGq1ePWDdBQuC-TydWQ_IN/view?usp=drive_link" },
+    { name: "51.寶劍2", imageUrl: "https://drive.google.com/file/d/11Axf3XfSlLOGX9YnUr4v3nKLYuAGNBmK/view?usp=drive_link" },
+    { name: "52.寶劍3", imageUrl: "https://drive.google.com/file/d/12_1v-YVmJOpI7qRcewAa6yEOo_R4e0se/view?usp=drive_link" },
+    { name: "53.寶劍4", imageUrl: "https://drive.google.com/file/d/15hrgHfNbMKIacsFEGRa_GDhd3MfvOQC1/view?usp=drive_link" },
+    { name: "54.寶劍5", imageUrl: "https://drive.google.com/file/d/1w4xg50Uc6Pg1CD6s_5pOoxoH8JBL8r4D/view?usp=drive_link" },
+    { name: "55.寶劍6", imageUrl: "https://drive.google.com/file/d/1OphjloBMDJ5td50cjrEFlYR0oHkYe1k8/view?usp=drive_link" },
+    { name: "56.寶劍7", imageUrl: "https://drive.google.com/file/d/19POa-nnYETWZoKaprg_zjR0Cxw3qkDy0/view?usp=drive_link" },
+    { name: "57.寶劍8", imageUrl: "https://drive.google.com/file/d/1DMd9gq2R2fBv6JhtaX1kSZUrqiCmSqXq/view?usp=drive_link" },
+    { name: "58.寶劍9", imageUrl: "https://drive.google.com/file/d/1tQZpd9xvTSKS_aUxB4w2lavbTzSWp_db/view?usp=drive_link" },
+    { name: "59.寶劍10", imageUrl: "https://drive.google.com/file/d/1Xy4wu81N0gwmtLZGz1TRIkv9_ncEEeLa/view?usp=drive_link" },
+    { name: "60.寶劍侍從", imageUrl: "https://drive.google.com/file/d/1h9KsEoBwVJxa68gkGU9F98-xfnHE0yO8/view?usp=drive_link" },
+    { name: "61.寶劍騎士", imageUrl: "https://drive.google.com/file/d/1w9hNUzAs8HHERkTNOyufHXSW458Wi3Fk/view?usp=drive_link" },
+    { name: "62.寶劍皇后", imageUrl: "https://drive.google.com/file/d/1SKTg4Jvdkh2g8P90V722KYfmSS45kZju/view?usp=drive_link" },
+    { name: "63.寶劍國王", imageUrl: "https://drive.google.com/file/d/14TO6ajNbn17n_8vfcwAcLDI4WtHYGSU9/view?usp=drive_link" },
+    { name: "64.錢幣1", imageUrl: "https://drive.google.com/file/d/17coOsj32gKdTmG1FZPyVTjnbF-k0m14S/view?usp=drive_link" },
+    { name: "65.錢幣2", imageUrl: "https://drive.google.com/file/d/1lLM7RgJnlQ4REso6iK-Q3-Agrohv-oiX/view?usp=drive_link" },
+    { name: "66.錢幣3", imageUrl: "https://drive.google.com/file/d/1sBabjBAlsLnVLIpuQeoUB5b9lfZK4_TA/view?usp=drive_link" },
+    { name: "67.錢幣4", imageUrl: "https://drive.google.com/file/d/1o24HB3m2DIPZ7WUTvbQg_cgiQTiSBTUr/view?usp=drive_link" },
+    { name: "68.錢幣5", imageUrl: "https://drive.google.com/file/d/1JImkhttn7vZmV1y3rXw9457c9M_s6P4T/view?usp=drive_link" },
+    { name: "69.錢幣6", imageUrl: "https://drive.google.com/file/d/1R34QlsYR0dPju1J6038e8pXBCFXHwOyv/view?usp=drive_link" },
+    { name: "70.錢幣7", imageUrl: "https://drive.google.com/file/d/1er6ztuk0RBuVYD7GELqxFABd-D9GScYa/view?usp=drive_link" },
+    { name: "71.錢幣8", imageUrl: "https://drive.google.com/file/d/1PMQacb47vsNaYrLZy80W4HVmcoRVZRdV/view?usp=drive_link" },
+    { name: "72.錢幣9", imageUrl: "https://drive.google.com/file/d/1CLiSLE60hWZ0PB7WixdaDwMMsJjHqnHr/view?usp=drive_link" },
+    { name: "73.錢幣10", imageUrl: "https://drive.google.com/file/d/1YSn7UMcVBYyVeV0e_LqzGbk7aOVAcCem/view?usp=drive_link" },
+    { name: "74.錢幣侍從", imageUrl: "https://drive.google.com/file/d/17-m6LyJjR2mh77Vo36utjy--eqnLYch7/view?usp=drive_link" },
+    { name: "75.錢幣騎士", imageUrl: "https://drive.google.com/file/d/18XwNaGPNtOpjco4nvriB4VLN1cNz_mA2/view?usp=drive_link" },
+    { name: "76.錢幣皇后", imageUrl: "https://drive.google.com/file/d/1n_iA-ITqdRh0u5u0A84jJoIXW5x0u67x/view?usp=drive_link" },
+    { name: "77.錢幣國王", imageUrl: "https://drive.google.com/file/d/1fYbX4Y96Ai9hNLIaeIOnMzxArtf0zo3n/view?usp=drive_link" },
+  ];
   const cardPositions = ["正位", "逆位"];
   const threePositions = ["過去 / 起點", "現在 / 核心", "未來 / 提醒"];
   const selectedLibraryImages = new Map();
@@ -29,7 +108,6 @@
   const libraryStatus = document.getElementById("libraryStatus");
   const libraryYear = document.getElementById("libraryYear");
   const libraryMonth = document.getElementById("libraryMonth");
-  const cardOptions = document.getElementById("cardOptions");
   const calendarTitle = document.getElementById("calendarTitle");
   const photoViewer = document.getElementById("photoViewer");
   const photoViewerImg = document.getElementById("photoViewerImg");
@@ -308,15 +386,10 @@
   async function loadCards() {
     try {
       const body = await fetch(apiUrl("/api/wife-journal/cards"), { cache: "no-store", headers: headers() }).then(readJson);
-      cards = Array.isArray(body.cards) ? body.cards : [];
-      const optionCards = cards.length ? cards : fallbackCards.map((name) => ({ name }));
-      cardOptions.innerHTML = optionCards.map((card) => {
-        const name = card.name || card.cardName || card.title || card.label || card.id || "";
-        return '<option value="' + esc(name) + '"></option>';
-      }).join("");
+      const apiCards = Array.isArray(body.cards) ? body.cards : [];
+      cards = mergeCards(apiCards);
     } catch (_error) {
-      cards = fallbackCards.map((name) => ({ name }));
-      cardOptions.innerHTML = fallbackCards.map((name) => '<option value="' + esc(name) + '"></option>').join("");
+      cards = fallbackCards.slice();
     }
     renderCardDrawFields();
   }
@@ -332,7 +405,22 @@
 
   function cardNameOptions() {
     const names = cards.map((card) => card.name || card.cardName || card.title || card.label || card.id || "").filter(Boolean);
-    return (names.length ? names : fallbackCards).map((name) => '<option value="' + esc(name) + '">' + esc(name) + '</option>').join("");
+    const optionNames = names.length ? names : fallbackCards.map((card) => card.name);
+    return '<option value="">選擇牌卡</option>' + optionNames.map((name) => '<option value="' + esc(name) + '">' + esc(name) + '</option>').join("");
+  }
+
+  function mergeCards(apiCards) {
+    const byName = new Map();
+    fallbackCards.forEach((card) => {
+      byName.set(cleanCardName(card.name), { ...card });
+    });
+    apiCards.forEach((card) => {
+      const name = card.name || card.cardName || card.title || card.label || card.id || "";
+      if (!name) return;
+      const key = cleanCardName(name);
+      byName.set(key, { ...(byName.get(key) || {}), ...card, name });
+    });
+    return Array.from(byName.values());
   }
 
   function cleanCardName(value) {
@@ -377,7 +465,7 @@
           + '<div class="card-thumb" data-card-thumb="' + index + '">🃏</div>'
           + '<strong data-card-preview-name="' + index + '">' + esc(label) + '</strong>'
         + '</div>'
-        + '<label>牌卡<input name="cardName' + index + '" list="cardOptions" placeholder="選擇或輸入牌名"></label>'
+        + '<label>牌卡<select name="cardName' + index + '">' + cardNameOptions() + '</select></label>'
         + '<label>正逆位<select name="cardPosition' + index + '">' + cardPositionOptions("") + '</select></label>'
       + '</div>';
     }).join("");
