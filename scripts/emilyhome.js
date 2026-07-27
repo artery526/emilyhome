@@ -264,7 +264,7 @@
           + '<div class="entry-title">' + esc(entry.title || "今天的心情") + '</div>'
           + '<div class="entry-meta">' + esc(meta) + '</div>'
           + '<div class="entry-meta">' + esc(entry.excerpt || "") + '</div>'
-          + '<div class="toolbar"><button type="button" data-edit-id="' + esc(entry.id) + '">✏️ 編輯</button></div>'
+          + '<div class="toolbar"><button type="button" data-edit-id="' + esc(entry.id) + '">✏️ 編輯</button><button class="danger" type="button" data-delete-id="' + esc(entry.id) + '">🗑️ 刪除</button></div>'
         + '</div>'
       + '</article>';
     }).join("");
@@ -365,6 +365,29 @@
       + '</form>';
     } catch (error) {
       detailEl.textContent = error.message;
+    }
+  }
+
+  async function deleteEntry(id) {
+    const entry = entries.find((item) => item.id === id || item.slug === id) || {};
+    const title = entry.title || "這篇心情日記";
+    const confirmed = window.confirm(
+      "確定要刪除「" + title + "」嗎？\n\n"
+      + "這會刪除整篇文章、這篇上傳的照片與語音。從 NAS Photos 插入的歷史照片只會移除文章引用，不會刪除原始相簿。"
+    );
+    if (!confirmed) return;
+
+    detailEl.innerHTML = '<p class="status">刪除中... 🧸</p>';
+    try {
+      const body = await fetch(apiUrl("/api/wife-journal/entries/" + encodeURIComponent(id)), {
+        method: "DELETE",
+        headers: headers(),
+      }).then(readJson);
+      const deletedTitle = (body.entry && body.entry.title) || title;
+      detailEl.innerHTML = '<p class="status ok">已刪除「' + esc(deletedTitle) + '」✨</p>';
+      await loadEntries();
+    } catch (error) {
+      detailEl.innerHTML = '<p class="status error">' + esc(error.message) + '</p>';
     }
   }
 
@@ -657,7 +680,12 @@
       return;
     }
     const button = event.target.closest("[data-edit-id]");
-    if (button) openEditEntry(button.dataset.editId);
+    if (button) {
+      openEditEntry(button.dataset.editId);
+      return;
+    }
+    const deleteButton = event.target.closest("[data-delete-id]");
+    if (deleteButton) deleteEntry(deleteButton.dataset.deleteId);
   });
 
   detailEl.addEventListener("click", (event) => {
