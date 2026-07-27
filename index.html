@@ -31,8 +31,10 @@
       letter-spacing: 0;
     }
     header {
-      position: sticky;
+      position: fixed;
       top: 0;
+      left: 0;
+      right: 0;
       z-index: 4;
       display: flex;
       align-items: center;
@@ -64,7 +66,7 @@
     main {
       max-width: 1240px;
       margin: 0 auto;
-      padding: 22px;
+      padding: 104px 22px 22px;
     }
     .grid {
       display: grid;
@@ -91,26 +93,6 @@
       align-items: end;
       gap: 16px;
       margin: 20px 0 12px;
-    }
-    .art-title {
-      display: block;
-      width: min(260px, 64vw);
-      padding: 2px;
-      border-radius: 8px;
-      background:
-        linear-gradient(135deg, rgba(255, 250, 240, .3), rgba(247, 236, 224, .18)),
-        rgba(255, 255, 255, .08);
-      box-shadow: 0 5px 12px rgba(156, 96, 91, .055);
-      backdrop-filter: blur(1px);
-    }
-    .art-title img {
-      display: block;
-      width: 100%;
-      height: auto;
-      border-radius: 8px;
-      mix-blend-mode: multiply;
-      opacity: .9;
-      filter: saturate(.98) contrast(.96);
     }
     .section-head p, .muted { color: var(--muted); line-height: 1.55; }
     .toolbar {
@@ -434,7 +416,7 @@
     @media (max-width: 900px) {
       .span-4, .span-5, .span-7, .span-8 { grid-column: span 12; }
       .form-grid, .library-controls, .card-draw-set { grid-template-columns: 1fr; }
-      main { padding: 14px; }
+      main { padding: 142px 14px 14px; }
       header { align-items: start; flex-direction: column; }
       .brand-logo { width: min(210px, 76vw); }
       .media-grid {
@@ -478,11 +460,6 @@
     </section>
 
     <section class="app" id="app" hidden>
-      <section class="section-head">
-        <div>
-          <h2 class="art-title"><img src="css.png" alt="時間軸與月曆"></h2>
-        </div>
-      </section>
       <div class="view-tabs">
         <button class="view-tab active" type="button" data-view="journal">🌿 心情日記</button>
         <button class="view-tab" type="button" data-view="cards">🔮 記錄卡牌</button>
