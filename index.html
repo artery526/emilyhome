@@ -45,7 +45,22 @@
     }
     h1, h2, h3, p { margin: 0; }
     h1 { font-size: 22px; }
-    .top-note { color: var(--muted); font-size: 13px; }
+    .brand-logo {
+      display: block;
+      width: min(360px, 58vw);
+      padding: 4px;
+      border-radius: 8px;
+      background: rgba(255, 250, 240, .45);
+      box-shadow: 0 8px 18px rgba(156, 96, 91, .1);
+    }
+    .brand-logo img {
+      display: block;
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+      mix-blend-mode: multiply;
+      filter: saturate(1.04) contrast(.98);
+    }
     main {
       max-width: 1240px;
       margin: 0 auto;
@@ -413,15 +428,13 @@
       .form-grid, .library-controls, .card-draw-set { grid-template-columns: 1fr; }
       main { padding: 14px; }
       header { align-items: start; flex-direction: column; }
+      .brand-logo { width: min(300px, 88vw); }
     }
   </style>
 </head>
 <body>
   <header>
-    <div>
-      <h1>Emily's Home 🐰🧸</h1>
-      <p class="top-note">Emily 的心情日記、照片與抽牌記錄 ✨</p>
-    </div>
+    <h1 class="brand-logo"><img src="cssindex.png" alt="Emily's Home"></h1>
     <div class="toolbar">
       <button class="ghost" type="button" id="refreshBtn">🔄 重新整理</button>
     </div>
