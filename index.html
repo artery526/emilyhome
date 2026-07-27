@@ -77,6 +77,33 @@
       gap: 16px;
       margin: 20px 0 12px;
     }
+    .art-title {
+      display: inline-block;
+      font-family: "Segoe Print", "Comic Sans MS", "Microsoft JhengHei", cursive;
+      font-size: 34px;
+      line-height: 1.15;
+      color: #7e3651;
+      text-shadow:
+        0 2px 0 #fff,
+        0 6px 16px rgba(183, 92, 115, .28),
+        0 0 1px #7e3651;
+      padding: 6px 0;
+    }
+    .art-title span {
+      background: linear-gradient(135deg, #7e3651, #c86986 48%, #496b5a);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .art-title::after {
+      content: "";
+      display: block;
+      width: 100%;
+      height: 10px;
+      margin-top: -5px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(255, 202, 214, .85), rgba(211, 231, 218, .9));
+    }
     .section-head p, .muted { color: var(--muted); line-height: 1.55; }
     .toolbar {
       display: flex;
@@ -154,13 +181,41 @@
     }
     .card-draw-set {
       display: grid;
-      grid-template-columns: 88px 1fr 120px;
+      grid-template-columns: 96px minmax(0, 1fr) 120px;
       gap: 10px;
       align-items: end;
       border: 1px solid var(--line);
       border-radius: 8px;
       padding: 10px;
       background: #fff;
+    }
+    .card-preview {
+      display: grid;
+      gap: 6px;
+      justify-items: center;
+      color: var(--muted);
+      font-size: 12px;
+      text-align: center;
+    }
+    .card-thumb {
+      width: 72px;
+      aspect-ratio: 3 / 4;
+      border-radius: 8px;
+      border: 1px solid #ead0da;
+      background:
+        linear-gradient(150deg, rgba(255, 246, 248, .96), rgba(236, 246, 239, .96));
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      color: var(--rose);
+      font-size: 26px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.8);
+    }
+    .card-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
     }
     .card-record-list {
       display: grid;
@@ -375,8 +430,6 @@
     </div>
     <div class="toolbar">
       <button class="ghost" type="button" id="refreshBtn">🔄 重新整理</button>
-      <button class="primary" type="button" id="jumpCreateBtn">💌 新增心情</button>
-      <button class="ghost" type="button" id="jumpCardsBtn">🔮 記錄卡牌</button>
     </div>
   </header>
 
@@ -402,7 +455,7 @@
     <section class="app" id="app" hidden>
       <section class="section-head">
         <div>
-          <h2>🗓️ 時間軸與月曆</h2>
+          <h2 class="art-title"><span>🗓️ 時間軸與月曆</span></h2>
           <p>先看最近狀態，再決定是否新增今天的記錄 🧸</p>
         </div>
       </section>
@@ -422,7 +475,18 @@
           <div class="calendar" id="calendar"></div>
         </section>
 
-        <section class="card span-8" id="createCard">
+        <section class="card span-12">
+          <h3>🖼️找尋歷史軌跡</h3>
+          <div class="library-controls">
+            <select id="libraryYear"></select>
+            <select id="libraryMonth"></select>
+          <button type="button" id="loadLibraryBtn">載入 ✨</button>
+          </div>
+          <p class="status" id="libraryStatus">尚未載入 Photos。</p>
+          <div class="media-grid" id="libraryGrid"></div>
+        </section>
+
+        <section class="card span-12" id="createCard">
           <h3>💌 新增心情日記</h3>
           <form id="entryForm" class="form-grid">
             <label>日期<input name="date" type="date" required></label>
@@ -455,17 +519,6 @@
           <button class="primary full" type="submit">🧸 記錄</button>
           </form>
           <p class="status" id="formStatus"></p>
-        </section>
-
-        <section class="card span-4">
-          <h3>🖼️找尋歷史軌跡</h3>
-          <div class="library-controls">
-            <select id="libraryYear"></select>
-            <select id="libraryMonth"></select>
-          <button type="button" id="loadLibraryBtn">載入 ✨</button>
-          </div>
-          <p class="status" id="libraryStatus">尚未載入 Photos。</p>
-          <div class="media-grid" id="libraryGrid"></div>
         </section>
 
         <section class="card span-12">

@@ -335,6 +335,32 @@
     return (names.length ? names : fallbackCards).map((name) => '<option value="' + esc(name) + '">' + esc(name) + '</option>').join("");
   }
 
+  function cleanCardName(value) {
+    return String(value || "").replace(/\u200B/g, "").replace(/^\d+\./, "").trim();
+  }
+
+  function driveImageUrl(url) {
+    const raw = String(url || "").trim();
+    if (!raw) return "";
+    const match = raw.match(/drive\.google\.com\/file\/d\/([^/]+)/) || raw.match(/[?&]id=([^&]+)/);
+    if (match) return "https://drive.google.com/thumbnail?id=" + encodeURIComponent(match[1]) + "&sz=w320";
+    return raw;
+  }
+
+  function cardImageUrl(card) {
+    if (!card) return "";
+    return driveImageUrl(card.imageUrl || card.thumbnailUrl || card.image || card.cardImage || card.cardImageUrl || card.url || card.photoUrl || "");
+  }
+
+  function findCardByName(value) {
+    const raw = String(value || "").trim();
+    const clean = cleanCardName(raw);
+    return cards.find((card) => {
+      const names = [card.name, card.cardName, card.title, card.label, card.id, card.cardId].map((item) => String(item || "").trim()).filter(Boolean);
+      return names.some((name) => name === raw || cleanCardName(name) === clean);
+    }) || null;
+  }
+
   function cardPositionOptions(selected) {
     return '<option value="">未指定</option>' + cardPositions.map((position) => (
       '<option value="' + esc(position) + '"' + (selected === position ? " selected" : "") + '>' + esc(position) + '</option>'
@@ -347,11 +373,33 @@
     cardDrawFields.innerHTML = Array.from({ length: count }, (_unused, index) => {
       const label = drawMode === "three" ? threePositions[index] : "單張";
       return '<div class="card-draw-set">'
-        + '<strong>' + esc(label) + '</strong>'
+        + '<div class="card-preview">'
+          + '<div class="card-thumb" data-card-thumb="' + index + '">🃏</div>'
+          + '<strong data-card-preview-name="' + index + '">' + esc(label) + '</strong>'
+        + '</div>'
         + '<label>牌卡<input name="cardName' + index + '" list="cardOptions" placeholder="選擇或輸入牌名"></label>'
         + '<label>正逆位<select name="cardPosition' + index + '">' + cardPositionOptions("") + '</select></label>'
       + '</div>';
     }).join("");
+    updateCardPreviews();
+  }
+
+  function updateCardPreview(index) {
+    if (!cardDrawFields) return;
+    const input = cardDrawFields.querySelector('[name="cardName' + index + '"]');
+    const thumb = cardDrawFields.querySelector('[data-card-thumb="' + index + '"]');
+    const nameEl = cardDrawFields.querySelector('[data-card-preview-name="' + index + '"]');
+    if (!input || !thumb || !nameEl) return;
+    const card = findCardByName(input.value);
+    const label = cleanCardName(input.value) || (drawMode === "three" ? threePositions[index] : "單張");
+    const url = cardImageUrl(card);
+    nameEl.textContent = label;
+    thumb.innerHTML = url ? '<img src="' + esc(url) + '" alt="' + esc(label) + '">' : "🃏";
+  }
+
+  function updateCardPreviews() {
+    const count = drawMode === "three" ? 3 : 1;
+    for (let index = 0; index < count; index += 1) updateCardPreview(index);
   }
 
   function setDrawMode(mode) {
@@ -532,16 +580,19 @@
     showGate("已清除記住的 Token，請重新輸入 🧹", false);
   });
   document.getElementById("refreshBtn").addEventListener("click", loadEntries);
-  document.getElementById("jumpCreateBtn").addEventListener("click", () => document.getElementById("createCard").scrollIntoView({ behavior: "smooth" }));
-  document.getElementById("jumpCardsBtn").addEventListener("click", () => {
-    setView("cards");
-    document.getElementById("cardView").scrollIntoView({ behavior: "smooth" });
-  });
   document.querySelectorAll("[data-view]").forEach((button) => {
     button.addEventListener("click", () => setView(button.dataset.view));
   });
   document.querySelectorAll("[data-draw-mode]").forEach((button) => {
     button.addEventListener("click", () => setDrawMode(button.dataset.drawMode));
+  });
+  cardDrawFields.addEventListener("input", (event) => {
+    const match = String(event.target && event.target.name || "").match(/^cardName(\d+)$/);
+    if (match) updateCardPreview(Number(match[1]));
+  });
+  cardDrawFields.addEventListener("change", (event) => {
+    const match = String(event.target && event.target.name || "").match(/^cardName(\d+)$/);
+    if (match) updateCardPreview(Number(match[1]));
   });
   cardForm.addEventListener("submit", async (event) => {
     event.preventDefault();
