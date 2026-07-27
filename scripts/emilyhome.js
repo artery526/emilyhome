@@ -138,11 +138,12 @@
     entryListEl.innerHTML = visibleEntries.map((entry) => {
       const cover = mediaUrl(entry.coverImageUrl, entry.updatedAt || entry.id);
       const visibility = entry.visibility === "password" ? "私密密碼" : (entry.visibility === "locked" ? "上鎖" : "一般");
+      const meta = [entry.date || "", visibility].filter(Boolean).join(" · ");
       return '<article class="entry">'
         + (cover ? '<button class="cover-button" type="button" data-view-url="' + esc(cover) + '"><img class="cover" src="' + esc(cover) + '" alt=""></button>' : '<div class="cover"></div>')
         + '<div>'
           + '<div class="entry-title">' + esc(entry.title || "今天的心情") + '</div>'
-          + '<div class="entry-meta">' + esc(entry.date || "") + ' · ' + esc(entry.mood || "") + ' · ' + visibility + '</div>'
+          + '<div class="entry-meta">' + esc(meta) + '</div>'
           + '<div class="entry-meta">' + esc(entry.excerpt || "") + '</div>'
           + '<div class="toolbar"><button type="button" data-edit-id="' + esc(entry.id) + '">✏️ 編輯</button></div>'
         + '</div>'
@@ -234,7 +235,6 @@
           + '<option value="locked"' + (loaded.visibility === "locked" ? " selected" : "") + '>上鎖</option>'
           + '<option value="password"' + (loaded.visibility === "password" ? " selected" : "") + '>私密密碼</option>'
         + '</select></label>'
-        + '<label>心情<input name="mood" value="' + esc(loaded.mood || "") + '"></label>'
         + '<label>私密密碼<input name="entryPassword" type="password" placeholder="要更換密碼時填寫"></label>'
         + '<label class="full">快速標籤<input name="tags" value="' + esc((loaded.tags || []).join(",")) + '"></label>'
         + '<label class="full">日記內容<textarea name="content">' + esc(markdownBody(body.markdown || "")) + '</textarea></label>'
