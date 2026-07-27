@@ -78,31 +78,25 @@
       margin: 20px 0 12px;
     }
     .art-title {
-      display: inline-block;
-      font-family: "Segoe Print", "Comic Sans MS", "Microsoft JhengHei", cursive;
-      font-size: 34px;
-      line-height: 1.15;
-      color: #7e3651;
-      text-shadow:
-        0 2px 0 #fff,
-        0 6px 16px rgba(183, 92, 115, .28),
-        0 0 1px #7e3651;
-      padding: 6px 0;
+      display: block;
+      width: min(760px, 100%);
+      padding: 8px;
+      border-radius: 999px;
+      background:
+        linear-gradient(135deg, rgba(255, 250, 240, .76), rgba(247, 236, 224, .52)),
+        rgba(255, 255, 255, .18);
+      box-shadow:
+        0 12px 30px rgba(156, 96, 91, .14),
+        inset 0 1px 0 rgba(255, 255, 255, .64);
+      backdrop-filter: blur(2px);
     }
-    .art-title span {
-      background: linear-gradient(135deg, #7e3651, #c86986 48%, #496b5a);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-    .art-title::after {
-      content: "";
+    .art-title img {
       display: block;
       width: 100%;
-      height: 10px;
-      margin-top: -5px;
-      border-radius: 999px;
-      background: linear-gradient(90deg, rgba(255, 202, 214, .85), rgba(211, 231, 218, .9));
+      height: auto;
+      border-radius: 8px;
+      mix-blend-mode: multiply;
+      filter: saturate(1.06) contrast(.98) drop-shadow(0 8px 14px rgba(183, 92, 115, .14));
     }
     .section-head p, .muted { color: var(--muted); line-height: 1.55; }
     .toolbar {
@@ -455,7 +449,7 @@
     <section class="app" id="app" hidden>
       <section class="section-head">
         <div>
-          <h2 class="art-title"><span>🗓️ 時間軸與月曆</span></h2>
+          <h2 class="art-title"><img src="css.png" alt="時間軸與月曆"></h2>
           <p>先看最近狀態，再決定是否新增今天的記錄 🧸</p>
         </div>
       </section>
