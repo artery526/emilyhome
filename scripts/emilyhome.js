@@ -87,6 +87,7 @@
   let entries = [];
   let cards = [];
   let activeDate = "";
+  let activeCardMonth = "";
   let drawMode = "single";
   let apiBase = localStorage.getItem("emilyhome.apiBase") || defaultApiBase;
   let apiToken = localStorage.getItem("emilyhome.token") || "";
@@ -116,6 +117,8 @@
   const cardStatus = document.getElementById("cardStatus");
   const cardDrawFields = document.getElementById("cardDrawFields");
   const cardRecordList = document.getElementById("cardRecordList");
+  const cardTimelineYear = document.getElementById("cardTimelineYear");
+  const cardTimelineMonth = document.getElementById("cardTimelineMonth");
 
   apiBaseInput.value = apiBase;
   tokenInput.value = apiToken;
@@ -204,6 +207,47 @@
     return entries.filter((entry) => entry.type === "card" || entry.cardOnly || entry.cardDraw);
   }
 
+  function cardEntryMonth(entry) {
+    return String(entry.date || "").slice(0, 7);
+  }
+
+  function cardTimelineOptions() {
+    return Array.from(new Set(cardEntries().map(cardEntryMonth).filter(Boolean))).sort().reverse();
+  }
+
+  function syncCardTimelineFilters() {
+    const months = cardTimelineOptions();
+    if (!months.length) {
+      cardTimelineYear.innerHTML = '<option value="">尚無年份</option>';
+      cardTimelineMonth.innerHTML = '<option value="">尚無月份</option>';
+      activeCardMonth = "";
+      return;
+    }
+    if (!activeCardMonth || !months.includes(activeCardMonth)) activeCardMonth = months[0];
+    const years = Array.from(new Set(months.map((month) => month.slice(0, 4))));
+    const activeYear = activeCardMonth.slice(0, 4);
+    cardTimelineYear.innerHTML = years.map((year) => (
+      '<option value="' + year + '"' + (year === activeYear ? " selected" : "") + '>' + year + '年</option>'
+    )).join("");
+    syncCardTimelineMonths();
+  }
+
+  function syncCardTimelineMonths() {
+    const months = cardTimelineOptions();
+    const year = cardTimelineYear.value || (activeCardMonth ? activeCardMonth.slice(0, 4) : "");
+    const yearMonths = months.filter((month) => month.startsWith(year + "-"));
+    if (!yearMonths.length) {
+      cardTimelineMonth.innerHTML = '<option value="">尚無月份</option>';
+      activeCardMonth = "";
+      return;
+    }
+    if (!activeCardMonth || !yearMonths.includes(activeCardMonth)) activeCardMonth = yearMonths[0];
+    cardTimelineMonth.innerHTML = yearMonths.map((month) => {
+      const monthNumber = Number(month.slice(5, 7));
+      return '<option value="' + month + '"' + (month === activeCardMonth ? " selected" : "") + '>' + monthNumber + '月</option>';
+    }).join("");
+  }
+
   function renderEntries() {
     const visibleEntries = entriesForTimeline();
     if (!visibleEntries.length) {
@@ -259,6 +303,7 @@
     entries = Array.isArray(body.entries) ? body.entries : [];
     renderEntries();
     renderCalendar();
+    syncCardTimelineFilters();
     renderCardRecords();
   }
 
@@ -524,10 +569,10 @@
   }
 
   function renderCardRecords() {
-    const records = cardEntries();
+    const records = cardEntries().filter((entry) => !activeCardMonth || cardEntryMonth(entry) === activeCardMonth);
     if (!cardRecordList) return;
     if (!records.length) {
-      cardRecordList.innerHTML = '<p class="muted">目前還沒有卡牌記錄 🔮</p>';
+      cardRecordList.innerHTML = '<p class="muted">' + (activeCardMonth ? esc(activeCardMonth) + ' 沒有卡牌記錄 🔮' : '目前還沒有卡牌記錄 🔮') + '</p>';
       return;
     }
     cardRecordList.innerHTML = records.map((entry) => {
@@ -536,11 +581,12 @@
         ? draw.cards
         : [{ displayName: [draw.cardName, draw.position].filter(Boolean).join("") || "未抽取" }];
       const chips = drawCards.map((card) => '<span class="chip">' + esc(card.positionName ? card.positionName + "：" + card.displayName : card.displayName) + '</span>').join("");
+      const details = [draw.question, draw.reading || entry.excerpt].filter(Boolean).map((text) => '<div class="entry-meta">' + esc(text) + '</div>').join("");
       return '<article class="card-record">'
         + '<div class="entry-title">' + esc(entry.title || "卡牌記錄") + '</div>'
-        + '<div class="entry-meta">' + esc(entry.date || "") + ' · ' + esc(draw.spreadType || (drawCards.length >= 3 ? "三張" : "單張")) + '</div>'
+        + '<div class="entry-meta">' + esc([entry.date || "", entry.time || "", draw.spreadType || (drawCards.length >= 3 ? "三張" : "單張")].filter(Boolean).join(" · ")) + '</div>'
         + '<div class="chip-row">' + chips + '</div>'
-        + '<div class="entry-meta">' + esc(draw.question || entry.excerpt || "") + '</div>'
+        + details
       + '</article>';
     }).join("");
   }
@@ -573,6 +619,20 @@
 
   libraryYear.addEventListener("change", syncLibraryMonths);
   document.getElementById("loadLibraryBtn").addEventListener("click", loadLibraryMonth);
+  cardTimelineYear.addEventListener("change", () => {
+    activeCardMonth = "";
+    syncCardTimelineMonths();
+    activeCardMonth = cardTimelineMonth.value;
+    renderCardRecords();
+  });
+  cardTimelineMonth.addEventListener("change", () => {
+    activeCardMonth = cardTimelineMonth.value;
+    renderCardRecords();
+  });
+  document.getElementById("cardTimelineApply").addEventListener("click", () => {
+    activeCardMonth = cardTimelineMonth.value;
+    renderCardRecords();
+  });
   libraryGrid.addEventListener("click", (event) => {
     const card = event.target.closest("[data-library-id]");
     if (!card) return;
@@ -713,6 +773,7 @@
       cardForm.elements.date.valueAsDate = new Date();
       cardForm.elements.time.value = currentTime();
       setDrawMode("single");
+      activeCardMonth = date.slice(0, 7);
       await loadEntries();
     } catch (error) {
       cardStatus.className = "status error";

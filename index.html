@@ -47,11 +47,11 @@
     h1 { font-size: 22px; }
     .brand-logo {
       display: block;
-      width: min(280px, 52vw);
-      padding: 3px;
+      width: min(230px, 46vw);
+      padding: 2px;
       border-radius: 8px;
-      background: rgba(255, 250, 240, .26);
-      box-shadow: 0 6px 14px rgba(156, 96, 91, .07);
+      background: rgba(255, 250, 240, .14);
+      box-shadow: 0 4px 10px rgba(156, 96, 91, .045);
     }
     .brand-logo img {
       display: block;
@@ -59,7 +59,8 @@
       height: auto;
       border-radius: 8px;
       mix-blend-mode: multiply;
-      filter: saturate(1.04) contrast(.98);
+      opacity: .88;
+      filter: saturate(.96) contrast(.95);
     }
     main {
       max-width: 1240px;
@@ -428,7 +429,7 @@
       .form-grid, .library-controls, .card-draw-set { grid-template-columns: 1fr; }
       main { padding: 14px; }
       header { align-items: start; flex-direction: column; }
-      .brand-logo { width: min(240px, 82vw); }
+      .brand-logo { width: min(210px, 76vw); }
     }
   </style>
 </head>
@@ -546,6 +547,11 @@
           </section>
           <section class="card span-12">
             <h3>🃏 卡牌時間軸</h3>
+            <div class="library-controls">
+              <select id="cardTimelineYear"></select>
+              <select id="cardTimelineMonth"></select>
+              <button type="button" id="cardTimelineApply">顯示 ✨</button>
+            </div>
             <div class="card-record-list" id="cardRecordList"><p class="muted">載入中...</p></div>
           </section>
         </div>
