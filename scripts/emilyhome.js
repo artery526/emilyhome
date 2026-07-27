@@ -56,18 +56,23 @@
   function friendlyConnectionError(error) {
     const message = String(error && error.message || "");
     if (message.includes("Cannot GET /api/wife-journal/entries") || message.includes("404")) {
-      return "後端還沒更新或尚未重啟，請先重啟 ArkOS API 後再連線。";
+      return "後端還沒更新或尚未重啟，請先重啟 ArkOS API 後再連線 🛠️";
     }
     if (message.includes("Admin access required") || message.includes("401")) {
-      return "Token 沒有通過後端驗證，請確認輸入的是 ArkOS 後端目前使用的 ARKOS_UPLOAD_TOKEN。";
+      return "Token 沒有通過後端驗證，請確認輸入的是 ArkOS 後端目前使用的 ARKOS_UPLOAD_TOKEN 🔐";
     }
-    return "無法載入私密資料：" + (message || "連線失敗");
+    if (message.includes("Wall read token is required")) {
+      return "NAS Photos 讀取權限還沒通過，請重啟 ArkOS API 後再試一次 🖼️";
+    }
+    return "無法載入私密資料：" + (message || "連線失敗") + " 🌧️";
   }
 
   function mediaUrl(url, version) {
     if (!url) return "";
     const absolute = /^https?:\/\//i.test(url) ? url : apiUrl(url);
-    return absolute + (absolute.indexOf("?") >= 0 ? "&" : "?") + "v=" + encodeURIComponent(version || Date.now());
+    const params = ["v=" + encodeURIComponent(version || Date.now())];
+    if (apiToken) params.push("readToken=" + encodeURIComponent(apiToken));
+    return absolute + (absolute.indexOf("?") >= 0 ? "&" : "?") + params.join("&");
   }
 
   function parseTags() {
@@ -100,7 +105,7 @@
 
   function renderEntries() {
     if (!entries.length) {
-      entryListEl.innerHTML = '<p class="muted">目前還沒有心情日記。</p>';
+      entryListEl.innerHTML = '<p class="muted">目前還沒有心情日記 🐰</p>';
       return;
     }
     entryListEl.innerHTML = entries.map((entry) => {
@@ -132,7 +137,7 @@
   }
 
   async function loadEntries() {
-    entryListEl.innerHTML = '<p class="muted">載入中...</p>';
+    entryListEl.innerHTML = '<p class="muted">載入中... ✨</p>';
     const body = await fetch(apiUrl("/api/wife-journal/entries"), { cache: "no-store", headers: headers() }).then(readJson);
     entries = Array.isArray(body.entries) ? body.entries : [];
     renderEntries();
@@ -144,14 +149,14 @@
   }
 
   async function openEntry(id) {
-    detailEl.textContent = "讀取中...";
+    detailEl.textContent = "讀取中... 📖";
     try {
       let url = apiUrl("/api/wife-journal/entries/" + encodeURIComponent(id));
       const entry = entries.find((item) => item.id === id);
       if (entry && entry.visibility === "password") {
         const password = window.prompt("請輸入這篇文章的私密密碼");
         if (!password) {
-          detailEl.textContent = "已取消開啟私密文章。";
+            detailEl.textContent = "已取消開啟私密文章 🔐";
           return;
         }
         url += "?password=" + encodeURIComponent(password);
@@ -189,7 +194,7 @@
       libraryYear.innerHTML = years.map((year) => '<option value="' + year + '">' + year + '年</option>').join("");
       libraryYear.dataset.options = JSON.stringify(options);
       syncLibraryMonths();
-      libraryStatus.textContent = options.length ? "選擇年月後載入 NAS Photos。" : "尚未建立 Photos 索引。";
+      libraryStatus.textContent = options.length ? "選擇年月後載入 NAS Photos 🖼️" : "尚未建立 Photos 索引 🌙";
     } catch (error) {
       libraryStatus.textContent = error.message;
       libraryStatus.className = "status error";
@@ -206,7 +211,7 @@
     const year = libraryYear.value;
     const month = libraryMonth.value;
     if (!year || !month) return;
-    libraryStatus.textContent = "載入 Photos 中...";
+    libraryStatus.textContent = "載入 Photos 中... 🖼️";
     try {
       const body = await fetch(apiUrl("/api/photo-library/months/" + encodeURIComponent(year) + "/" + encodeURIComponent(month)), { cache: "no-store", headers: headers() }).then(readJson);
       const items = (body.items || []).filter((item) => item.type === "photo");
@@ -217,7 +222,7 @@
           + '<img src="' + esc(url) + '" alt="' + esc(item.fileName || id) + '" loading="lazy">'
         + '</button>';
       }).join("");
-      libraryStatus.textContent = "可插入照片 " + items.length + " 張。";
+      libraryStatus.textContent = "可插入照片 " + items.length + " 張 ✨";
       libraryStatus.className = "status";
     } catch (error) {
       libraryStatus.textContent = error.message;
@@ -244,7 +249,7 @@
     localStorage.setItem("emilyhome.apiBase", apiBase);
     if (apiToken) localStorage.setItem("emilyhome.token", apiToken);
     else localStorage.removeItem("emilyhome.token");
-    gateStatus.textContent = "連線中...";
+    gateStatus.textContent = "連線中... 🌙";
     try {
       await loadEntries();
       await loadLibrarySummary();
@@ -284,7 +289,7 @@
     event.preventDefault();
     const button = form.querySelector("button[type='submit']");
     button.disabled = true;
-    statusEl.textContent = "寫入 NAS 中...";
+      statusEl.textContent = "寫入 NAS 中... 📮";
     statusEl.className = "status";
     try {
       const data = new FormData(form);
@@ -299,7 +304,7 @@
       }
       const body = await fetch(apiUrl("/api/wife-journal/entries"), { method: "POST", headers: headers(), body: data }).then(readJson);
       statusEl.className = "status ok";
-      statusEl.textContent = "已寫入 NAS：" + body.entry.title;
+      statusEl.textContent = "已寫入 NAS：" + body.entry.title + " ✨";
       form.reset();
       form.elements.date.valueAsDate = new Date();
       selectedLibraryImages.clear();
@@ -318,7 +323,7 @@
     localStorage.removeItem("emilyhome.token");
     apiToken = "";
     tokenInput.value = "";
-    showGate("已清除記住的 Token，請重新輸入。", false);
+    showGate("已清除記住的 Token，請重新輸入 🧹", false);
   });
   document.getElementById("refreshBtn").addEventListener("click", loadEntries);
   document.getElementById("jumpCreateBtn").addEventListener("click", () => document.getElementById("createCard").scrollIntoView({ behavior: "smooth" }));

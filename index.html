@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>emilyhome</title>
-  <meta name="description" content="Emily 的私密心情日記、照片與抽牌記錄入口。">
+  <title>Emily's Home</title>
+  <meta name="description" content="Emily's Home：私密心情日記、照片與抽牌記錄入口。">
   <style>
     :root {
       color-scheme: light;
@@ -22,7 +22,10 @@
     body {
       margin: 0;
       min-height: 100vh;
-      background: var(--paper);
+      background:
+        linear-gradient(90deg, rgba(251, 250, 246, .92), rgba(251, 250, 246, .72)),
+        url("assets/bunny-bear-bg.png") center top / cover fixed,
+        var(--paper);
       color: var(--ink);
       font-family: "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif;
       letter-spacing: 0;
@@ -55,11 +58,12 @@
       align-items: start;
     }
     .card {
-      background: var(--panel);
+      background: rgba(255, 255, 255, .9);
       border: 1px solid var(--line);
       border-radius: 8px;
       padding: 16px;
       box-shadow: 0 12px 28px rgba(39, 49, 45, .06);
+      backdrop-filter: blur(8px);
     }
     .span-4 { grid-column: span 4; }
     .span-5 { grid-column: span 5; }
@@ -238,20 +242,20 @@
 <body>
   <header>
     <div>
-      <h1>emilyhome</h1>
-      <p class="top-note">Emily 的心情日記、照片與抽牌記錄。</p>
+      <h1>Emily's Home 🐰🧸</h1>
+      <p class="top-note">Emily 的心情日記、照片與抽牌記錄 ✨</p>
     </div>
     <div class="toolbar">
-      <button class="ghost" type="button" id="refreshBtn">重新整理</button>
-      <button class="primary" type="button" id="jumpCreateBtn">新增心情</button>
+      <button class="ghost" type="button" id="refreshBtn">🔄 重新整理</button>
+      <button class="primary" type="button" id="jumpCreateBtn">💌 新增心情</button>
     </div>
   </header>
 
   <main>
     <section class="gate" id="gate">
       <div class="card">
-        <h2>需要連線到私密後端</h2>
-        <p class="muted">這個 GitHub Pages 入口不會直接存放或顯示文章內容。通過後端登入後，才會載入時間軸、月曆、照片與抽牌記錄。</p>
+        <h2>🔐 需要連線到私密後端</h2>
+        <p class="muted">這個 GitHub Pages 入口不會直接存放或顯示文章內容。通過後端登入後，才會載入時間軸、月曆、照片與抽牌記錄 🐰✨</p>
         <div class="form-grid" style="margin-top:14px">
           <label class="full">API 位置
             <input id="apiBaseInput" placeholder="例如 https://api.ark-os26.cc">
@@ -259,8 +263,8 @@
           <label class="full">本機測試 Token
             <input id="tokenInput" type="password" placeholder="正式 Cloudflare Access 可留空">
           </label>
-          <button class="primary full" type="button" id="connectBtn">連線</button>
-          <button class="ghost full" type="button" id="clearTokenBtn">清除已記住的 Token</button>
+          <button class="primary full" type="button" id="connectBtn">🌙 連線</button>
+          <button class="ghost full" type="button" id="clearTokenBtn">🧹 清除已記住的 Token</button>
         </div>
         <p class="status" id="gateStatus"></p>
       </div>
@@ -269,22 +273,22 @@
     <section class="app" id="app" hidden>
       <section class="section-head">
         <div>
-          <h2>時間軸與月曆</h2>
-          <p>先看最近狀態，再決定是否新增今天的記錄。</p>
+          <h2>🗓️ 時間軸與月曆</h2>
+          <p>先看最近狀態，再決定是否新增今天的記錄 🧸</p>
         </div>
       </section>
       <div class="grid">
         <section class="card span-7">
-          <h3>時間軸</h3>
+          <h3>🌿 時間軸</h3>
           <div class="entry-list" id="entryList"><p class="muted">載入中...</p></div>
         </section>
         <section class="card span-5">
-          <h3>本月月曆</h3>
+          <h3>🌙 本月月曆</h3>
           <div class="calendar" id="calendar"></div>
         </section>
 
         <section class="card span-8" id="createCard">
-          <h3>新增心情日記</h3>
+          <h3>💌 新增心情日記</h3>
           <form id="entryForm" class="form-grid">
             <label>日期<input name="date" type="date" required></label>
             <label>文章權限
@@ -325,25 +329,25 @@
             <datalist id="cardOptions"></datalist>
             <label class="full">抽牌問題<input name="cardQuestion" placeholder="今天我需要知道什麼？"></label>
             <label class="full">抽牌解讀<textarea name="cardReading" placeholder="自己的直覺解讀與感受"></textarea></label>
-            <button class="primary full" type="submit">寫入 NAS</button>
+          <button class="primary full" type="submit">📮 寫入 NAS</button>
           </form>
           <p class="status" id="formStatus"></p>
         </section>
 
         <section class="card span-4">
-          <h3>NAS Photos 選圖</h3>
+          <h3>🖼️ NAS Photos 選圖</h3>
           <div class="library-controls">
             <select id="libraryYear"></select>
             <select id="libraryMonth"></select>
-            <button type="button" id="loadLibraryBtn">載入</button>
+          <button type="button" id="loadLibraryBtn">載入 ✨</button>
           </div>
           <p class="status" id="libraryStatus">尚未載入 Photos。</p>
           <div class="media-grid" id="libraryGrid"></div>
         </section>
 
         <section class="card span-12">
-          <h3>文章內容</h3>
-          <div class="detail" id="entryDetail">點選時間軸文章後顯示全文。私密密碼文章會先要求密碼。</div>
+          <h3>📖 文章內容</h3>
+          <div class="detail" id="entryDetail">點選時間軸文章後顯示全文。私密密碼文章會先要求密碼 🔐</div>
         </section>
       </div>
     </section>
