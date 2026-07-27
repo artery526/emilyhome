@@ -45,9 +45,23 @@
   }
 
   async function readJson(response) {
-    const body = await response.json().catch(() => ({}));
+    const contentType = response.headers.get("content-type") || "";
+    const body = contentType.includes("application/json")
+      ? await response.json().catch(() => ({}))
+      : { error: await response.text().catch(() => "") };
     if (!response.ok) throw new Error(body.error || "Request failed");
     return body;
+  }
+
+  function friendlyConnectionError(error) {
+    const message = String(error && error.message || "");
+    if (message.includes("Cannot GET /api/wife-journal/entries") || message.includes("404")) {
+      return "後端還沒更新或尚未重啟，請先重啟 ArkOS API 後再連線。";
+    }
+    if (message.includes("Admin access required") || message.includes("401")) {
+      return "Token 沒有通過後端驗證，請確認輸入的是 ArkOS 後端目前使用的 ARKOS_UPLOAD_TOKEN。";
+    }
+    return "無法載入私密資料：" + (message || "連線失敗");
   }
 
   function mediaUrl(url, version) {
@@ -237,7 +251,7 @@
       await loadCards();
       showApp();
     } catch (error) {
-      showGate("無法載入私密資料：" + error.message, true);
+      showGate(friendlyConnectionError(error), true);
     }
   }
 
@@ -300,6 +314,12 @@
   });
 
   document.getElementById("connectBtn").addEventListener("click", connect);
+  document.getElementById("clearTokenBtn").addEventListener("click", () => {
+    localStorage.removeItem("emilyhome.token");
+    apiToken = "";
+    tokenInput.value = "";
+    showGate("已清除記住的 Token，請重新輸入。", false);
+  });
   document.getElementById("refreshBtn").addEventListener("click", loadEntries);
   document.getElementById("jumpCreateBtn").addEventListener("click", () => document.getElementById("createCard").scrollIntoView({ behavior: "smooth" }));
   form.elements.date.valueAsDate = new Date();
