@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>emilyhome</title>
+  <meta name="description" content="Emily 的私密心情日記、照片與抽牌記錄入口。">
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #26302c;
+      --muted: #6b766f;
+      --line: #dce3de;
+      --paper: #fbfaf6;
+      --panel: #ffffff;
+      --sage: #496b5a;
+      --rose: #b75c73;
+      --mist: #eef4ef;
+      --danger: #a54848;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif;
+      letter-spacing: 0;
+    }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 4;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px 20px;
+      background: rgba(251, 250, 246, .94);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(12px);
+    }
+    h1, h2, h3, p { margin: 0; }
+    h1 { font-size: 22px; }
+    .top-note { color: var(--muted); font-size: 13px; }
+    main {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 22px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 16px;
+      align-items: start;
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: 0 12px 28px rgba(39, 49, 45, .06);
+    }
+    .span-4 { grid-column: span 4; }
+    .span-5 { grid-column: span 5; }
+    .span-7 { grid-column: span 7; }
+    .span-8 { grid-column: span 8; }
+    .span-12 { grid-column: span 12; }
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 16px;
+      margin: 20px 0 12px;
+    }
+    .section-head p, .muted { color: var(--muted); line-height: 1.55; }
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 12px 0;
+    }
+    button, input, select, textarea {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      min-height: 40px;
+      padding: 8px 10px;
+      font: inherit;
+      background: #fff;
+      color: var(--ink);
+    }
+    button { cursor: pointer; }
+    button.primary {
+      background: var(--sage);
+      border-color: var(--sage);
+      color: #fff;
+    }
+    button.ghost { background: var(--mist); }
+    label {
+      display: grid;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    input, select, textarea { width: 100%; }
+    textarea { min-height: 120px; resize: vertical; }
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .full { grid-column: 1 / -1; }
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .tag {
+      border-radius: 999px;
+      background: var(--mist);
+      color: var(--sage);
+      border-color: #d2ddd5;
+      min-height: 34px;
+    }
+    .tag.active {
+      background: var(--sage);
+      color: #fff;
+    }
+    .entry-list {
+      display: grid;
+      gap: 10px;
+    }
+    .entry {
+      display: grid;
+      grid-template-columns: 74px 1fr;
+      gap: 12px;
+      align-items: center;
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 8px;
+      padding: 10px;
+    }
+    .cover {
+      width: 74px;
+      height: 74px;
+      border-radius: 8px;
+      object-fit: cover;
+      background: var(--mist);
+    }
+    .entry-title {
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .entry-meta {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .calendar {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+    }
+    .day {
+      min-height: 50px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 7px;
+      background: #fff;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .day.has-entry {
+      background: #f4e9ed;
+      color: var(--rose);
+      border-color: #e6cdd5;
+    }
+    .library-controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .media-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(82px, 1fr));
+      gap: 8px;
+      max-height: 320px;
+      overflow: auto;
+      padding: 4px;
+    }
+    .media-card {
+      position: relative;
+      border: 2px solid transparent;
+      border-radius: 8px;
+      padding: 0;
+      overflow: hidden;
+      background: var(--mist);
+      aspect-ratio: 1;
+    }
+    .media-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .media-card.active { border-color: var(--rose); }
+    .status {
+      white-space: pre-wrap;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 13px;
+    }
+    .status.error { color: var(--danger); }
+    .status.ok { color: var(--sage); }
+    .detail {
+      white-space: pre-wrap;
+      line-height: 1.7;
+      color: var(--ink);
+    }
+    .gate {
+      min-height: 52vh;
+      display: grid;
+      place-items: center;
+    }
+    .gate .card {
+      width: min(620px, 100%);
+    }
+    .app[hidden], .gate[hidden] { display: none; }
+    @media (max-width: 900px) {
+      .span-4, .span-5, .span-7, .span-8 { grid-column: span 12; }
+      .form-grid, .library-controls { grid-template-columns: 1fr; }
+      main { padding: 14px; }
+      header { align-items: start; flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>emilyhome</h1>
+      <p class="top-note">Emily 的心情日記、照片與抽牌記錄。</p>
+    </div>
+    <div class="toolbar">
+      <button class="ghost" type="button" id="refreshBtn">重新整理</button>
+      <button class="primary" type="button" id="jumpCreateBtn">新增心情</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="gate" id="gate">
+      <div class="card">
+        <h2>需要連線到私密後端</h2>
+        <p class="muted">這個 GitHub Pages 入口不會直接存放或顯示文章內容。通過後端登入後，才會載入時間軸、月曆、照片與抽牌記錄。</p>
+        <div class="form-grid" style="margin-top:14px">
+          <label class="full">API 位置
+            <input id="apiBaseInput" placeholder="例如 https://api.ark-os26.cc">
+          </label>
+          <label class="full">本機測試 Token
+            <input id="tokenInput" type="password" placeholder="正式 Cloudflare Access 可留空">
+          </label>
+          <button class="primary full" type="button" id="connectBtn">連線</button>
+        </div>
+        <p class="status" id="gateStatus"></p>
+      </div>
+    </section>
+
+    <section class="app" id="app" hidden>
+      <section class="section-head">
+        <div>
+          <h2>時間軸與月曆</h2>
+          <p>先看最近狀態，再決定是否新增今天的記錄。</p>
+        </div>
+      </section>
+      <div class="grid">
+        <section class="card span-7">
+          <h3>時間軸</h3>
+          <div class="entry-list" id="entryList"><p class="muted">載入中...</p></div>
+        </section>
+        <section class="card span-5">
+          <h3>本月月曆</h3>
+          <div class="calendar" id="calendar"></div>
+        </section>
+
+        <section class="card span-8" id="createCard">
+          <h3>新增心情日記</h3>
+          <form id="entryForm" class="form-grid">
+            <label>日期<input name="date" type="date" required></label>
+            <label>文章權限
+              <select name="visibility">
+                <option value="normal">一般</option>
+                <option value="locked">上鎖</option>
+                <option value="password">私密密碼</option>
+              </select>
+            </label>
+            <label>標題<input name="title" placeholder="今天的心情"></label>
+            <label>私密密碼<input name="entryPassword" type="password" placeholder="選擇私密密碼時填寫"></label>
+            <label>心情
+              <select name="mood">
+                <option value="平靜">平靜</option>
+                <option value="開心">開心</option>
+                <option value="焦慮">焦慮</option>
+                <option value="低落">低落</option>
+                <option value="疲憊">疲憊</option>
+              </select>
+            </label>
+            <label>心情分數<input name="moodScore" type="number" min="1" max="5" value="3"></label>
+            <label class="full">快速標籤
+              <input name="tags" id="tagsInput" placeholder="可手動補標籤，用逗號分隔">
+            </label>
+            <div class="tag-row full" id="tagPicker"></div>
+            <label class="full">日記內容<textarea name="content" required placeholder="今天發生什麼？我想留下什麼？"></textarea></label>
+            <label>上傳照片<input name="media" type="file" accept="image/*,.heic,.heif" multiple></label>
+            <label>語音備忘<input name="media" type="file" accept="audio/*,.m4a,.mp3,.wav,.webm" multiple></label>
+            <label>抽牌牌名<input name="cardName" list="cardOptions" placeholder="可從醫館牌卡資料庫選擇"></label>
+            <label>正逆位
+              <select name="cardPosition">
+                <option value="">未指定</option>
+                <option value="正位">正位</option>
+                <option value="逆位">逆位</option>
+              </select>
+            </label>
+            <input name="cardId" type="hidden">
+            <datalist id="cardOptions"></datalist>
+            <label class="full">抽牌問題<input name="cardQuestion" placeholder="今天我需要知道什麼？"></label>
+            <label class="full">抽牌解讀<textarea name="cardReading" placeholder="自己的直覺解讀與感受"></textarea></label>
+            <button class="primary full" type="submit">寫入 NAS</button>
+          </form>
+          <p class="status" id="formStatus"></p>
+        </section>
+
+        <section class="card span-4">
+          <h3>NAS Photos 選圖</h3>
+          <div class="library-controls">
+            <select id="libraryYear"></select>
+            <select id="libraryMonth"></select>
+            <button type="button" id="loadLibraryBtn">載入</button>
+          </div>
+          <p class="status" id="libraryStatus">尚未載入 Photos。</p>
+          <div class="media-grid" id="libraryGrid"></div>
+        </section>
+
+        <section class="card span-12">
+          <h3>文章內容</h3>
+          <div class="detail" id="entryDetail">點選時間軸文章後顯示全文。私密密碼文章會先要求密碼。</div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <script src="scripts/emilyhome.js"></script>
+</body>
+</html>
