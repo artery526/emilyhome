@@ -48,6 +48,10 @@
     h1 { font-size: 22px; }
     .brand-logo {
       display: block;
+      position: fixed;
+      top: 14px;
+      left: 20px;
+      z-index: 6;
       width: min(230px, 46vw);
       padding: 2px;
       border-radius: 8px;
@@ -420,7 +424,11 @@
       .form-grid, .library-controls, .card-draw-set { grid-template-columns: 1fr; }
       main { padding: 104px 14px 14px; }
       header { align-items: start; }
-      .brand-logo { width: min(210px, 76vw); }
+      .brand-logo {
+        top: 14px;
+        left: 14px;
+        width: min(210px, 76vw);
+      }
       .view-tabs {
         position: sticky;
         top: 92px;
