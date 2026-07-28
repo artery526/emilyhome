@@ -257,7 +257,7 @@
     entryListEl.innerHTML = visibleEntries.map((entry) => {
       const cover = mediaUrl(entry.coverImageUrl, entry.updatedAt || entry.id);
       const visibility = entry.visibility === "password" ? "私密密碼" : (entry.visibility === "locked" ? "上鎖" : "一般");
-      const meta = [entry.date || "", visibility].filter(Boolean).join(" · ");
+      const meta = [entry.date || "", entry.time || "", visibility].filter(Boolean).join(" · ");
       return '<article class="entry">'
         + (cover ? '<button class="cover-button" type="button" data-view-url="' + esc(cover) + '"><img class="cover" src="' + esc(cover) + '" alt=""></button>' : '<div class="cover"></div>')
         + '<div>'
@@ -349,6 +349,8 @@
       const body = await fetch(url, { cache: "no-store", headers: headers() }).then(readJson);
       const loaded = body.entry || {};
       detailEl.innerHTML = '<form id="editEntryForm" class="form-grid" data-entry-id="' + esc(loaded.id) + '">'
+        + '<label>日期<input name="date" type="date" value="' + esc(loaded.date || "") + '" required></label>'
+        + '<label>時間<input name="time" type="time" step="60" value="' + esc(loaded.time || "") + '"></label>'
         + '<label>標題<input name="title" value="' + esc(loaded.title || "") + '"></label>'
         + '<label>文章權限<select name="visibility">'
           + '<option value="normal"' + (loaded.visibility === "normal" ? " selected" : "") + '>一般</option>'
@@ -733,6 +735,7 @@
       statusEl.textContent = "已記錄：" + body.entry.title + " ✨";
       form.reset();
       form.elements.date.valueAsDate = new Date();
+      form.elements.time.value = currentTime();
       selectedLibraryImages.clear();
       renderTagPicker();
       await loadEntries();
@@ -815,6 +818,7 @@
     return String(now.getHours()).padStart(2, "0") + ":" + String(now.getMinutes()).padStart(2, "0");
   }
   form.elements.date.valueAsDate = new Date();
+  form.elements.time.value = currentTime();
   cardForm.elements.date.valueAsDate = new Date();
   cardForm.elements.time.value = currentTime();
   renderCardDrawFields();
