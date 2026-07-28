@@ -24,12 +24,36 @@ Expected ArkOS API routes:
 GET  /api/wife-journal/entries
 GET  /api/wife-journal/entries/:id
 POST /api/wife-journal/entries
+PUT  /api/wife-journal/entries/:id
+DELETE /api/wife-journal/entries/:id
 GET  /api/wife-journal/card-records
 POST /api/wife-journal/card-records
 GET  /api/wife-journal/cards
 GET  /api/photo-library/summary
 GET  /api/photo-library/months/:year/:month
 ```
+
+## Related Systems
+
+Emily's Home should stay isolated from the Empire Control tools unless a feature explicitly needs shared data.
+
+```text
+Emily's Home frontend:     D:\emilyhome
+ArkOS / Wall backend:      D:\ArkOS26\src\server.js
+Empire Control frontend:   D:\wealth-dashboard\index.html
+Empire backend / Sheets:   D:\WebApp
+Empire Android app:        D:\WebApp\EmpireAndroid
+Emily card spreadsheet:    1GQBYT2jcNa9D6G39tntT5UfetXpgwfKYZ2h5fSy3bV8
+Emily workshop:            path to confirm before editing
+```
+
+Keep these boundaries:
+
+- Journal UI, layout, logo, background, mobile behavior: edit `D:\emilyhome`.
+- Journal records, NAS Photos sync, photo library API, card API: edit `D:\ArkOS26\src\server.js`.
+- Empire Control dashboard features: edit `D:\wealth-dashboard\index.html` and related `D:\WebApp` Apps Script files.
+- Android app behavior: edit `D:\WebApp\EmpireAndroid`.
+- Spreadsheet formulas or tab structure: edit the relevant Google Sheet or Apps Script writer.
 
 ## Privacy Model
 
