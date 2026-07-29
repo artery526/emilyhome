@@ -95,6 +95,7 @@
   let drawMode = "single";
   let apiBase = localStorage.getItem("emilyhome.apiBase") || defaultApiBase;
   let apiToken = localStorage.getItem("emilyhome.token") || "";
+  let sheetToken = localStorage.getItem("emilyhome.sheetToken") || "";
 
   const gate = document.getElementById("gate");
   const app = document.getElementById("app");
@@ -132,9 +133,11 @@
   const bodyForm = document.getElementById("bodyForm");
   const bodyRecordList = document.getElementById("bodyRecordList");
   const bodyDayTitle = document.getElementById("bodyDayTitle");
+  const sheetTokenInput = document.getElementById("sheetTokenInput");
 
   apiBaseInput.value = apiBase;
   tokenInput.value = apiToken;
+  sheetTokenInput.value = sheetToken;
 
   function esc(value) {
     return String(value == null ? "" : value)
@@ -161,10 +164,18 @@
     return body;
   }
 
+  function currentSheetToken() {
+    sheetToken = sheetTokenInput.value.trim();
+    if (sheetToken) localStorage.setItem("emilyhome.sheetToken", sheetToken);
+    else localStorage.removeItem("emilyhome.sheetToken");
+    return sheetToken || apiToken;
+  }
+
   function sheetRequest(action, params) {
-    if (!apiToken) return Promise.reject(new Error("請先輸入 Token 後再使用身體記錄 🔐"));
+    const token = currentSheetToken();
+    if (!token) return Promise.reject(new Error("請先輸入試算表寫入 Token 後再使用身體記錄 🔐"));
     const callback = "__emilySheetCallback" + Date.now() + Math.random().toString(36).slice(2);
-    const query = new URLSearchParams({ action, token: apiToken, callback });
+    const query = new URLSearchParams({ action, token, callback });
     Object.entries(params || {}).forEach(([key, value]) => {
       if (value != null && value !== "") query.set(key, value);
     });
@@ -181,7 +192,10 @@
       }
       window[callback] = (payload) => {
         cleanup();
-        if (!payload || payload.ok === false) reject(new Error((payload && payload.error) || "Google Sheet 寫入失敗"));
+        if (!payload || payload.ok === false) {
+          const message = String((payload && payload.error) || "Google Sheet 寫入失敗");
+          reject(new Error(message.includes("密鑰") || message.includes("Token") ? "試算表寫入 Token 沒通過驗證，請確認輸入的是 Apps Script 使用的寫入密鑰 🔐" : message));
+        }
         else resolve(payload.data || {});
       };
       script.onerror = () => {
