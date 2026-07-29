@@ -1,6 +1,6 @@
 (function () {
   const defaultApiBase = "https://api.ark-os26.cc";
-  const sheetAppUrl = "https://script.google.com/macros/s/AKfycbz1Ndp8oT7penjejzs4LZxBnc1pmnmr_uoV4sGZJLmlRVEiK3vpcPtOtkvQASFiS4Hb/exec";
+  const sheetAppUrl = "https://script.google.com/macros/s/AKfycbzRv_7W-jw-3PphYvyCRqRgbXhuMCaWQZPs1bgYgrTGQ0-ND2lCaQ9o39oZH6dHoPXr/exec";
   const tags = ["工作", "家人", "感情", "健康", "睡眠", "夢境", "感謝", "低潮"];
   const fallbackCards = [
     { name: "0.愚者", imageUrl: "https://drive.google.com/file/d/1O_yGudgr5djUHNnN8o5K2x44yBj2lTgi/view?usp=sharing" },
@@ -144,6 +144,7 @@
   apiBaseInput.value = apiBase;
   tokenInput.value = apiToken;
   sheetTokenInput.value = sheetToken;
+  updateEntryPasswordField(form);
 
   function esc(value) {
     return String(value == null ? "" : value)
@@ -201,6 +202,49 @@
     const nextHidden = !panel.hidden;
     panel.hidden = nextHidden;
     button.setAttribute("aria-expanded", String(!nextHidden));
+  }
+
+  function updateEntryPasswordField(targetForm) {
+    const visibility = targetForm.elements.visibility && targetForm.elements.visibility.value;
+    const passwordInput = targetForm.elements.entryPassword;
+    if (!passwordInput) return;
+    const locked = visibility === "password";
+    passwordInput.closest("label").hidden = !locked;
+    passwordInput.required = locked && targetForm.id === "entryForm";
+    passwordInput.placeholder = locked
+      ? "輸入解鎖密碼，會同步到試算表"
+      : "選擇上鎖後填寫";
+    if (!locked) passwordInput.value = "";
+  }
+
+  function journalPasswordSyncText(result) {
+    if (!result || result.enabled === false || result.skipped) return "";
+    if (result.ok) return " 解鎖密碼已同步到試算表 🔐";
+    return " 但解鎖密碼沒有同步到試算表：" + (result.error || "未知錯誤");
+  }
+
+  async function syncJournalPasswordFromBrowser(entry, data, serverResult) {
+    if (serverResult && serverResult.ok) return serverResult;
+    const visibility = String(data.get("visibility") || entry.visibility || "normal");
+    const password = String(data.get("entryPassword") || "").trim();
+    if (visibility !== "password" || !password) return serverResult;
+    try {
+      const result = await sheetRequest("emilyJournalPasswordSave", {
+        entryId: entry.id || entry.slug || "",
+        date: data.get("date") || entry.date || "",
+        time: data.get("time") || entry.time || "",
+        title: data.get("title") || entry.title || "",
+        visibility,
+        password,
+      });
+      return { enabled: true, ok: true, data: result };
+    } catch (error) {
+      return {
+        enabled: true,
+        ok: false,
+        error: error.message,
+      };
+    }
   }
 
   function sheetRequest(action, params) {
@@ -559,7 +603,7 @@
     }
     entryListEl.innerHTML = visibleEntries.map((entry) => {
       const cover = mediaUrl(entry.coverImageUrl, entry.updatedAt || entry.id);
-      const visibility = entry.visibility === "password" ? "私密密碼" : (entry.visibility === "locked" ? "上鎖" : "一般");
+      const visibility = entry.visibility === "password" || entry.visibility === "locked" ? "上鎖" : "不上鎖";
       const meta = [entry.date || "", entry.time || "", visibility].filter(Boolean).join(" · ");
       return '<article class="entry" data-read-id="' + esc(entry.id) + '">'
         + (cover ? '<button class="cover-button" type="button" data-view-url="' + esc(cover) + '"><img class="cover" src="' + esc(cover) + '" alt=""></button>' : '<div class="cover"></div>')
@@ -616,7 +660,7 @@
 
   function entryPasswordQuery(entry) {
     if (entry && entry.visibility === "password") {
-      const password = window.prompt("請輸入這篇文章的私密密碼");
+      const password = window.prompt("請輸入這篇文章的解鎖密碼");
       if (!password) return null;
       return "?password=" + encodeURIComponent(password);
     }
@@ -650,7 +694,7 @@
       url += query;
       const body = await fetch(url, { cache: "no-store", headers: headers() }).then(readJson);
       const loaded = body.entry || {};
-      const visibility = loaded.visibility === "password" ? "私密密碼" : (loaded.visibility === "locked" ? "上鎖" : "一般");
+      const visibility = loaded.visibility === "password" || loaded.visibility === "locked" ? "上鎖" : "不上鎖";
       const media = Array.isArray(loaded.media) ? loaded.media : [];
       detailEl.innerHTML = '<article class="reader-entry">'
         + '<div class="entry-title">' + esc(loaded.title || "今天的心情") + '</div>'
@@ -706,11 +750,10 @@
         + '<label>時間<input name="time" type="time" step="60" value="' + esc(loaded.time || "") + '"></label>'
         + '<label>標題<input name="title" value="' + esc(loaded.title || "") + '"></label>'
         + '<label>文章權限<select name="visibility">'
-          + '<option value="normal"' + (loaded.visibility === "normal" ? " selected" : "") + '>一般</option>'
-          + '<option value="locked"' + (loaded.visibility === "locked" ? " selected" : "") + '>上鎖</option>'
-          + '<option value="password"' + (loaded.visibility === "password" ? " selected" : "") + '>私密密碼</option>'
+          + '<option value="normal"' + (loaded.visibility === "normal" ? " selected" : "") + '>不上鎖</option>'
+          + '<option value="password"' + (loaded.visibility === "password" || loaded.visibility === "locked" ? " selected" : "") + '>上鎖</option>'
         + '</select></label>'
-        + '<label>私密密碼<input name="entryPassword" type="password" placeholder="要更換密碼時填寫"></label>'
+        + '<label>解鎖密碼<input name="entryPassword" type="password" placeholder="上鎖或更換密碼時填寫，會同步到試算表"></label>'
         + '<label class="full">快速標籤<input name="tags" value="' + esc((loaded.tags || []).join(",")) + '"></label>'
         + '<label class="full">日記內容<textarea name="content">' + esc(markdownBody(body.markdown || "")) + '</textarea></label>'
         + '<div class="full"><h3>照片與語音</h3><div class="edit-media-grid">' + ((loaded.media || []).map(mediaPreview).join("") || '<p class="muted">沒有附件</p>') + '</div></div>'
@@ -719,6 +762,7 @@
         + '<div class="upload-status-list full" id="editUploadStatus"></div>'
         + '<button class="primary full" type="submit">🧸 儲存編輯</button>'
       + '</form>';
+      updateEntryPasswordField(detailEl.querySelector("#editEntryForm"));
     } catch (error) {
       detailEl.textContent = error.message;
     }
@@ -1113,7 +1157,12 @@
 
   detailEl.addEventListener("change", (event) => {
     const editForm = event.target.closest("#editEntryForm");
-    if (!editForm || !event.target.matches('input[type="file"][name="media"]')) return;
+    if (!editForm) return;
+    if (event.target.matches('[name="visibility"]')) {
+      updateEntryPasswordField(editForm);
+      return;
+    }
+    if (!event.target.matches('input[type="file"][name="media"]')) return;
     renderUploadStatuses(editForm.querySelector("#editUploadStatus"), selectedUploadFiles(editForm), "waiting");
   });
 
@@ -1137,7 +1186,9 @@
         headers: headers(),
         body: data,
       }).then(readJson);
-      detailEl.innerHTML = '<p class="status ok">已更新：' + esc(body.entry.title || "心情日記") + ' ✨</p>';
+      const passwordSheetSync = await syncJournalPasswordFromBrowser(body.entry || {}, data, body.passwordSheetSync);
+      const syncMessage = journalPasswordSyncText(passwordSheetSync);
+      detailEl.innerHTML = '<p class="status ok">已更新：' + esc(body.entry.title || "心情日記") + ' ✨' + esc(syncMessage) + '</p>';
       if (uploadFiles.length) {
         detailEl.insertAdjacentHTML("beforeend", '<div class="upload-status-list">' + uploadFiles.map((file) => (
           '<div class="upload-status-item ok"><strong>' + esc(uploadKind(file) + "：" + file.name) + '</strong><span>已上傳</span></div>'
@@ -1153,6 +1204,10 @@
   });
 
   form.addEventListener("change", (event) => {
+    if (event.target.matches('[name="visibility"]')) {
+      updateEntryPasswordField(form);
+      return;
+    }
     if (!event.target.matches('input[type="file"][name="media"]')) return;
     renderUploadStatuses(entryUploadStatus, selectedUploadFiles(form), "waiting");
   });
@@ -1169,12 +1224,15 @@
       const data = new FormData(form);
       selectedLibraryImages.forEach((_value, id) => data.append("libraryImageIds", id));
       const body = await fetch(apiUrl("/api/wife-journal/entries"), { method: "POST", headers: headers(), body: data }).then(readJson);
+      const passwordSheetSync = await syncJournalPasswordFromBrowser(body.entry || {}, data, body.passwordSheetSync);
+      const syncMessage = journalPasswordSyncText(passwordSheetSync);
       statusEl.className = "status ok";
-      statusEl.textContent = "已記錄：" + body.entry.title + " ✨";
+      statusEl.textContent = "已記錄：" + body.entry.title + " ✨" + syncMessage;
       renderUploadStatuses(entryUploadStatus, uploadFiles, "ok");
       form.reset();
       form.elements.date.valueAsDate = new Date();
       form.elements.time.value = currentTime();
+      updateEntryPasswordField(form);
       selectedLibraryImages.clear();
       renderTagPicker();
       await loadEntries();

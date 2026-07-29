@@ -585,13 +585,12 @@
             <label>時間<input name="time" type="time" step="60"></label>
             <label>文章權限
               <select name="visibility">
-                <option value="normal">一般</option>
-                <option value="locked">上鎖</option>
-                <option value="password">私密密碼</option>
+                <option value="normal">不上鎖</option>
+                <option value="password">上鎖</option>
               </select>
             </label>
             <label>標題<input name="title" placeholder="主題是?"></label>
-            <label>私密密碼<input name="entryPassword" type="password" placeholder="選擇私密密碼時填寫"></label>
+            <label>解鎖密碼<input name="entryPassword" type="password" placeholder="選擇上鎖時填寫，會同步到試算表"></label>
             <label class="full">快速標籤
               <input name="tags" id="tagsInput" placeholder="可手動補標籤，用逗號分隔">
             </label>
@@ -607,7 +606,7 @@
 
         <section class="card span-12">
           <h3>📖 完整閱讀 / 編輯文章</h3>
-          <div class="detail" id="entryDetail">點選時間軸文章後可閱讀完整內文。需要修改時再按編輯，私密密碼文章會先要求密碼 🔐</div>
+          <div class="detail" id="entryDetail">點選時間軸文章後可閱讀完整內文。上鎖文章會先要求解鎖密碼 🔐</div>
         </section>
       </div>
       </section>
