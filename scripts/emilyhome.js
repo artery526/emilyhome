@@ -603,14 +603,16 @@
     }
     entryListEl.innerHTML = visibleEntries.map((entry) => {
       const cover = mediaUrl(entry.coverImageUrl, entry.updatedAt || entry.id);
-      const visibility = entry.visibility === "password" || entry.visibility === "locked" ? "上鎖" : "不上鎖";
+      const locked = entry.visibility === "password" || entry.visibility === "locked";
+      const visibility = locked ? "上鎖" : "不上鎖";
       const meta = [entry.date || "", entry.time || "", visibility].filter(Boolean).join(" · ");
+      const excerpt = locked ? "這篇文章需要解鎖密碼。" : (entry.excerpt || "");
       return '<article class="entry" data-read-id="' + esc(entry.id) + '">'
         + (cover ? '<button class="cover-button" type="button" data-view-url="' + esc(cover) + '"><img class="cover" src="' + esc(cover) + '" alt=""></button>' : '<div class="cover"></div>')
         + '<div>'
           + '<div class="entry-title">' + esc(entry.title || "今天的心情") + '</div>'
           + '<div class="entry-meta">' + esc(meta) + '</div>'
-          + '<div class="entry-meta">' + esc(entry.excerpt || "") + '</div>'
+          + '<div class="entry-meta">' + esc(excerpt) + '</div>'
           + '<div class="toolbar"><button type="button" data-read-button-id="' + esc(entry.id) + '">📖 閱讀全文</button><button type="button" data-edit-id="' + esc(entry.id) + '">✏️ 編輯</button><button class="danger" type="button" data-delete-id="' + esc(entry.id) + '">🗑️ 刪除</button></div>'
         + '</div>'
       + '</article>';
