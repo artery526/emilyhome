@@ -31,10 +31,7 @@
       letter-spacing: 0;
     }
     header {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
+      position: relative;
       z-index: 4;
       display: flex;
       align-items: center;
@@ -48,10 +45,6 @@
     h1 { font-size: 22px; }
     .brand-logo {
       display: block;
-      position: fixed;
-      top: 14px;
-      left: 20px;
-      z-index: 6;
       width: min(230px, 46vw);
       padding: 2px;
       border-radius: 8px;
@@ -70,7 +63,7 @@
     main {
       max-width: 1240px;
       margin: 0 auto;
-      padding: 104px 22px 22px;
+      padding: 22px;
     }
     .grid {
       display: grid;
@@ -163,7 +156,7 @@
       gap: 8px;
       margin: 0 0 16px;
     }
-    .view-tabs #refreshBtn { margin-left: auto; }
+    .view-tabs #refreshBtn { margin-left: 0; }
     .view-tab.active {
       background: var(--rose);
       border-color: var(--rose);
@@ -422,16 +415,14 @@
     @media (max-width: 900px) {
       .span-4, .span-5, .span-7, .span-8 { grid-column: span 12; }
       .form-grid, .library-controls, .card-draw-set { grid-template-columns: 1fr; }
-      main { padding: 104px 14px 14px; }
+      main { padding: 14px; }
       header { align-items: start; }
       .brand-logo {
-        top: 14px;
-        left: 14px;
         width: min(210px, 76vw);
       }
       .view-tabs {
         position: sticky;
-        top: 92px;
+        top: 0;
         z-index: 3;
         padding-bottom: 8px;
       }
@@ -544,8 +535,9 @@
               <label>時間<input name="time" type="time" step="60"></label>
               <label class="full">抽牌模式
                 <div class="draw-mode">
-                  <button class="active" type="button" data-draw-mode="single">單張牌卡</button>
-                  <button type="button" data-draw-mode="three">三張牌卡</button>
+                  <button class="active" type="button" data-draw-mode="single">塔羅單張</button>
+                  <button type="button" data-draw-mode="three">塔羅三張</button>
+                  <button type="button" data-draw-mode="osho">奧修單張</button>
                 </div>
               </label>
               <div class="full" id="cardDrawFields"></div>

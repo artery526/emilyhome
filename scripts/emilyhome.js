@@ -526,14 +526,14 @@
     if (!cardDrawFields) return;
     const count = drawMode === "three" ? 3 : 1;
     cardDrawFields.innerHTML = Array.from({ length: count }, (_unused, index) => {
-      const label = drawMode === "three" ? threePositions[index] : "單張";
+      const label = drawMode === "three" ? threePositions[index] : (drawMode === "osho" ? "奧修單張" : "塔羅單張");
       return '<div class="card-draw-set">'
         + '<div class="card-preview">'
           + '<div class="card-thumb" data-card-thumb="' + index + '">🃏</div>'
           + '<strong data-card-preview-name="' + index + '">' + esc(label) + '</strong>'
         + '</div>'
         + '<label>牌卡<select name="cardName' + index + '">' + cardNameOptions() + '</select></label>'
-        + '<label>正逆位<select name="cardPosition' + index + '">' + cardPositionOptions("") + '</select></label>'
+        + (drawMode === "osho" ? '<input type="hidden" name="cardPosition' + index + '" value="❌">' : '<label>正逆位<select name="cardPosition' + index + '">' + cardPositionOptions("") + '</select></label>')
       + '</div>';
     }).join("");
     updateCardPreviews();
@@ -546,7 +546,7 @@
     const nameEl = cardDrawFields.querySelector('[data-card-preview-name="' + index + '"]');
     if (!input || !thumb || !nameEl) return;
     const card = findCardByName(input.value);
-    const label = cleanCardName(input.value) || (drawMode === "three" ? threePositions[index] : "單張");
+    const label = cleanCardName(input.value) || (drawMode === "three" ? threePositions[index] : (drawMode === "osho" ? "奧修單張" : "塔羅單張"));
     const url = cardImageUrl(card);
     nameEl.textContent = label;
     thumb.innerHTML = url ? '<img src="' + esc(url) + '" alt="' + esc(label) + '">' : "🃏";
@@ -558,7 +558,7 @@
   }
 
   function setDrawMode(mode) {
-    drawMode = mode === "three" ? "three" : "single";
+    drawMode = ["three", "osho"].includes(mode) ? mode : "single";
     document.querySelectorAll("[data-draw-mode]").forEach((button) => {
       button.classList.toggle("active", button.dataset.drawMode === drawMode);
     });
@@ -581,14 +581,15 @@
       const rawName = sourceForm.elements["cardName" + index]?.value || "";
       const position = sourceForm.elements["cardPosition" + index]?.value || "";
       const parsed = splitCardLabel(rawName);
+      const displaySuffix = position && position !== "❌" ? position : "";
       return {
         positionIndex: index + 1,
-        positionName: drawMode === "three" ? threePositions[index] : "單張",
+        positionName: drawMode === "three" ? threePositions[index] : (drawMode === "osho" ? "奧修單張" : "塔羅單張"),
         cardId: parsed.id,
         cardName: parsed.name || rawName || "未抽取",
         cardLabel: parsed.label || rawName || "未抽取",
         orientation: position,
-        displayName: (parsed.name || rawName || "未抽取") + (position ? position : ""),
+        displayName: (parsed.name || rawName || "未抽取") + displaySuffix,
       };
     });
   }
@@ -779,7 +780,7 @@
     const time = cardForm.elements.time.value;
     const question = cardForm.elements.cardQuestion.value.trim();
     const reading = cardForm.elements.cardReading.value.trim();
-    const spreadType = drawMode === "three" ? "三張" : "單張";
+    const spreadType = drawMode === "three" ? "塔羅三張" : (drawMode === "osho" ? "奧修單張" : "塔羅單張");
     data.set("type", "card");
     data.set("date", date);
     data.set("time", time);
@@ -791,7 +792,7 @@
     data.set("spreadType", spreadType);
     data.set("cards", JSON.stringify(cardsDrawn));
     data.set("cardName", cardsDrawn.map((card) => card.displayName).join("、"));
-    data.set("cardPosition", drawMode === "three" ? "三張" : (cardsDrawn[0]?.orientation || ""));
+    data.set("cardPosition", drawMode === "three" ? "塔羅三張" : (cardsDrawn[0]?.orientation || ""));
     data.set("cardId", cardsDrawn[0]?.cardId || "");
     button.disabled = true;
     cardStatus.className = "status";

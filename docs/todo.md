@@ -7,6 +7,7 @@
 - Add a live backend health check on the gate screen.
 - Add clearer success messages after photo upload syncs to NAS Photos.
 - Add a simple admin-only export or backup view for journal indexes.
+- Add body records for 月經日 and 氣喘發作日 using `docs/body-records-assessment.md`.
 
 ## Later Ideas
 

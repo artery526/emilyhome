@@ -18,6 +18,7 @@ Emily 的私密心情日記、NAS Photos 與抽牌記錄入口。
 - `docs/decisions.md` - 目前已定案的設計決策
 - `docs/deploy.md` - 前端發布、後端同步與重啟流程
 - `docs/todo.md` - 待辦與後續功能候選
+- `docs/body-records-assessment.md` - 身體記錄功能評估與第一版設計
 
 ## Private Data
 
