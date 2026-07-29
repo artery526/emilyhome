@@ -354,6 +354,25 @@
       padding: 12px;
       margin: 10px 0 12px;
     }
+    .panel-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .panel-heading h3 { margin: 0; }
+    .icon-button {
+      width: 40px;
+      min-height: 40px;
+      padding: 0;
+      display: grid;
+      place-items: center;
+      border-radius: 999px;
+      background: var(--mist);
+      color: var(--sage);
+    }
+    .settings-panel[hidden] { display: none; }
     .library-controls {
       display: grid;
       grid-template-columns: 1fr 1fr auto;
@@ -605,32 +624,23 @@
               <select id="bodyMonth"></select>
               <button type="button" id="bodyLoadBtn">載入 ✨</button>
             </div>
-            <label class="full">試算表寫入 Token
-              <input id="sheetTokenInput" type="password" placeholder="身體記錄直接寫入 Google Sheet 時使用">
-            </label>
-            <div class="toolbar">
-              <button class="ghost" type="button" id="saveSheetTokenBtn">💾 記住試算表 Token</button>
-              <button class="ghost" type="button" id="clearSheetTokenBtn">🧹 清除試算表 Token</button>
-            </div>
-            <div class="lock-panel">
-              <h3>🔐 當月記錄鎖定</h3>
-              <div class="form-grid" style="margin-top:10px">
-                <label class="full">解鎖密碼
-                  <input id="bodyPasswordInput" type="password" placeholder="輸入身體記錄檢視密碼">
-                </label>
-                <label class="full">初始設定 / 更換密碼
-                  <input id="bodyNewPasswordInput" type="password" placeholder="第一次使用或要更換時填寫">
-                </label>
-                <button class="primary" type="button" id="bodyUnlockBtn">🔓 解鎖當月記錄</button>
-                <button class="ghost" type="button" id="bodySetPasswordBtn">🔐 設定密碼</button>
-                <button class="ghost full" type="button" id="bodyLockBtn">🔒 重新上鎖</button>
-              </div>
-            </div>
             <div class="calendar" id="bodyCalendar"></div>
             <p class="status" id="bodyStatus"></p>
           </section>
           <section class="card span-4">
-            <h3>🩷 新增記錄</h3>
+            <div class="panel-heading">
+              <h3>🩷 新增記錄</h3>
+              <button class="icon-button" type="button" id="bodyTokenSettingsBtn" aria-expanded="false" aria-controls="bodyTokenSettings" title="試算表 Token 設定">⚙️</button>
+            </div>
+            <div class="settings-panel lock-panel" id="bodyTokenSettings" hidden>
+              <label class="full">試算表寫入 Token
+                <input id="sheetTokenInput" type="password" placeholder="身體記錄直接寫入 Google Sheet 時使用">
+              </label>
+              <div class="toolbar">
+                <button class="ghost" type="button" id="saveSheetTokenBtn">💾 記住試算表 Token</button>
+                <button class="ghost" type="button" id="clearSheetTokenBtn">🧹 清除試算表 Token</button>
+              </div>
+            </div>
             <form id="bodyForm" class="form-grid" style="margin-top:14px">
               <label class="full">日期<input name="date" type="date" required></label>
               <label class="full">類型
@@ -678,7 +688,24 @@
             </form>
           </section>
           <section class="card span-12">
-            <h3 id="bodyDayTitle">📍 當日記錄</h3>
+            <div class="panel-heading">
+              <h3 id="bodyDayTitle">📍 當日記錄</h3>
+              <button class="icon-button" type="button" id="bodyLockSettingsBtn" aria-expanded="false" aria-controls="bodyLockSettings" title="當月記錄鎖定設定">⚙️</button>
+            </div>
+            <div class="settings-panel lock-panel" id="bodyLockSettings" hidden>
+              <h3>🔐 當月記錄鎖定</h3>
+              <div class="form-grid" style="margin-top:10px">
+                <label class="full">解鎖密碼
+                  <input id="bodyPasswordInput" type="password" placeholder="輸入身體記錄檢視密碼">
+                </label>
+                <label class="full">初始設定 / 更換密碼
+                  <input id="bodyNewPasswordInput" type="password" placeholder="第一次使用或要更換時填寫">
+                </label>
+                <button class="primary" type="button" id="bodyUnlockBtn">🔓 解鎖當月記錄</button>
+                <button class="ghost" type="button" id="bodySetPasswordBtn">🔐 設定密碼</button>
+                <button class="ghost full" type="button" id="bodyLockBtn">🔒 重新上鎖</button>
+              </div>
+            </div>
             <div class="body-record-list" id="bodyRecordList"><p class="muted">點選月曆日期查看記錄。</p></div>
           </section>
         </div>

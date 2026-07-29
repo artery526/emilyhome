@@ -193,6 +193,15 @@
     }
   }
 
+  function toggleSettingsPanel(buttonId, panelId) {
+    const button = document.getElementById(buttonId);
+    const panel = document.getElementById(panelId);
+    if (!button || !panel) return;
+    const nextHidden = !panel.hidden;
+    panel.hidden = nextHidden;
+    button.setAttribute("aria-expanded", String(!nextHidden));
+  }
+
   function sheetRequest(action, params) {
     const token = currentSheetToken();
     if (!token) return Promise.reject(new Error("請先輸入試算表寫入 Token 後再使用身體記錄 🔐"));
@@ -1080,6 +1089,8 @@
   document.getElementById("bodyUnlockBtn").addEventListener("click", unlockBodyRecords);
   document.getElementById("bodySetPasswordBtn").addEventListener("click", setBodyLockPassword);
   document.getElementById("bodyLockBtn").addEventListener("click", lockBodyRecords);
+  document.getElementById("bodyTokenSettingsBtn").addEventListener("click", () => toggleSettingsPanel("bodyTokenSettingsBtn", "bodyTokenSettings"));
+  document.getElementById("bodyLockSettingsBtn").addEventListener("click", () => toggleSettingsPanel("bodyLockSettingsBtn", "bodyLockSettings"));
   document.getElementById("refreshBtn").addEventListener("click", async () => {
     await loadEntries();
     await loadBodyRecords();
