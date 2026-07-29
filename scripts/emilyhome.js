@@ -171,6 +171,23 @@
     return sheetToken || apiToken;
   }
 
+  function saveSheetToken(showMessage) {
+    sheetToken = sheetTokenInput.value.trim();
+    if (sheetToken) {
+      localStorage.setItem("emilyhome.sheetToken", sheetToken);
+      if (showMessage) {
+        bodyStatus.className = "status ok";
+        bodyStatus.textContent = "已記住試算表 Token，下次開啟會自動帶入 🔐";
+      }
+      return;
+    }
+    localStorage.removeItem("emilyhome.sheetToken");
+    if (showMessage) {
+      bodyStatus.className = "status";
+      bodyStatus.textContent = "試算表 Token 欄位是空的，已清除本機記憶 🧹";
+    }
+  }
+
   function sheetRequest(action, params) {
     const token = currentSheetToken();
     if (!token) return Promise.reject(new Error("請先輸入試算表寫入 Token 後再使用身體記錄 🔐"));
@@ -961,9 +978,22 @@
   document.getElementById("closePhotoViewer").addEventListener("click", () => photoViewer.close());
   document.getElementById("clearTokenBtn").addEventListener("click", () => {
     localStorage.removeItem("emilyhome.token");
+    localStorage.removeItem("emilyhome.sheetToken");
     apiToken = "";
+    sheetToken = "";
     tokenInput.value = "";
+    sheetTokenInput.value = "";
     showGate("已清除記住的 Token，請重新輸入 🧹", false);
+  });
+  sheetTokenInput.addEventListener("change", () => saveSheetToken(false));
+  sheetTokenInput.addEventListener("blur", () => saveSheetToken(false));
+  document.getElementById("saveSheetTokenBtn").addEventListener("click", () => saveSheetToken(true));
+  document.getElementById("clearSheetTokenBtn").addEventListener("click", () => {
+    sheetToken = "";
+    sheetTokenInput.value = "";
+    localStorage.removeItem("emilyhome.sheetToken");
+    bodyStatus.className = "status";
+    bodyStatus.textContent = "已清除本機記住的試算表 Token 🧹";
   });
   document.getElementById("refreshBtn").addEventListener("click", async () => {
     await loadEntries();
