@@ -86,6 +86,7 @@
   const selectedLibraryImages = new Map();
   let entries = [];
   let cards = [];
+  let oshoCards = [];
   let activeDate = "";
   let activeCardMonth = "";
   let drawMode = "single";
@@ -454,9 +455,12 @@
     try {
       const body = await fetch(apiUrl("/api/wife-journal/cards"), { cache: "no-store", headers: headers() }).then(readJson);
       const apiCards = Array.isArray(body.cards) ? body.cards : [];
+      const apiOshoCards = Array.isArray(body.oshoCards) ? body.oshoCards : [];
       cards = mergeCards(apiCards);
+      oshoCards = apiOshoCards.length ? normalizeCards(apiOshoCards) : [];
     } catch (_error) {
       cards = fallbackCards.slice();
+      oshoCards = [];
     }
     renderCardDrawFields();
   }
@@ -470,10 +474,22 @@
     });
   }
 
+  function activeCards() {
+    return drawMode === "osho" ? oshoCards : cards;
+  }
+
   function cardNameOptions() {
-    const names = cards.map((card) => card.name || card.cardName || card.title || card.label || card.id || "").filter(Boolean);
-    const optionNames = names.length ? names : fallbackCards.map((card) => card.name);
+    const deckCards = activeCards();
+    const names = deckCards.map((card) => card.name || card.cardName || card.title || card.label || card.id || "").filter(Boolean);
+    const optionNames = names.length ? names : (drawMode === "osho" ? [] : fallbackCards.map((card) => card.name));
     return '<option value="">選擇牌卡</option>' + optionNames.map((name) => '<option value="' + esc(name) + '">' + esc(name) + '</option>').join("");
+  }
+
+  function normalizeCards(apiCards) {
+    return apiCards.map((card) => {
+      const name = card.name || card.cardName || card.title || card.label || card.id || "";
+      return name ? { ...card, name } : null;
+    }).filter(Boolean);
   }
 
   function mergeCards(apiCards) {
@@ -510,7 +526,7 @@
   function findCardByName(value) {
     const raw = String(value || "").trim();
     const clean = cleanCardName(raw);
-    return cards.find((card) => {
+    return activeCards().find((card) => {
       const names = [card.name, card.cardName, card.title, card.label, card.id, card.cardId].map((item) => String(item || "").trim()).filter(Boolean);
       return names.some((name) => name === raw || cleanCardName(name) === clean);
     }) || null;
