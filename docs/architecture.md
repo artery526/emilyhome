@@ -92,6 +92,18 @@ Useful tabs:
 ```text
 卡片圖案連結 - tarot / oracle card names and Google Drive image links
 牌卡統計 - card draw rows and monthly report area
+奧修禪卡記錄 - Osho Zen single-card draw rows
 ```
 
-Recommendation: keep the public GitHub Pages frontend read-only for Google credentials. Formal spreadsheet writes should be performed by ArkOS server-side code or a private Apps Script endpoint, using the same row shape as `牌卡統計`.
+The public GitHub Pages frontend remains read-only for Google credentials. Card spreadsheet writes are performed server-side:
+
+```text
+Emily's Home -> ArkOS /api/wife-journal/card-records -> Apps Script action emilyCardRecord -> Emily卡牌空間
+```
+
+ArkOS requires:
+
+```text
+ARKOS_EMILY_CARD_SHEET_WEBHOOK_URL
+ARKOS_EMILY_CARD_SHEET_WRITE_TOKEN
+```

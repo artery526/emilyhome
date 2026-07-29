@@ -3,7 +3,6 @@
 ## Next Practical Work
 
 - Confirm the exact folder and data model for Emily 手作工坊.
-- Decide whether card records should write to the Emily card spreadsheet through ArkOS or Apps Script.
 - Add a live backend health check on the gate screen.
 - Add clearer success messages after photo upload syncs to NAS Photos.
 - Add a simple admin-only export or backup view for journal indexes.

@@ -11,7 +11,7 @@ Visual layout or buttons in Emily's Home      -> D:\emilyhome
 Journal save/read/edit/delete behavior        -> D:\ArkOS26\src\server.js
 NAS Photos storage or image picker            -> D:\ArkOS26\src\server.js + D:\emilyhome UI if needed
 Card picker or card record API                -> D:\ArkOS26\src\server.js + Emily card data source
-Card spreadsheet writing/reporting            -> Emily card spreadsheet or server-side writer
+Card spreadsheet writing/reporting            -> ArkOS server-side writer + Apps Script emilyCardRecord
 Empire Control web dashboard                  -> D:\wealth-dashboard\index.html
 Empire Control backend / Apps Script          -> D:\WebApp
 Empire Android app                            -> D:\WebApp\EmpireAndroid
@@ -29,7 +29,7 @@ Emily workshop                                -> confirm exact folder first
 | Edit or delete an entry | ArkOS backend + UI | `server.js`, `emilyhome.js` | API smoke test + browser flow |
 | NAS Photos picker | ArkOS backend + UI | photo-library routes + Emily UI | month API + mobile layout |
 | Card thumbnails | ArkOS backend + UI | card loader + card picker UI | card API + preview render |
-| Card record spreadsheet sync | backend or Apps Script | server-side writer, not public JS | Sheet row verification |
+| Card record spreadsheet sync | ArkOS + Apps Script | `D:\ArkOS26\src\server.js`, `D:\WebApp\WebApp.gs` | Sheet row verification |
 | Empire command page | Empire frontend | `D:\wealth-dashboard\index.html` | GitHub Pages build + public HTML |
 | Empire finance or command data | Apps Script | `D:\WebApp` | clasp deploy + live endpoint |
 | App display or mobile native behavior | Android | `D:\WebApp\EmpireAndroid` | build + install or emulator/device check |

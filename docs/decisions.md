@@ -38,7 +38,9 @@ Emily's Home is a private journal and card-record frontend. It is not the same s
 
 - Card records are separated from mood journal entries.
 - The card page supports single-card and three-card draws.
-- Card records should eventually write to the Emily card spreadsheet through a private backend or Apps Script writer.
+- Card records automatically sync to the Emily card spreadsheet through ArkOS and private Apps Script action `emilyCardRecord`.
+- Tarot records write to `牌卡統計`.
+- Osho Zen records write to `奧修禪卡記錄`.
 
 ## Branding
 
