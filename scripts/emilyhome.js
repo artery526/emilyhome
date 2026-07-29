@@ -109,6 +109,7 @@
   const calendarEl = document.getElementById("calendar");
   const form = document.getElementById("entryForm");
   const statusEl = document.getElementById("formStatus");
+  const entryUploadStatus = document.getElementById("entryUploadStatus");
   const detailEl = document.getElementById("entryDetail");
   const tagsInput = document.getElementById("tagsInput");
   const tagPicker = document.getElementById("tagPicker");
@@ -258,6 +259,37 @@
     const params = ["v=" + encodeURIComponent(version || Date.now())];
     if (apiToken) params.push("readToken=" + encodeURIComponent(apiToken));
     return absolute + (absolute.indexOf("?") >= 0 ? "&" : "?") + params.join("&");
+  }
+
+  function selectedUploadFiles(sourceForm) {
+    return Array.from(sourceForm.querySelectorAll('input[type="file"][name="media"]'))
+      .flatMap((input) => Array.from(input.files || []));
+  }
+
+  function uploadKind(file) {
+    const type = String(file && file.type || "");
+    if (type.startsWith("audio/")) return "語音";
+    return "照片";
+  }
+
+  function renderUploadStatuses(target, files, state, message) {
+    if (!target) return;
+    if (!files.length) {
+      target.innerHTML = "";
+      return;
+    }
+    const statusText = {
+      waiting: "等待上傳",
+      loading: "上傳中...",
+      ok: "已上傳",
+      error: "上傳失敗",
+    }[state] || state;
+    target.innerHTML = files.map((file) => (
+      '<div class="upload-status-item ' + esc(state) + '">'
+        + '<strong>' + esc(uploadKind(file) + "：" + file.name) + '</strong>'
+        + '<span>' + esc(message || statusText) + '</span>'
+      + '</div>'
+    )).join("");
   }
 
   function parseTags() {
@@ -634,6 +666,7 @@
         + '<div class="full"><h3>照片與語音</h3><div class="edit-media-grid">' + ((loaded.media || []).map(mediaPreview).join("") || '<p class="muted">沒有附件</p>') + '</div></div>'
         + '<label>新增照片<input name="media" type="file" accept="image/*,.heic,.heif" multiple></label>'
         + '<label>新增語音<input name="media" type="file" accept="audio/*,.m4a,.mp3,.wav,.webm" multiple></label>'
+        + '<div class="upload-status-list full" id="editUploadStatus"></div>'
         + '<button class="primary full" type="submit">🧸 儲存編輯</button>'
       + '</form>';
     } catch (error) {
@@ -1013,11 +1046,20 @@
     if (viewButton) openPhoto(viewButton.dataset.viewUrl);
   });
 
+  detailEl.addEventListener("change", (event) => {
+    const editForm = event.target.closest("#editEntryForm");
+    if (!editForm || !event.target.matches('input[type="file"][name="media"]')) return;
+    renderUploadStatuses(editForm.querySelector("#editUploadStatus"), selectedUploadFiles(editForm), "waiting");
+  });
+
   detailEl.addEventListener("submit", async (event) => {
     const editForm = event.target.closest("#editEntryForm");
     if (!editForm) return;
     event.preventDefault();
     const button = editForm.querySelector("button[type='submit']");
+    const uploadTarget = editForm.querySelector("#editUploadStatus");
+    const uploadFiles = selectedUploadFiles(editForm);
+    renderUploadStatuses(uploadTarget, uploadFiles, "loading");
     button.disabled = true;
     button.textContent = "儲存中... ✨";
     try {
@@ -1031,17 +1073,30 @@
         body: data,
       }).then(readJson);
       detailEl.innerHTML = '<p class="status ok">已更新：' + esc(body.entry.title || "心情日記") + ' ✨</p>';
+      if (uploadFiles.length) {
+        detailEl.insertAdjacentHTML("beforeend", '<div class="upload-status-list">' + uploadFiles.map((file) => (
+          '<div class="upload-status-item ok"><strong>' + esc(uploadKind(file) + "：" + file.name) + '</strong><span>已上傳</span></div>'
+        )).join("") + '</div>');
+      }
       await loadEntries();
     } catch (error) {
       button.disabled = false;
       button.textContent = "🧸 儲存編輯";
+      renderUploadStatuses(uploadTarget, uploadFiles, "error", "上傳失敗");
       detailEl.insertAdjacentHTML("beforeend", '<p class="status error">' + esc(error.message) + '</p>');
     }
+  });
+
+  form.addEventListener("change", (event) => {
+    if (!event.target.matches('input[type="file"][name="media"]')) return;
+    renderUploadStatuses(entryUploadStatus, selectedUploadFiles(form), "waiting");
   });
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     const button = form.querySelector("button[type='submit']");
+    const uploadFiles = selectedUploadFiles(form);
+    renderUploadStatuses(entryUploadStatus, uploadFiles, "loading");
     button.disabled = true;
       statusEl.textContent = "記錄中... 🧸";
     statusEl.className = "status";
@@ -1051,6 +1106,7 @@
       const body = await fetch(apiUrl("/api/wife-journal/entries"), { method: "POST", headers: headers(), body: data }).then(readJson);
       statusEl.className = "status ok";
       statusEl.textContent = "已記錄：" + body.entry.title + " ✨";
+      renderUploadStatuses(entryUploadStatus, uploadFiles, "ok");
       form.reset();
       form.elements.date.valueAsDate = new Date();
       form.elements.time.value = currentTime();
@@ -1060,6 +1116,7 @@
     } catch (error) {
       statusEl.className = "status error";
       statusEl.textContent = error.message;
+      renderUploadStatuses(entryUploadStatus, uploadFiles, "error", "上傳失敗");
     } finally {
       button.disabled = false;
     }

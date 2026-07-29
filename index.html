@@ -441,6 +441,31 @@
     .edit-media-card label {
       padding: 8px;
     }
+    .upload-status-list {
+      display: grid;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .upload-status-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, .9);
+      padding: 8px 10px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .upload-status-item strong {
+      color: var(--ink);
+      font-weight: 600;
+      overflow-wrap: anywhere;
+    }
+    .upload-status-item.ok { border-color: #c8ded2; background: #f2faf5; }
+    .upload-status-item.error { border-color: #efcfcf; background: #fff3f3; }
+    .upload-status-item.loading { border-color: #e4d7bb; background: #fffaf0; }
     dialog.photo-viewer {
       width: min(920px, calc(100vw - 28px));
       border: 0;
@@ -570,6 +595,7 @@
             <label class="full">日記內容<textarea name="content" required placeholder="今天發生什麼？我想留下什麼？"></textarea></label>
             <label>上傳照片<input name="media" type="file" accept="image/*,.heic,.heif" multiple></label>
             <label>語音備忘<input name="media" type="file" accept="audio/*,.m4a,.mp3,.wav,.webm" multiple></label>
+            <div class="upload-status-list full" id="entryUploadStatus"></div>
           <button class="primary full" type="submit">🧸 記錄</button>
           </form>
           <p class="status" id="formStatus"></p>
