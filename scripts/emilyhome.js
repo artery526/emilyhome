@@ -561,7 +561,7 @@
       const cover = mediaUrl(entry.coverImageUrl, entry.updatedAt || entry.id);
       const visibility = entry.visibility === "password" ? "私密密碼" : (entry.visibility === "locked" ? "上鎖" : "一般");
       const meta = [entry.date || "", entry.time || "", visibility].filter(Boolean).join(" · ");
-      return '<article class="entry">'
+      return '<article class="entry" data-read-id="' + esc(entry.id) + '">'
         + (cover ? '<button class="cover-button" type="button" data-view-url="' + esc(cover) + '"><img class="cover" src="' + esc(cover) + '" alt=""></button>' : '<div class="cover"></div>')
         + '<div>'
           + '<div class="entry-title">' + esc(entry.title || "今天的心情") + '</div>'
@@ -614,6 +614,56 @@
     return String(markdown || "").replace(/^---[\s\S]*?---\s*/, "").trim();
   }
 
+  function entryPasswordQuery(entry) {
+    if (entry && entry.visibility === "password") {
+      const password = window.prompt("請輸入這篇文章的私密密碼");
+      if (!password) return null;
+      return "?password=" + encodeURIComponent(password);
+    }
+    return "";
+  }
+
+  function readMediaPreview(item, index) {
+    const key = item.libraryId || item.legacyLibraryId || item.fileName || item.url || item.originalUrl || item.thumbnailUrl || "";
+    if (item.type === "audio") {
+      return '<div class="edit-media-card">'
+        + '<label>語音 ' + (index + 1) + '</label>'
+        + '<audio controls src="' + esc(mediaUrl(item.url || "", item.updatedAt || key)) + '"></audio>'
+      + '</div>';
+    }
+    const thumb = mediaUrl(item.thumbnailUrl || item.originalUrl, item.updatedAt || key);
+    const original = mediaUrl(item.originalUrl || item.thumbnailUrl, item.updatedAt || key);
+    return '<button class="media-card" type="button" data-view-url="' + esc(original) + '"><img src="' + esc(thumb) + '" alt="" loading="lazy"></button>';
+  }
+
+  async function openReadEntry(id) {
+    detailEl.textContent = "讀取完整文章中... 📖";
+    try {
+      let url = apiUrl("/api/wife-journal/entries/" + encodeURIComponent(id));
+      const entry = entries.find((item) => item.id === id);
+      const query = entryPasswordQuery(entry);
+      if (query === null) {
+        detailEl.textContent = "已取消開啟私密文章 🔐";
+        return;
+      }
+      url += query;
+      const body = await fetch(url, { cache: "no-store", headers: headers() }).then(readJson);
+      const loaded = body.entry || {};
+      const visibility = loaded.visibility === "password" ? "私密密碼" : (loaded.visibility === "locked" ? "上鎖" : "一般");
+      const media = Array.isArray(loaded.media) ? loaded.media : [];
+      detailEl.innerHTML = '<article class="reader-entry">'
+        + '<div class="entry-title">' + esc(loaded.title || "今天的心情") + '</div>'
+        + '<div class="entry-meta">' + esc([loaded.date || "", loaded.time || "", visibility].filter(Boolean).join(" · ")) + '</div>'
+        + (loaded.tags && loaded.tags.length ? '<div class="chip-row">' + loaded.tags.map((tag) => '<span class="chip">' + esc(tag) + '</span>').join("") + '</div>' : '')
+        + '<div class="detail" style="margin-top:12px">' + esc(markdownBody(body.markdown || "")) + '</div>'
+        + (media.length ? '<div class="edit-media-grid full" style="margin-top:14px">' + media.map(readMediaPreview).join("") + '</div>' : '')
+        + '<div class="toolbar"><button type="button" data-edit-id="' + esc(loaded.id) + '">✏️ 編輯</button></div>'
+      + '</article>';
+    } catch (error) {
+      detailEl.innerHTML = '<p class="status error">' + esc(error.message) + '</p>';
+    }
+  }
+
   function openPhoto(url) {
     if (!url) return;
     photoViewerImg.src = url;
@@ -641,14 +691,12 @@
     try {
       let url = apiUrl("/api/wife-journal/entries/" + encodeURIComponent(id));
       const entry = entries.find((item) => item.id === id);
-      if (entry && entry.visibility === "password") {
-        const password = window.prompt("請輸入這篇文章的私密密碼");
-        if (!password) {
-            detailEl.textContent = "已取消開啟私密文章 🔐";
-          return;
-        }
-        url += "?password=" + encodeURIComponent(password);
+      const query = entryPasswordQuery(entry);
+      if (query === null) {
+        detailEl.textContent = "已取消開啟私密文章 🔐";
+        return;
       }
+      url += query;
       const body = await fetch(url, { cache: "no-store", headers: headers() }).then(readJson);
       const loaded = body.entry || {};
       detailEl.innerHTML = '<form id="editEntryForm" class="form-grid" data-entry-id="' + esc(loaded.id) + '">'
@@ -1038,12 +1086,22 @@
       return;
     }
     const deleteButton = event.target.closest("[data-delete-id]");
-    if (deleteButton) deleteEntry(deleteButton.dataset.deleteId);
+    if (deleteButton) {
+      deleteEntry(deleteButton.dataset.deleteId);
+      return;
+    }
+    const entryCard = event.target.closest("[data-read-id]");
+    if (entryCard) openReadEntry(entryCard.dataset.readId);
   });
 
   detailEl.addEventListener("click", (event) => {
     const viewButton = event.target.closest("[data-view-url]");
-    if (viewButton) openPhoto(viewButton.dataset.viewUrl);
+    if (viewButton) {
+      openPhoto(viewButton.dataset.viewUrl);
+      return;
+    }
+    const editButton = event.target.closest("[data-edit-id]");
+    if (editButton) openEditEntry(editButton.dataset.editId);
   });
 
   detailEl.addEventListener("change", (event) => {
