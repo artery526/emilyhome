@@ -567,7 +567,7 @@
           + '<div class="entry-title">' + esc(entry.title || "今天的心情") + '</div>'
           + '<div class="entry-meta">' + esc(meta) + '</div>'
           + '<div class="entry-meta">' + esc(entry.excerpt || "") + '</div>'
-          + '<div class="toolbar"><button type="button" data-edit-id="' + esc(entry.id) + '">✏️ 編輯</button><button class="danger" type="button" data-delete-id="' + esc(entry.id) + '">🗑️ 刪除</button></div>'
+          + '<div class="toolbar"><button type="button" data-read-button-id="' + esc(entry.id) + '">📖 閱讀全文</button><button type="button" data-edit-id="' + esc(entry.id) + '">✏️ 編輯</button><button class="danger" type="button" data-delete-id="' + esc(entry.id) + '">🗑️ 刪除</button></div>'
         + '</div>'
       + '</article>';
     }).join("");
@@ -1078,6 +1078,11 @@
     const viewButton = event.target.closest("[data-view-url]");
     if (viewButton) {
       openPhoto(viewButton.dataset.viewUrl);
+      return;
+    }
+    const readButton = event.target.closest("[data-read-button-id]");
+    if (readButton) {
+      openReadEntry(readButton.dataset.readButtonId);
       return;
     }
     const button = event.target.closest("[data-edit-id]");
