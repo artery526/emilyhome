@@ -49,6 +49,7 @@ Emily's Home is a private journal and card-record frontend. It is not the same s
 - The first version writes directly from Emily's Home to Apps Script actions with the locally entered token.
 - Body rows are stored in `Emily卡牌空間` -> `身體記錄`.
 - The body record page supports month lookup, calendar markers, create, and delete.
+- Body records can be locked with a view password stored in `Emily卡牌空間` -> `身體記錄設定` row `lockPassword`; leaving it blank disables the lock.
 
 ## Branding
 

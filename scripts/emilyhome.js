@@ -92,6 +92,9 @@
   let activeDate = "";
   let activeCardMonth = "";
   let activeBodyDate = "";
+  let bodyUnlocked = false;
+  let bodyLockConfigured = false;
+  let bodyPassword = "";
   let drawMode = "single";
   let apiBase = localStorage.getItem("emilyhome.apiBase") || defaultApiBase;
   let apiToken = localStorage.getItem("emilyhome.token") || "";
@@ -134,6 +137,8 @@
   const bodyRecordList = document.getElementById("bodyRecordList");
   const bodyDayTitle = document.getElementById("bodyDayTitle");
   const sheetTokenInput = document.getElementById("sheetTokenInput");
+  const bodyPasswordInput = document.getElementById("bodyPasswordInput");
+  const bodyNewPasswordInput = document.getElementById("bodyNewPasswordInput");
 
   apiBaseInput.value = apiBase;
   tokenInput.value = apiToken;
@@ -411,7 +416,18 @@
     bodyStatus.className = "status";
     bodyStatus.textContent = "讀取身體記錄中... 🌙";
     try {
-      const body = await sheetRequest("emilyBodyRecords", { year, month });
+      await refreshBodyLockStatus();
+      if (bodyLockConfigured && !bodyUnlocked) {
+        bodyRecords = [];
+        renderBodyCalendar();
+        renderBodyRecords();
+        bodyStatus.className = "status";
+        bodyStatus.textContent = "當月記錄已上鎖，請先輸入身體記錄密碼 🔐";
+        return;
+      }
+      const params = { year, month };
+      if (bodyLockConfigured) params.bodyPassword = bodyPassword;
+      const body = await sheetRequest("emilyBodyRecords", params);
       bodyRecords = Array.isArray(body.records) ? body.records : [];
       const prefix = year + "-" + month;
       if (!activeBodyDate || !activeBodyDate.startsWith(prefix)) activeBodyDate = "";
@@ -426,6 +442,72 @@
       bodyStatus.className = "status error";
       bodyStatus.textContent = error.message;
     }
+  }
+
+  async function refreshBodyLockStatus() {
+    const status = await sheetRequest("emilyBodyLockStatus");
+    bodyLockConfigured = !!status.locked;
+    if (!bodyLockConfigured) bodyUnlocked = true;
+    return status;
+  }
+
+  async function unlockBodyRecords() {
+    bodyPassword = bodyPasswordInput.value.trim();
+    if (!bodyPassword) {
+      bodyStatus.className = "status error";
+      bodyStatus.textContent = "請輸入身體記錄密碼 🔐";
+      return;
+    }
+    bodyStatus.className = "status";
+    bodyStatus.textContent = "解鎖中... 🔐";
+    try {
+      await sheetRequest("emilyBodyLockUnlock", { bodyPassword });
+      bodyUnlocked = true;
+      bodyStatus.className = "status ok";
+      bodyStatus.textContent = "已解鎖當月記錄 ✨";
+      await loadBodyRecords();
+    } catch (error) {
+      bodyPassword = "";
+      bodyUnlocked = false;
+      bodyStatus.className = "status error";
+      bodyStatus.textContent = error.message;
+    }
+  }
+
+  async function setBodyLockPassword() {
+    const nextPassword = bodyNewPasswordInput.value.trim();
+    if (!nextPassword) {
+      bodyStatus.className = "status error";
+      bodyStatus.textContent = "請先輸入要設定的身體記錄密碼 🔐";
+      return;
+    }
+    bodyStatus.className = "status";
+    bodyStatus.textContent = "設定身體記錄密碼中... 🔐";
+    try {
+      await sheetRequest("emilyBodyLockSet", { bodyPassword: nextPassword });
+      bodyPassword = nextPassword;
+      bodyPasswordInput.value = nextPassword;
+      bodyNewPasswordInput.value = "";
+      bodyLockConfigured = true;
+      bodyUnlocked = true;
+      bodyStatus.className = "status ok";
+      bodyStatus.textContent = "身體記錄密碼已設定，也已解鎖目前頁面 ✨";
+      await loadBodyRecords();
+    } catch (error) {
+      bodyStatus.className = "status error";
+      bodyStatus.textContent = error.message;
+    }
+  }
+
+  function lockBodyRecords() {
+    bodyPassword = "";
+    bodyUnlocked = false;
+    bodyPasswordInput.value = "";
+    bodyRecords = [];
+    renderBodyCalendar();
+    renderBodyRecords();
+    bodyStatus.className = "status";
+    bodyStatus.textContent = "身體記錄已重新上鎖 🔒";
   }
 
   function renderEntries() {
@@ -995,6 +1077,9 @@
     bodyStatus.className = "status";
     bodyStatus.textContent = "已清除本機記住的試算表 Token 🧹";
   });
+  document.getElementById("bodyUnlockBtn").addEventListener("click", unlockBodyRecords);
+  document.getElementById("bodySetPasswordBtn").addEventListener("click", setBodyLockPassword);
+  document.getElementById("bodyLockBtn").addEventListener("click", lockBodyRecords);
   document.getElementById("refreshBtn").addEventListener("click", async () => {
     await loadEntries();
     await loadBodyRecords();

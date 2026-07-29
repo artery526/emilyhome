@@ -90,10 +90,22 @@ Columns:
 
 The frontend calls the Apps Script Web App directly by JSONP-style GET requests, using the locally entered token. This keeps Google credentials out of GitHub Pages while avoiding a NAS backend dependency for this feature.
 
+Lock settings are stored in:
+
+```text
+Emily卡牌空間 -> 身體記錄設定
+lockPassword
+```
+
+Leaving `lockPassword` blank disables the monthly-record view lock.
+
 ## Apps Script Actions
 
 ```text
 emilyBodyRecords
+emilyBodyLockStatus
+emilyBodyLockSet
+emilyBodyLockUnlock
 emilyBodyRecordWrite
 emilyBodyRecordDelete
 ```
