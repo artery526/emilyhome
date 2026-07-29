@@ -43,6 +43,13 @@ Emily's Home is a private journal and card-record frontend. It is not the same s
 - Tarot records write to `牌卡統計`.
 - Osho Zen records write to `奧修禪卡記錄`.
 
+## Body Records
+
+- Body records are separated from mood journal entries and card records.
+- The first version writes directly from Emily's Home to Apps Script actions with the locally entered token.
+- Body rows are stored in `Emily卡牌空間` -> `身體記錄`.
+- The body record page supports month lookup, calendar markers, create, and delete.
+
 ## Branding
 
 - Page title is `Emily's Home`.

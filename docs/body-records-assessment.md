@@ -63,55 +63,55 @@ Optional future fields:
 - `medicine`: text
 - `trigger`: weather / dust / stress / exercise / unknown
 
-## NAS Storage
+## Storage
 
-Recommended root:
-
-```text
-\\DS920II\AI_CommandCenter\data\emily-body-records
-```
-
-Recommended structure:
+The first version stores body records in the Emily card spreadsheet because the primary use is backup and statistics:
 
 ```text
-records/YYYY/MM/YYYY-MM-DD.json
-indexes/months/YYYY-MM.json
-indexes/summary.json
+Emily卡牌空間 -> 身體記錄
 ```
 
-Each day file can contain multiple records:
-
-```json
-{
-  "date": "2026-07-29",
-  "records": []
-}
-```
-
-## API Proposal
+Columns:
 
 ```text
-GET    /api/emily-body-records/months/:year/:month
-GET    /api/emily-body-records/days/:date
-POST   /api/emily-body-records
-PUT    /api/emily-body-records/:id
-DELETE /api/emily-body-records/:id
+月份
+紀錄時間
+日期
+類型
+程度
+流量
+疼痛程度
+氣喘誘因
+是否用藥
+備註
+記錄ID
+來源
 ```
 
-All routes should require the same protected ArkOS access as wife journal records.
+The frontend calls the Apps Script Web App directly by JSONP-style GET requests, using the locally entered token. This keeps Google credentials out of GitHub Pages while avoiding a NAS backend dependency for this feature.
+
+## Apps Script Actions
+
+```text
+emilyBodyRecords
+emilyBodyRecordWrite
+emilyBodyRecordDelete
+```
+
+All three actions require the write token.
 
 ## Implementation Notes
 
-- Do not store body records in GitHub Pages.
+- Do not store body records in GitHub Pages local code.
 - Do not mix body records into `wife-journal/entries`.
 - Month calendar should support historical year/month lookup.
 - Keep the first version simple: date, type, notes, optional severity.
 - Avoid medical interpretation in the app. Store observations only.
 
-## Suggested First Version
+## First Version
 
-1. Add body records backend storage and API in ArkOS.
-2. Add Body tab in Emily's Home.
-3. Build month calendar with period/asthma markers.
-4. Add selected-day create/delete.
+1. Add Body tab in Emily's Home.
+2. Build month calendar with period/asthma markers.
+3. Add selected-day create/delete.
+4. Store rows in `身體記錄`.
 5. Add edit only after create/delete is stable.

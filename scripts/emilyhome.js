@@ -1,5 +1,6 @@
 (function () {
   const defaultApiBase = "https://api.ark-os26.cc";
+  const sheetAppUrl = "https://script.google.com/macros/s/AKfycbz1Ndp8oT7penjejzs4LZxBnc1pmnmr_uoV4sGZJLmlRVEiK3vpcPtOtkvQASFiS4Hb/exec";
   const tags = ["工作", "家人", "感情", "健康", "睡眠", "夢境", "感謝", "低潮"];
   const fallbackCards = [
     { name: "0.愚者", imageUrl: "https://drive.google.com/file/d/1O_yGudgr5djUHNnN8o5K2x44yBj2lTgi/view?usp=sharing" },
@@ -87,8 +88,10 @@
   let entries = [];
   let cards = [];
   let oshoCards = [];
+  let bodyRecords = [];
   let activeDate = "";
   let activeCardMonth = "";
+  let activeBodyDate = "";
   let drawMode = "single";
   let apiBase = localStorage.getItem("emilyhome.apiBase") || defaultApiBase;
   let apiToken = localStorage.getItem("emilyhome.token") || "";
@@ -114,12 +117,21 @@
   const photoViewerImg = document.getElementById("photoViewerImg");
   const journalView = document.getElementById("journalView");
   const cardView = document.getElementById("cardView");
+  const bodyView = document.getElementById("bodyView");
   const cardForm = document.getElementById("cardForm");
   const cardStatus = document.getElementById("cardStatus");
   const cardDrawFields = document.getElementById("cardDrawFields");
   const cardRecordList = document.getElementById("cardRecordList");
   const cardTimelineYear = document.getElementById("cardTimelineYear");
   const cardTimelineMonth = document.getElementById("cardTimelineMonth");
+  const bodyYear = document.getElementById("bodyYear");
+  const bodyMonth = document.getElementById("bodyMonth");
+  const bodyCalendar = document.getElementById("bodyCalendar");
+  const bodyCalendarTitle = document.getElementById("bodyCalendarTitle");
+  const bodyStatus = document.getElementById("bodyStatus");
+  const bodyForm = document.getElementById("bodyForm");
+  const bodyRecordList = document.getElementById("bodyRecordList");
+  const bodyDayTitle = document.getElementById("bodyDayTitle");
 
   apiBaseInput.value = apiBase;
   tokenInput.value = apiToken;
@@ -147,6 +159,38 @@
       : { error: await response.text().catch(() => "") };
     if (!response.ok) throw new Error(body.error || "Request failed");
     return body;
+  }
+
+  function sheetRequest(action, params) {
+    if (!apiToken) return Promise.reject(new Error("請先輸入 Token 後再使用身體記錄 🔐"));
+    const callback = "__emilySheetCallback" + Date.now() + Math.random().toString(36).slice(2);
+    const query = new URLSearchParams({ action, token: apiToken, callback });
+    Object.entries(params || {}).forEach(([key, value]) => {
+      if (value != null && value !== "") query.set(key, value);
+    });
+    return new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      const timer = window.setTimeout(() => {
+        cleanup();
+        reject(new Error("Google Sheet 回應逾時，請稍後再試 🌧️"));
+      }, 20000);
+      function cleanup() {
+        window.clearTimeout(timer);
+        delete window[callback];
+        script.remove();
+      }
+      window[callback] = (payload) => {
+        cleanup();
+        if (!payload || payload.ok === false) reject(new Error((payload && payload.error) || "Google Sheet 寫入失敗"));
+        else resolve(payload.data || {});
+      };
+      script.onerror = () => {
+        cleanup();
+        reject(new Error("無法連線 Google Sheet Web App 🌧️"));
+      };
+      script.src = sheetAppUrl + "?" + query.toString();
+      document.body.appendChild(script);
+    });
   }
 
   function friendlyConnectionError(error) {
@@ -247,6 +291,110 @@
       const monthNumber = Number(month.slice(5, 7));
       return '<option value="' + month + '"' + (month === activeCardMonth ? " selected" : "") + '>' + monthNumber + '月</option>';
     }).join("");
+  }
+
+  function setupBodyFilters() {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const years = [];
+    for (let year = currentYear + 1; year >= currentYear - 8; year -= 1) years.push(String(year));
+    bodyYear.innerHTML = years.map((year) => '<option value="' + year + '">' + year + '年</option>').join("");
+    bodyMonth.innerHTML = Array.from({ length: 12 }, (_unused, index) => {
+      const value = String(index + 1).padStart(2, "0");
+      return '<option value="' + value + '">' + (index + 1) + '月</option>';
+    }).join("");
+    bodyYear.value = String(currentYear);
+    bodyMonth.value = String(now.getMonth() + 1).padStart(2, "0");
+    bodyForm.elements.date.valueAsDate = now;
+  }
+
+  function bodyRecordsByDate() {
+    return bodyRecords.reduce((map, record) => {
+      if (!record.date) return map;
+      if (!map.has(record.date)) map.set(record.date, []);
+      map.get(record.date).push(record);
+      return map;
+    }, new Map());
+  }
+
+  function renderBodyCalendar() {
+    const year = Number(bodyYear.value);
+    const month = Number(bodyMonth.value) - 1;
+    const days = new Date(year, month + 1, 0).getDate();
+    const firstDay = new Date(year, month, 1).getDay();
+    const leadingBlanks = (firstDay + 6) % 7;
+    const weekdayNames = ["一", "二", "三", "四", "五", "六", "日"];
+    const byDate = bodyRecordsByDate();
+    bodyCalendarTitle.textContent = "🌙 " + String(month + 1) + "月身體月曆";
+    const head = weekdayNames.map((name, index) => '<div class="weekday' + (index >= 5 ? ' weekend' : '') + '">週' + name + '</div>');
+    const blanks = Array.from({ length: leadingBlanks }, () => '<div class="day"></div>');
+    const dayCells = Array.from({ length: days }, (_unused, index) => {
+      const day = index + 1;
+      const date = year + "-" + String(month + 1).padStart(2, "0") + "-" + String(day).padStart(2, "0");
+      const weekday = new Date(year, month, day).getDay();
+      const records = byDate.get(date) || [];
+      const hasPeriod = records.some((record) => record.type === "月經");
+      const hasAsthma = records.some((record) => record.type === "氣喘");
+      const markers = (hasPeriod ? '<span class="body-marker period"></span>' : '')
+        + (hasAsthma ? '<span class="body-marker asthma"></span>' : '');
+      return '<button type="button" class="day body-day'
+        + (weekday === 0 || weekday === 6 ? ' weekend' : '')
+        + (hasPeriod ? ' has-period' : '')
+        + (hasAsthma ? ' has-asthma' : '')
+        + (activeBodyDate === date ? ' active' : '')
+        + '" data-body-date="' + date + '">' + day + (markers ? '<div class="dot-row">' + markers + '</div>' : '') + '</button>';
+    });
+    bodyCalendar.innerHTML = head.concat(blanks, dayCells).join("");
+  }
+
+  function renderBodyRecords() {
+    const records = activeBodyDate
+      ? bodyRecords.filter((record) => record.date === activeBodyDate)
+      : [];
+    bodyDayTitle.textContent = activeBodyDate ? "📍 " + activeBodyDate + " 當日記錄" : "📍 當日記錄";
+    if (!records.length) {
+      bodyRecordList.innerHTML = '<p class="muted">' + (activeBodyDate ? '這一天還沒有身體記錄 🌙' : '點選月曆日期查看記錄。') + '</p>';
+      return;
+    }
+    bodyRecordList.innerHTML = records.map((record) => {
+      const title = record.type === "氣喘" ? "🫧 氣喘發作日" : "🌸 月經來時";
+      const details = [
+        record.severity ? "程度：" + record.severity : "",
+        record.flow ? "流量：" + record.flow : "",
+        record.painLevel ? "疼痛：" + record.painLevel : "",
+        record.asthmaTrigger ? "誘因：" + record.asthmaTrigger : "",
+        record.medicineUsed ? "用藥：" + record.medicineUsed : "",
+      ].filter(Boolean).join(" · ");
+      return '<article class="body-record">'
+        + '<div class="entry-title">' + esc(title) + '</div>'
+        + '<div class="entry-meta">' + esc([record.recordedAt || record.date, details].filter(Boolean).join(" · ")) + '</div>'
+        + (record.notes ? '<div class="entry-meta">' + esc(record.notes) + '</div>' : '')
+        + '<div class="toolbar"><button class="danger" type="button" data-body-delete-id="' + esc(record.id) + '">🗑️ 刪除</button></div>'
+      + '</article>';
+    }).join("");
+  }
+
+  async function loadBodyRecords() {
+    const year = bodyYear.value;
+    const month = bodyMonth.value;
+    bodyStatus.className = "status";
+    bodyStatus.textContent = "讀取身體記錄中... 🌙";
+    try {
+      const body = await sheetRequest("emilyBodyRecords", { year, month });
+      bodyRecords = Array.isArray(body.records) ? body.records : [];
+      const prefix = year + "-" + month;
+      if (!activeBodyDate || !activeBodyDate.startsWith(prefix)) activeBodyDate = "";
+      renderBodyCalendar();
+      renderBodyRecords();
+      bodyStatus.className = "status ok";
+      bodyStatus.textContent = "已載入 " + prefix + "，共 " + bodyRecords.length + " 筆記錄 ✨";
+    } catch (error) {
+      bodyRecords = [];
+      renderBodyCalendar();
+      renderBodyRecords();
+      bodyStatus.className = "status error";
+      bodyStatus.textContent = error.message;
+    }
   }
 
   function renderEntries() {
@@ -466,9 +614,10 @@
   }
 
   function setView(view) {
-    const next = view === "cards" ? "cards" : "journal";
+    const next = view === "cards" ? "cards" : (view === "body" ? "body" : "journal");
     journalView.hidden = next !== "journal";
     cardView.hidden = next !== "cards";
+    bodyView.hidden = next !== "body";
     document.querySelectorAll("[data-view]").forEach((button) => {
       button.classList.toggle("active", button.dataset.view === next);
     });
@@ -644,6 +793,7 @@
       await loadEntries();
       await loadLibrarySummary();
       await loadCards();
+      await loadBodyRecords().catch(() => {});
       showApp();
     } catch (error) {
       showGate(friendlyConnectionError(error), true);
@@ -661,6 +811,9 @@
 
   libraryYear.addEventListener("change", syncLibraryMonths);
   document.getElementById("loadLibraryBtn").addEventListener("click", loadLibraryMonth);
+  document.getElementById("bodyLoadBtn").addEventListener("click", loadBodyRecords);
+  bodyYear.addEventListener("change", loadBodyRecords);
+  bodyMonth.addEventListener("change", loadBodyRecords);
   cardTimelineYear.addEventListener("change", () => {
     activeCardMonth = "";
     syncCardTimelineMonths();
@@ -690,6 +843,32 @@
     activeDate = activeDate === button.dataset.date ? "" : button.dataset.date;
     renderCalendar();
     renderEntries();
+  });
+
+  bodyCalendar.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-body-date]");
+    if (!button) return;
+    activeBodyDate = activeBodyDate === button.dataset.bodyDate ? "" : button.dataset.bodyDate;
+    if (activeBodyDate) bodyForm.elements.date.value = activeBodyDate;
+    renderBodyCalendar();
+    renderBodyRecords();
+  });
+
+  bodyRecordList.addEventListener("click", async (event) => {
+    const button = event.target.closest("[data-body-delete-id]");
+    if (!button) return;
+    if (!window.confirm("確定要刪除這筆身體記錄嗎？")) return;
+    button.disabled = true;
+    bodyStatus.className = "status";
+    bodyStatus.textContent = "刪除中... 🌙";
+    try {
+      await sheetRequest("emilyBodyRecordDelete", { id: button.dataset.bodyDeleteId });
+      await loadBodyRecords();
+    } catch (error) {
+      button.disabled = false;
+      bodyStatus.className = "status error";
+      bodyStatus.textContent = error.message;
+    }
   });
 
   entryListEl.addEventListener("click", (event) => {
@@ -772,7 +951,10 @@
     tokenInput.value = "";
     showGate("已清除記住的 Token，請重新輸入 🧹", false);
   });
-  document.getElementById("refreshBtn").addEventListener("click", loadEntries);
+  document.getElementById("refreshBtn").addEventListener("click", async () => {
+    await loadEntries();
+    await loadBodyRecords();
+  });
   document.querySelectorAll("[data-view]").forEach((button) => {
     button.addEventListener("click", () => setView(button.dataset.view));
   });
@@ -830,6 +1012,42 @@
       button.disabled = false;
     }
   });
+  bodyForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const button = bodyForm.querySelector("button[type='submit']");
+    const data = new FormData(bodyForm);
+    const date = data.get("date");
+    button.disabled = true;
+    bodyStatus.className = "status";
+    bodyStatus.textContent = "寫入身體記錄中... 🌙";
+    try {
+      await sheetRequest("emilyBodyRecordWrite", {
+        date,
+        time: currentTime(),
+        type: data.get("type"),
+        severity: data.get("severity"),
+        flow: data.get("flow"),
+        painLevel: data.get("painLevel"),
+        asthmaTrigger: data.get("asthmaTrigger"),
+        medicineUsed: data.get("medicineUsed"),
+        notes: data.get("notes"),
+        source: "EmilyHome",
+      });
+      bodyYear.value = String(date).slice(0, 4);
+      bodyMonth.value = String(date).slice(5, 7);
+      activeBodyDate = date;
+      bodyForm.reset();
+      bodyForm.elements.date.value = date;
+      await loadBodyRecords();
+      bodyStatus.className = "status ok";
+      bodyStatus.textContent = "已寫入身體記錄 ✨";
+    } catch (error) {
+      bodyStatus.className = "status error";
+      bodyStatus.textContent = error.message;
+    } finally {
+      button.disabled = false;
+    }
+  });
   function currentTime() {
     const now = new Date();
     return String(now.getHours()).padStart(2, "0") + ":" + String(now.getMinutes()).padStart(2, "0");
@@ -838,6 +1056,9 @@
   form.elements.time.value = currentTime();
   cardForm.elements.date.valueAsDate = new Date();
   cardForm.elements.time.value = currentTime();
+  setupBodyFilters();
+  renderBodyCalendar();
+  renderBodyRecords();
   renderCardDrawFields();
   renderTagPicker();
 })();
