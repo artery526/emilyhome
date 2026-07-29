@@ -638,6 +638,7 @@
 
   async function openReadEntry(id) {
     detailEl.textContent = "讀取完整文章中... 📖";
+    detailEl.scrollIntoView({ behavior: "smooth", block: "start" });
     try {
       let url = apiUrl("/api/wife-journal/entries/" + encodeURIComponent(id));
       const entry = entries.find((item) => item.id === id);
@@ -659,6 +660,7 @@
         + (media.length ? '<div class="edit-media-grid full" style="margin-top:14px">' + media.map(readMediaPreview).join("") + '</div>' : '')
         + '<div class="toolbar"><button type="button" data-edit-id="' + esc(loaded.id) + '">✏️ 編輯</button></div>'
       + '</article>';
+      detailEl.scrollIntoView({ behavior: "smooth", block: "start" });
     } catch (error) {
       detailEl.innerHTML = '<p class="status error">' + esc(error.message) + '</p>';
     }
