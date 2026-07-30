@@ -118,7 +118,6 @@
   const statusEl = document.getElementById("formStatus");
   const entryUploadStatus = document.getElementById("entryUploadStatus");
   const entryEditMedia = document.getElementById("entryEditMedia");
-  const detailEl = document.getElementById("entryDetail");
   const entryReaderDialog = document.getElementById("entryReaderDialog");
   const entryReaderContent = document.getElementById("entryReaderContent");
   const tagsInput = document.getElementById("tagsInput");
@@ -856,17 +855,20 @@
     );
     if (!confirmed) return;
 
-    detailEl.innerHTML = '<p class="status">刪除中... 🧸</p>';
+    statusEl.className = "status";
+    statusEl.textContent = "刪除中... 🧸";
     try {
       const body = await fetch(apiUrl("/api/wife-journal/entries/" + encodeURIComponent(id)), {
         method: "DELETE",
         headers: headers(),
       }).then(readJson);
       const deletedTitle = (body.entry && body.entry.title) || title;
-      detailEl.innerHTML = '<p class="status ok">已刪除「' + esc(deletedTitle) + '」✨</p>';
+      statusEl.className = "status ok";
+      statusEl.textContent = "已刪除「" + deletedTitle + "」✨";
       await loadEntries();
     } catch (error) {
-      detailEl.innerHTML = '<p class="status error">' + esc(error.message) + '</p>';
+      statusEl.className = "status error";
+      statusEl.textContent = error.message;
     }
   }
 
@@ -1241,16 +1243,6 @@
     if (entryCard) openReadEntry(entryCard.dataset.readId);
   });
 
-  detailEl.addEventListener("click", (event) => {
-    const viewButton = event.target.closest("[data-view-url]");
-    if (viewButton) {
-      openPhoto(viewButton.dataset.viewUrl);
-      return;
-    }
-    const editButton = event.target.closest("[data-edit-id]");
-    if (editButton) openEditEntry(editButton.dataset.editId);
-  });
-
   entryReaderContent.addEventListener("click", (event) => {
     const viewButton = event.target.closest("[data-view-url]");
     if (viewButton) {
@@ -1261,54 +1253,6 @@
     if (editButton) {
       entryReaderDialog.close();
       openEditEntry(editButton.dataset.editId);
-    }
-  });
-
-  detailEl.addEventListener("change", (event) => {
-    const editForm = event.target.closest("#editEntryForm");
-    if (!editForm) return;
-    if (event.target.matches('[name="visibility"]')) {
-      updateEntryPasswordField(editForm);
-      return;
-    }
-    if (!event.target.matches('input[type="file"][name="media"]')) return;
-    renderUploadStatuses(editForm.querySelector("#editUploadStatus"), selectedUploadFiles(editForm), "waiting");
-  });
-
-  detailEl.addEventListener("submit", async (event) => {
-    const editForm = event.target.closest("#editEntryForm");
-    if (!editForm) return;
-    event.preventDefault();
-    const button = editForm.querySelector("button[type='submit']");
-    const uploadTarget = editForm.querySelector("#editUploadStatus");
-    const uploadFiles = selectedUploadFiles(editForm);
-    renderUploadStatuses(uploadTarget, uploadFiles, "loading");
-    button.disabled = true;
-    button.textContent = "儲存中... ✨";
-    try {
-      const data = new FormData(editForm);
-      editForm.querySelectorAll("input[name='removeMedia']:checked").forEach((input) => {
-        data.append("removeMedia", input.value);
-      });
-      const body = await fetch(apiUrl("/api/wife-journal/entries/" + encodeURIComponent(editForm.dataset.entryId)), {
-        method: "PUT",
-        headers: headers(),
-        body: data,
-      }).then(readJson);
-      const passwordSheetSync = await syncJournalPasswordFromBrowser(body.entry || {}, data, body.passwordSheetSync);
-      const syncMessage = journalPasswordSyncText(passwordSheetSync);
-      detailEl.innerHTML = '<p class="status ok">已更新：' + esc(body.entry.title || "心情日記") + ' ✨' + esc(syncMessage) + '</p>';
-      if (uploadFiles.length) {
-        detailEl.insertAdjacentHTML("beforeend", '<div class="upload-status-list">' + uploadFiles.map((file) => (
-          '<div class="upload-status-item ok"><strong>' + esc(uploadKind(file) + "：" + file.name) + '</strong><span>已上傳</span></div>'
-        )).join("") + '</div>');
-      }
-      await loadEntries();
-    } catch (error) {
-      button.disabled = false;
-      button.textContent = "🧸 儲存編輯";
-      renderUploadStatuses(uploadTarget, uploadFiles, "error", "上傳失敗");
-      detailEl.insertAdjacentHTML("beforeend", '<p class="status error">' + esc(error.message) + '</p>');
     }
   });
 
