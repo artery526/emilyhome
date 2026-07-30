@@ -228,6 +228,13 @@
       display: grid;
       gap: 10px;
     }
+    .cards-panel .grid {
+      gap: 16px;
+    }
+    .cards-panel .library-controls {
+      grid-template-columns: minmax(160px, 1fr) minmax(160px, 1fr) auto;
+      max-width: 100%;
+    }
     .card-record {
       border: 1px solid var(--line);
       border-radius: 8px;
@@ -650,9 +657,9 @@
       </div>
       </section>
 
-      <section class="view-panel" id="cardView" hidden>
+      <section class="view-panel cards-panel" id="cardView" hidden>
         <div class="grid">
-          <section class="card span-8">
+          <section class="card span-12">
             <h3>🔮 記錄卡牌</h3>
             <form id="cardForm" class="form-grid" style="margin-top:14px">
               <label>日期<input name="date" type="date" required></label>
