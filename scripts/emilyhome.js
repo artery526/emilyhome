@@ -747,15 +747,15 @@
       url += query;
       const body = await fetch(url, { cache: "no-store", headers: headers() }).then(readJson);
       const loaded = body.entry || {};
-      detailEl.innerHTML = '<form id="editEntryForm" class="form-grid" data-entry-id="' + esc(loaded.id) + '">'
-        + '<label>日期<input name="date" type="date" value="' + esc(loaded.date || "") + '" required></label>'
-        + '<label>時間<input name="time" type="time" step="60" value="' + esc(loaded.time || "") + '"></label>'
-        + '<label>標題<input name="title" value="' + esc(loaded.title || "") + '"></label>'
-        + '<label>文章權限<select name="visibility">'
+      detailEl.innerHTML = '<form id="editEntryForm" class="form-grid entry-form" data-entry-id="' + esc(loaded.id) + '">'
+        + '<label class="title-field">標題<input name="title" value="' + esc(loaded.title || "") + '"></label>'
+        + '<label class="date-field">日期<input name="date" type="date" value="' + esc(loaded.date || "") + '" required></label>'
+        + '<label class="time-field">時間<input name="time" type="time" step="60" value="' + esc(loaded.time || "") + '"></label>'
+        + '<label class="privacy-field">文章權限<select name="visibility">'
           + '<option value="normal"' + (loaded.visibility === "normal" ? " selected" : "") + '>不上鎖</option>'
           + '<option value="password"' + (loaded.visibility === "password" || loaded.visibility === "locked" ? " selected" : "") + '>上鎖</option>'
         + '</select></label>'
-        + '<label>解鎖密碼<input name="entryPassword" type="password" placeholder="上鎖或更換密碼時填寫，會同步到試算表"></label>'
+        + '<label class="password-field">解鎖密碼<input name="entryPassword" type="password" placeholder="上鎖或更換密碼時填寫，會同步到試算表"></label>'
         + '<label class="full">快速標籤<input name="tags" value="' + esc((loaded.tags || []).join(",")) + '"></label>'
         + '<label class="full">日記內容<textarea name="content">' + esc(markdownBody(body.markdown || "")) + '</textarea></label>'
         + '<div class="full"><h3>照片與語音</h3><div class="edit-media-grid">' + ((loaded.media || []).map(mediaPreview).join("") || '<p class="muted">沒有附件</p>') + '</div></div>'

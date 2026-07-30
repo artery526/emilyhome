@@ -132,6 +132,19 @@
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 12px;
     }
+    .entry-form {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+    .entry-form .title-field,
+    .entry-form .full {
+      grid-column: 1 / -1;
+    }
+    .entry-form .date-field,
+    .entry-form .time-field,
+    .entry-form .privacy-field,
+    .entry-form .password-field {
+      grid-column: span 2;
+    }
     .full { grid-column: 1 / -1; }
     .tag-row {
       display: flex;
@@ -383,6 +396,24 @@
       gap: 8px;
       margin-bottom: 10px;
     }
+    .library-panel summary {
+      cursor: pointer;
+      font-weight: 700;
+      color: var(--ink);
+      list-style: none;
+    }
+    .library-panel summary::-webkit-details-marker { display: none; }
+    .library-panel summary::after {
+      content: "展開";
+      float: right;
+      color: var(--rose);
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .library-panel[open] summary::after { content: "收合"; }
+    .library-panel .library-body {
+      margin-top: 12px;
+    }
     .media-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(82px, 1fr));
@@ -499,6 +530,12 @@
     @media (max-width: 900px) {
       .span-4, .span-5, .span-7, .span-8 { grid-column: span 12; }
       .form-grid, .library-controls, .card-draw-set { grid-template-columns: 1fr; }
+      .entry-form .date-field,
+      .entry-form .time-field,
+      .entry-form .privacy-field,
+      .entry-form .password-field {
+        grid-column: 1 / -1;
+      }
       main { padding: 14px; }
       header { align-items: start; }
       .brand-logo {
@@ -567,30 +604,32 @@
           <div class="calendar" id="calendar"></div>
         </section>
 
-        <section class="card span-12">
-          <h3>🖼️找尋歷史軌跡</h3>
-          <div class="library-controls">
-            <select id="libraryYear"></select>
-            <select id="libraryMonth"></select>
-          <button type="button" id="loadLibraryBtn">載入 ✨</button>
+        <details class="card span-12 library-panel">
+          <summary>🖼️找尋歷史軌跡</summary>
+          <div class="library-body">
+            <div class="library-controls">
+              <select id="libraryYear"></select>
+              <select id="libraryMonth"></select>
+              <button type="button" id="loadLibraryBtn">載入 ✨</button>
+            </div>
+            <p class="status" id="libraryStatus">尚未載入 Photos。</p>
+            <div class="media-grid" id="libraryGrid"></div>
           </div>
-          <p class="status" id="libraryStatus">尚未載入 Photos。</p>
-          <div class="media-grid" id="libraryGrid"></div>
-        </section>
+        </details>
 
         <section class="card span-12" id="createCard">
           <h3>💌 新增心情日記</h3>
-          <form id="entryForm" class="form-grid">
-            <label>日期<input name="date" type="date" required></label>
-            <label>時間<input name="time" type="time" step="60"></label>
-            <label>文章權限
+          <form id="entryForm" class="form-grid entry-form">
+            <label class="title-field">標題<input name="title" placeholder="主題是?"></label>
+            <label class="date-field">日期<input name="date" type="date" required></label>
+            <label class="time-field">時間<input name="time" type="time" step="60"></label>
+            <label class="privacy-field">文章權限
               <select name="visibility">
                 <option value="normal">不上鎖</option>
                 <option value="password">上鎖</option>
               </select>
             </label>
-            <label>標題<input name="title" placeholder="主題是?"></label>
-            <label hidden>解鎖密碼<input name="entryPassword" type="password" placeholder="選擇上鎖時填寫，會同步到試算表"></label>
+            <label class="password-field" hidden>解鎖密碼<input name="entryPassword" type="password" placeholder="選擇上鎖時填寫，會同步到試算表"></label>
             <label class="full">快速標籤
               <input name="tags" id="tagsInput" placeholder="可手動補標籤，用逗號分隔">
             </label>
