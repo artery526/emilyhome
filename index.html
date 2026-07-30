@@ -537,11 +537,28 @@
     @media (max-width: 900px) {
       .span-4, .span-5, .span-7, .span-8 { grid-column: span 12; }
       .form-grid, .library-controls, .card-draw-set { grid-template-columns: 1fr; }
+      .entry-form {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .entry-form label {
+        font-size: 15px;
+        font-weight: 600;
+      }
+      .entry-form input,
+      .entry-form select,
+      .entry-form textarea {
+        font-weight: 400;
+      }
+      .entry-form .title-field,
+      .entry-form .full {
+        grid-column: 1 / -1;
+      }
       .entry-form .date-field,
       .entry-form .time-field,
       .entry-form .privacy-field,
       .entry-form .password-field {
-        grid-column: 1 / -1;
+        grid-column: span 2;
       }
       main { padding: 14px; }
       header { align-items: start; }
