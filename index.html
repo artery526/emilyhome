@@ -35,11 +35,11 @@
       z-index: 4;
       display: flex;
       align-items: center;
-      justify-content: flex-start;
+      justify-content: center;
       gap: 16px;
       padding: 14px 20px;
       background: transparent;
-      border-bottom: 0;
+      border-bottom: 1px solid rgba(107, 118, 111, .14);
     }
     h1, h2, h3, p { margin: 0; }
     h1 { font-size: 22px; }
@@ -170,17 +170,20 @@
       color: #fff;
     }
     .view-tabs {
+      position: absolute;
+      left: calc(50% + 154px);
+      top: 50%;
       display: flex;
       flex-wrap: wrap;
       align-items: center;
       gap: 8px;
       max-width: 0;
       max-height: 46px;
-      margin: 8px 0 0;
+      margin: 0;
       opacity: 0;
       overflow: hidden;
       pointer-events: none;
-      transform: translateX(-8px);
+      transform: translateY(-50%) translateX(-8px);
       transition: max-width .22s ease, opacity .18s ease, transform .18s ease;
       white-space: nowrap;
     }
@@ -188,7 +191,7 @@
       max-width: 760px;
       opacity: 1;
       pointer-events: auto;
-      transform: translateX(0);
+      transform: translateY(-50%) translateX(0);
     }
     .view-tabs #refreshBtn { margin-left: 0; }
     .view-tab.active {
@@ -660,7 +663,7 @@
       }
       main { padding: 14px; }
       header {
-        align-items: start;
+        align-items: center;
         flex-direction: column;
         gap: 8px;
       }
@@ -668,6 +671,9 @@
         width: min(260px, 82vw);
       }
       .view-tabs {
+        position: static;
+        left: auto;
+        top: auto;
         max-width: 100%;
         max-height: 0;
         margin: 0;
