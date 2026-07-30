@@ -531,6 +531,25 @@
     }).join("");
   }
 
+  function updateBodyTemplateFields() {
+    const type = bodyForm.elements.type.value;
+    const isAsthma = type === "氣喘";
+    bodyForm.querySelectorAll(".body-period-field").forEach((field) => {
+      field.hidden = isAsthma;
+      field.querySelectorAll("input, select, textarea").forEach((input) => {
+        input.disabled = isAsthma;
+        if (isAsthma) input.value = "";
+      });
+    });
+    bodyForm.querySelectorAll(".body-asthma-field").forEach((field) => {
+      field.hidden = !isAsthma;
+      field.querySelectorAll("input, select, textarea").forEach((input) => {
+        input.disabled = !isAsthma;
+        if (!isAsthma) input.value = "";
+      });
+    });
+  }
+
   async function loadBodyRecords() {
     const year = bodyYear.value;
     const month = bodyMonth.value;
@@ -1354,6 +1373,7 @@
   document.getElementById("bodyLockBtn").addEventListener("click", lockBodyRecords);
   document.getElementById("bodyTokenSettingsBtn").addEventListener("click", () => toggleSettingsPanel("bodyTokenSettingsBtn", "bodyTokenSettings"));
   document.getElementById("bodyLockSettingsBtn").addEventListener("click", () => toggleSettingsPanel("bodyLockSettingsBtn", "bodyLockSettings"));
+  bodyForm.elements.type.addEventListener("change", updateBodyTemplateFields);
   document.getElementById("refreshBtn").addEventListener("click", async () => {
     await loadEntries();
     if (!cardView.hidden) await ensureCardsLoaded();
@@ -1443,6 +1463,7 @@
       activeBodyDate = date;
       bodyForm.reset();
       bodyForm.elements.date.value = date;
+      updateBodyTemplateFields();
       await loadBodyRecords();
       bodyStatus.className = "status ok";
       bodyStatus.textContent = "已寫入身體記錄 ✨";
@@ -1462,6 +1483,7 @@
   cardForm.elements.date.valueAsDate = new Date();
   cardForm.elements.time.value = currentTime();
   setupBodyFilters();
+  updateBodyTemplateFields();
   renderBodyCalendar();
   renderBodyRecords();
   renderCardDrawFields();
