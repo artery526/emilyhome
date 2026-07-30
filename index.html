@@ -569,6 +569,19 @@
       .entry-form .password-field {
         grid-column: span 2;
       }
+      .entry-form .upload-field {
+        grid-column: span 2;
+      }
+      .entry-form .upload-field input[type="file"] {
+        min-height: 34px;
+        padding: 5px;
+        font-size: 12px;
+      }
+      .entry-form .upload-field input[type="file"]::file-selector-button {
+        font-size: 12px;
+        padding: 4px 6px;
+        margin-right: 4px;
+      }
       main { padding: 14px; }
       header { align-items: start; }
       .brand-logo {
@@ -669,8 +682,8 @@
             <div class="tag-row full" id="tagPicker"></div>
             <label class="full">日記內容<textarea name="content" required placeholder="今天發生什麼？我想留下什麼？"></textarea></label>
             <div class="full" id="entryEditMedia" hidden></div>
-            <label>上傳照片<input name="media" type="file" accept="image/*,.heic,.heif" multiple></label>
-            <label>語音備忘<input name="media" type="file" accept="audio/*,.m4a,.mp3,.wav,.webm" multiple></label>
+            <label class="upload-field">上傳照片<input name="media" type="file" accept="image/*,.heic,.heif" multiple></label>
+            <label class="upload-field">語音備忘<input name="media" type="file" accept="audio/*,.m4a,.mp3,.wav,.webm" multiple></label>
             <div class="upload-status-list full" id="entryUploadStatus"></div>
             <button class="primary full" type="submit" id="entrySubmitBtn">🧸 記錄</button>
             <button class="ghost full" type="button" id="cancelEntryEditBtn" hidden>取消編輯，回到新增日記</button>
