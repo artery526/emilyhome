@@ -405,6 +405,12 @@
     return entries.filter((entry) => entry.type === "card" || entry.cardOnly || entry.cardDraw);
   }
 
+  function shortTimelineExcerpt(value) {
+    const text = String(value || "").replace(/\s+/g, " ").trim();
+    if (text.length <= 46) return text;
+    return text.slice(0, 46).trimEnd() + "...";
+  }
+
   function cardEntryMonth(entry) {
     return String(entry.date || "").slice(0, 7);
   }
@@ -664,13 +670,13 @@
       const locked = entry.visibility === "password" || entry.visibility === "locked";
       const visibility = locked ? "上鎖" : "不上鎖";
       const meta = [entry.date || "", entry.time || "", visibility].filter(Boolean).join(" · ");
-      const excerpt = locked ? "這篇文章需要解鎖密碼。" : (entry.excerpt || "");
+      const excerpt = locked ? "這篇文章需要解鎖密碼。" : shortTimelineExcerpt(entry.excerpt || "");
       return '<article class="entry" data-read-id="' + esc(entry.id) + '">'
         + (cover ? '<button class="cover-button" type="button" data-view-url="' + esc(cover) + '"><img class="cover" src="' + esc(cover) + '" alt=""></button>' : '<div class="cover"></div>')
         + '<div>'
           + '<div class="entry-title">' + esc(entry.title || "今天的心情") + '</div>'
           + '<div class="entry-meta">' + esc(meta) + '</div>'
-          + '<div class="entry-meta">' + esc(excerpt) + '</div>'
+          + '<div class="entry-excerpt">' + esc(excerpt) + '</div>'
           + '<div class="toolbar"><button type="button" data-read-button-id="' + esc(entry.id) + '">📖 閱讀全文</button><button type="button" data-edit-id="' + esc(entry.id) + '">✏️ 編輯</button><button class="danger" type="button" data-delete-id="' + esc(entry.id) + '">🗑️ 刪除</button></div>'
         + '</div>'
       + '</article>';
