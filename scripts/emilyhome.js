@@ -96,6 +96,9 @@
   let bodyLockConfigured = false;
   let bodyPassword = "";
   let drawMode = "single";
+  let librarySummaryLoaded = false;
+  let cardsLoaded = false;
+  let bodyLoaded = false;
   let apiBase = localStorage.getItem("emilyhome.apiBase") || defaultApiBase;
   let apiToken = localStorage.getItem("emilyhome.token") || "";
   let sheetToken = localStorage.getItem("emilyhome.sheetToken") || "";
@@ -120,6 +123,7 @@
   const tagPicker = document.getElementById("tagPicker");
   const libraryGrid = document.getElementById("libraryGrid");
   const libraryStatus = document.getElementById("libraryStatus");
+  const libraryPanel = document.getElementById("libraryPanel");
   const libraryYear = document.getElementById("libraryYear");
   const libraryMonth = document.getElementById("libraryMonth");
   const calendarTitle = document.getElementById("calendarTitle");
@@ -540,6 +544,7 @@
         renderBodyRecords();
         bodyStatus.className = "status";
         bodyStatus.textContent = "當月記錄已上鎖，請先輸入身體記錄密碼 🔐";
+        bodyLoaded = true;
         return;
       }
       const params = { year, month };
@@ -552,10 +557,12 @@
       renderBodyRecords();
       bodyStatus.className = "status ok";
       bodyStatus.textContent = "已載入 " + prefix + "，共 " + bodyRecords.length + " 筆記錄 ✨";
+      bodyLoaded = true;
     } catch (error) {
       bodyRecords = [];
       renderBodyCalendar();
       renderBodyRecords();
+      bodyLoaded = false;
       bodyStatus.className = "status error";
       bodyStatus.textContent = error.message;
     }
@@ -857,10 +864,16 @@
       libraryYear.dataset.options = JSON.stringify(options);
       syncLibraryMonths();
       libraryStatus.textContent = options.length ? "選擇年月後載入 NAS Photos 🖼️" : "尚未建立 Photos 索引 🌙";
+      librarySummaryLoaded = true;
     } catch (error) {
       libraryStatus.textContent = error.message;
       libraryStatus.className = "status error";
     }
+  }
+
+  async function ensureLibrarySummary() {
+    if (librarySummaryLoaded) return;
+    await loadLibrarySummary();
   }
 
   function syncLibraryMonths() {
@@ -870,6 +883,7 @@
   }
 
   async function loadLibraryMonth() {
+    await ensureLibrarySummary();
     const year = libraryYear.value;
     const month = libraryMonth.value;
     if (!year || !month) return;
@@ -903,7 +917,13 @@
       cards = fallbackCards.slice();
       oshoCards = [];
     }
+    cardsLoaded = true;
     renderCardDrawFields();
+  }
+
+  async function ensureCardsLoaded() {
+    if (cardsLoaded) return;
+    await loadCards();
   }
 
   function setView(view) {
@@ -914,6 +934,10 @@
     document.querySelectorAll("[data-view]").forEach((button) => {
       button.classList.toggle("active", button.dataset.view === next);
     });
+    if (next === "cards") ensureCardsLoaded();
+    if (next === "body" && !bodyLoaded) {
+      loadBodyRecords().then(() => { bodyLoaded = true; }).catch(() => {});
+    }
   }
 
   function activeCards() {
@@ -1084,9 +1108,6 @@
     gateStatus.textContent = "連線中... 🌙";
     try {
       await loadEntries();
-      await loadLibrarySummary();
-      await loadCards();
-      await loadBodyRecords().catch(() => {});
       showApp();
     } catch (error) {
       showGate(friendlyConnectionError(error), true);
@@ -1103,6 +1124,9 @@
   });
 
   libraryYear.addEventListener("change", syncLibraryMonths);
+  libraryPanel.addEventListener("toggle", () => {
+    if (libraryPanel.open) ensureLibrarySummary().catch(() => {});
+  });
   document.getElementById("loadLibraryBtn").addEventListener("click", loadLibraryMonth);
   document.getElementById("bodyLoadBtn").addEventListener("click", loadBodyRecords);
   bodyYear.addEventListener("change", loadBodyRecords);
@@ -1332,7 +1356,9 @@
   document.getElementById("bodyLockSettingsBtn").addEventListener("click", () => toggleSettingsPanel("bodyLockSettingsBtn", "bodyLockSettings"));
   document.getElementById("refreshBtn").addEventListener("click", async () => {
     await loadEntries();
-    await loadBodyRecords();
+    if (!cardView.hidden) await ensureCardsLoaded();
+    if (!bodyView.hidden) await loadBodyRecords();
+    if (!journalView.hidden && libraryPanel.open) await ensureLibrarySummary();
   });
   document.querySelectorAll("[data-view]").forEach((button) => {
     button.addEventListener("click", () => setView(button.dataset.view));
