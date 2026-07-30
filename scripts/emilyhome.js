@@ -712,8 +712,8 @@
       const weekday = new Date(year, month, day).getDay();
       const isWeekend = weekday === 0 || weekday === 6;
       const count = byDate.get(date) || 0;
-      const dots = count ? '<div class="dot-row">' + Array.from({ length: Math.min(count, 6) }, () => '<span class="dot"></span>').join("") + (count > 6 ? '<span class="entry-meta">+' + (count - 6) + '</span>' : '') + '</div>' : '';
-      return '<button type="button" class="day' + (isWeekend ? ' weekend' : '') + (count ? ' has-entry' : '') + (activeDate === date ? ' active' : '') + '" data-date="' + date + '">' + day + dots + '</button>';
+      const countBadge = count ? '<div><span class="entry-count-badge">' + esc(count > 9 ? "9+" : String(count)) + '</span></div>' : '';
+      return '<button type="button" class="day' + (isWeekend ? ' weekend' : '') + (count ? ' has-entry' : '') + (activeDate === date ? ' active' : '') + '" data-date="' + date + '">' + day + countBadge + '</button>';
     });
     calendarEl.innerHTML = head.concat(blanks, dayCells).join("");
   }
