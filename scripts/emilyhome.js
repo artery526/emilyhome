@@ -468,6 +468,10 @@
     bodyCalendar.innerHTML = head.concat(blanks, dayCells).join("");
   }
 
+  function asthmaTriggerLabel(value) {
+    return value === "壓力" ? "自律神經" : value;
+  }
+
   function renderBodyRecords() {
     const records = activeBodyDate
       ? bodyRecords.filter((record) => record.date === activeBodyDate)
@@ -483,7 +487,7 @@
         record.severity ? "程度：" + record.severity : "",
         record.flow ? "流量：" + record.flow : "",
         record.painLevel ? "疼痛：" + record.painLevel : "",
-        record.asthmaTrigger ? "誘因：" + record.asthmaTrigger : "",
+        record.asthmaTrigger ? "誘因：" + asthmaTriggerLabel(record.asthmaTrigger) : "",
         record.medicineUsed ? "用藥：" + record.medicineUsed : "",
       ].filter(Boolean).join(" · ");
       return '<article class="body-record">'
