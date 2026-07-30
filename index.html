@@ -625,7 +625,7 @@
         </details>
 
         <section class="card span-12" id="createCard">
-          <h3>💌 新增心情日記</h3>
+          <h3 id="entryFormTitle">💌 新增心情日記</h3>
           <form id="entryForm" class="form-grid entry-form">
             <label class="title-field">標題<input name="title" placeholder="主題是?"></label>
             <label class="date-field">日期<input name="date" type="date" required></label>
@@ -642,10 +642,12 @@
             </label>
             <div class="tag-row full" id="tagPicker"></div>
             <label class="full">日記內容<textarea name="content" required placeholder="今天發生什麼？我想留下什麼？"></textarea></label>
+            <div class="full" id="entryEditMedia" hidden></div>
             <label>上傳照片<input name="media" type="file" accept="image/*,.heic,.heif" multiple></label>
             <label>語音備忘<input name="media" type="file" accept="audio/*,.m4a,.mp3,.wav,.webm" multiple></label>
             <div class="upload-status-list full" id="entryUploadStatus"></div>
-          <button class="primary full" type="submit">🧸 記錄</button>
+            <button class="primary full" type="submit" id="entrySubmitBtn">🧸 記錄</button>
+            <button class="ghost full" type="button" id="cancelEntryEditBtn" hidden>取消編輯，回到新增日記</button>
           </form>
           <p class="status" id="formStatus"></p>
         </section>

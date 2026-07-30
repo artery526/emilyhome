@@ -107,9 +107,14 @@
   const tokenInput = document.getElementById("tokenInput");
   const entryListEl = document.getElementById("entryList");
   const calendarEl = document.getElementById("calendar");
+  const createCard = document.getElementById("createCard");
   const form = document.getElementById("entryForm");
+  const entryFormTitle = document.getElementById("entryFormTitle");
+  const entrySubmitBtn = document.getElementById("entrySubmitBtn");
+  const cancelEntryEditBtn = document.getElementById("cancelEntryEditBtn");
   const statusEl = document.getElementById("formStatus");
   const entryUploadStatus = document.getElementById("entryUploadStatus");
+  const entryEditMedia = document.getElementById("entryEditMedia");
   const detailEl = document.getElementById("entryDetail");
   const tagsInput = document.getElementById("tagsInput");
   const tagPicker = document.getElementById("tagPicker");
@@ -209,12 +214,35 @@
     const passwordInput = targetForm.elements.entryPassword;
     if (!passwordInput) return;
     const locked = visibility === "password";
+    const originalVisibility = targetForm.dataset.originalVisibility || "";
+    const needsNewPassword = !targetForm.dataset.entryId || !["password", "locked"].includes(originalVisibility);
     passwordInput.closest("label").hidden = !locked;
-    passwordInput.required = locked && targetForm.id === "entryForm";
+    passwordInput.required = locked && needsNewPassword;
     passwordInput.placeholder = locked
-      ? "輸入解鎖密碼，會同步到試算表"
+      ? (needsNewPassword ? "輸入解鎖密碼，會同步到試算表" : "要更換密碼時再填寫")
       : "選擇上鎖後填寫";
     if (!locked) passwordInput.value = "";
+  }
+
+  function resetEntryFormMode(message, className) {
+    form.reset();
+    delete form.dataset.entryId;
+    delete form.dataset.originalVisibility;
+    entryFormTitle.textContent = "💌 新增心情日記";
+    entrySubmitBtn.textContent = "🧸 記錄";
+    cancelEntryEditBtn.hidden = true;
+    entryEditMedia.hidden = true;
+    entryEditMedia.innerHTML = "";
+    entryUploadStatus.innerHTML = "";
+    form.elements.date.valueAsDate = new Date();
+    form.elements.time.value = currentTime();
+    updateEntryPasswordField(form);
+    selectedLibraryImages.clear();
+    renderTagPicker();
+    if (message) {
+      statusEl.className = className || "status";
+      statusEl.textContent = message;
+    }
   }
 
   function journalPasswordSyncText(result) {
@@ -739,38 +767,48 @@
   }
 
   async function openEditEntry(id) {
-    detailEl.textContent = "讀取中... 📖";
+    statusEl.className = "status";
+    statusEl.textContent = "讀取編輯內容中... 📖";
+    createCard.scrollIntoView({ behavior: "smooth", block: "start" });
     try {
       let url = apiUrl("/api/wife-journal/entries/" + encodeURIComponent(id));
       const entry = entries.find((item) => item.id === id);
       const query = entryPasswordQuery(entry);
       if (query === null) {
-        detailEl.textContent = "已取消開啟私密文章 🔐";
+        statusEl.textContent = "已取消開啟上鎖文章 🔐";
         return;
       }
       url += query;
       const body = await fetch(url, { cache: "no-store", headers: headers() }).then(readJson);
       const loaded = body.entry || {};
-      detailEl.innerHTML = '<form id="editEntryForm" class="form-grid entry-form" data-entry-id="' + esc(loaded.id) + '">'
-        + '<label class="title-field">標題<input name="title" value="' + esc(loaded.title || "") + '"></label>'
-        + '<label class="date-field">日期<input name="date" type="date" value="' + esc(loaded.date || "") + '" required></label>'
-        + '<label class="time-field">時間<input name="time" type="time" step="60" value="' + esc(loaded.time || "") + '"></label>'
-        + '<label class="privacy-field">文章權限<select name="visibility">'
-          + '<option value="normal"' + (loaded.visibility === "normal" ? " selected" : "") + '>不上鎖</option>'
-          + '<option value="password"' + (loaded.visibility === "password" || loaded.visibility === "locked" ? " selected" : "") + '>上鎖</option>'
-        + '</select></label>'
-        + '<label class="password-field">解鎖密碼<input name="entryPassword" type="password" placeholder="上鎖或更換密碼時填寫，會同步到試算表"></label>'
-        + '<label class="full">快速標籤<input name="tags" value="' + esc((loaded.tags || []).join(",")) + '"></label>'
-        + '<label class="full">日記內容<textarea name="content">' + esc(markdownBody(body.markdown || "")) + '</textarea></label>'
-        + '<div class="full"><h3>照片與語音</h3><div class="edit-media-grid">' + ((loaded.media || []).map(mediaPreview).join("") || '<p class="muted">沒有附件</p>') + '</div></div>'
-        + '<label>新增照片<input name="media" type="file" accept="image/*,.heic,.heif" multiple></label>'
-        + '<label>新增語音<input name="media" type="file" accept="audio/*,.m4a,.mp3,.wav,.webm" multiple></label>'
-        + '<div class="upload-status-list full" id="editUploadStatus"></div>'
-        + '<button class="primary full" type="submit">🧸 儲存編輯</button>'
-      + '</form>';
-      updateEntryPasswordField(detailEl.querySelector("#editEntryForm"));
+      form.reset();
+      form.dataset.entryId = loaded.id || id;
+      form.dataset.originalVisibility = loaded.visibility || "normal";
+      entryFormTitle.textContent = "✏️ 編輯心情日記";
+      entrySubmitBtn.textContent = "🧸 儲存編輯";
+      cancelEntryEditBtn.hidden = false;
+      form.elements.title.value = loaded.title || "";
+      form.elements.date.value = loaded.date || "";
+      form.elements.time.value = loaded.time || "";
+      form.elements.visibility.value = loaded.visibility === "password" || loaded.visibility === "locked" ? "password" : "normal";
+      form.elements.entryPassword.value = "";
+      form.elements.tags.value = (loaded.tags || []).join(",");
+      form.elements.content.value = markdownBody(body.markdown || "");
+      const media = Array.isArray(loaded.media) ? loaded.media : [];
+      entryEditMedia.hidden = false;
+      entryEditMedia.innerHTML = '<h3>照片與語音</h3><div class="edit-media-grid">'
+        + (media.map(mediaPreview).join("") || '<p class="muted">沒有附件</p>')
+        + '</div>';
+      entryUploadStatus.innerHTML = "";
+      selectedLibraryImages.clear();
+      renderTagPicker();
+      updateEntryPasswordField(form);
+      statusEl.className = "status ok";
+      statusEl.textContent = "正在編輯：「" + (loaded.title || "心情日記") + "」✨";
+      createCard.scrollIntoView({ behavior: "smooth", block: "start" });
     } catch (error) {
-      detailEl.textContent = error.message;
+      statusEl.className = "status error";
+      statusEl.textContent = error.message;
     }
   }
 
@@ -1218,29 +1256,38 @@
     renderUploadStatuses(entryUploadStatus, selectedUploadFiles(form), "waiting");
   });
 
+  form.addEventListener("click", (event) => {
+    const viewButton = event.target.closest("[data-view-url]");
+    if (!viewButton) return;
+    openPhoto(viewButton.dataset.viewUrl);
+  });
+
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     const button = form.querySelector("button[type='submit']");
     const uploadFiles = selectedUploadFiles(form);
     renderUploadStatuses(entryUploadStatus, uploadFiles, "loading");
     button.disabled = true;
-      statusEl.textContent = "記錄中... 🧸";
+    const editId = form.dataset.entryId || "";
+    statusEl.textContent = editId ? "儲存編輯中... 🧸" : "記錄中... 🧸";
     statusEl.className = "status";
     try {
       const data = new FormData(form);
       selectedLibraryImages.forEach((_value, id) => data.append("libraryImageIds", id));
-      const body = await fetch(apiUrl("/api/wife-journal/entries"), { method: "POST", headers: headers(), body: data }).then(readJson);
+      form.querySelectorAll("input[name='removeMedia']:checked").forEach((input) => {
+        data.append("removeMedia", input.value);
+      });
+      const body = await fetch(apiUrl(editId ? "/api/wife-journal/entries/" + encodeURIComponent(editId) : "/api/wife-journal/entries"), {
+        method: editId ? "PUT" : "POST",
+        headers: headers(),
+        body: data,
+      }).then(readJson);
       const passwordSheetSync = await syncJournalPasswordFromBrowser(body.entry || {}, data, body.passwordSheetSync);
       const syncMessage = journalPasswordSyncText(passwordSheetSync);
       statusEl.className = "status ok";
-      statusEl.textContent = "已記錄：" + body.entry.title + " ✨" + syncMessage;
+      statusEl.textContent = (editId ? "已更新：" : "已記錄：") + body.entry.title + " ✨" + syncMessage;
       renderUploadStatuses(entryUploadStatus, uploadFiles, "ok");
-      form.reset();
-      form.elements.date.valueAsDate = new Date();
-      form.elements.time.value = currentTime();
-      updateEntryPasswordField(form);
-      selectedLibraryImages.clear();
-      renderTagPicker();
+      resetEntryFormMode(statusEl.textContent, "status ok");
       await loadEntries();
     } catch (error) {
       statusEl.className = "status error";
@@ -1248,7 +1295,13 @@
       renderUploadStatuses(entryUploadStatus, uploadFiles, "error", "上傳失敗");
     } finally {
       button.disabled = false;
+      button.textContent = form.dataset.entryId ? "🧸 儲存編輯" : "🧸 記錄";
     }
+  });
+
+  cancelEntryEditBtn.addEventListener("click", () => {
+    resetEntryFormMode("已取消編輯，回到新增心情日記 🧸");
+    createCard.scrollIntoView({ behavior: "smooth", block: "start" });
   });
 
   document.getElementById("connectBtn").addEventListener("click", connect);
