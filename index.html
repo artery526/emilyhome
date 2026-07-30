@@ -471,6 +471,45 @@
       line-height: 1.7;
       color: var(--ink);
     }
+    dialog.entry-reader {
+      width: min(760px, calc(100vw - 28px));
+      max-height: min(82vh, 760px);
+      padding: 0;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, .98);
+      box-shadow: 0 26px 70px rgba(39, 49, 45, .22);
+      overflow: hidden;
+    }
+    dialog.entry-reader::backdrop {
+      background: rgba(38, 48, 44, .28);
+      backdrop-filter: blur(4px);
+    }
+    .reader-shell {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      max-height: min(82vh, 760px);
+    }
+    .reader-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 249, 244, .94);
+    }
+    .reader-top h3 {
+      font-size: 18px;
+    }
+    .reader-content {
+      overflow: auto;
+      padding: 16px;
+    }
+    .reader-entry .detail {
+      margin-top: 12px;
+      font-size: 16px;
+    }
     .edit-media-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
@@ -830,6 +869,16 @@
       </section>
     </section>
   </main>
+
+  <dialog class="entry-reader" id="entryReaderDialog">
+    <div class="reader-shell">
+      <div class="reader-top">
+        <h3>📖 閱讀全文</h3>
+        <button class="ghost" type="button" id="closeEntryReader">關閉</button>
+      </div>
+      <div class="reader-content" id="entryReaderContent"></div>
+    </div>
+  </dialog>
 
   <dialog class="photo-viewer" id="photoViewer">
     <div class="toolbar">

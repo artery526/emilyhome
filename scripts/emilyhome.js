@@ -119,6 +119,8 @@
   const entryUploadStatus = document.getElementById("entryUploadStatus");
   const entryEditMedia = document.getElementById("entryEditMedia");
   const detailEl = document.getElementById("entryDetail");
+  const entryReaderDialog = document.getElementById("entryReaderDialog");
+  const entryReaderContent = document.getElementById("entryReaderContent");
   const tagsInput = document.getElementById("tagsInput");
   const tagPicker = document.getElementById("tagPicker");
   const libraryGrid = document.getElementById("libraryGrid");
@@ -747,14 +749,16 @@
   }
 
   async function openReadEntry(id) {
-    detailEl.textContent = "讀取完整文章中... 📖";
-    detailEl.scrollIntoView({ behavior: "smooth", block: "start" });
+    entryReaderContent.innerHTML = '<p class="status">讀取完整文章中... 📖</p>';
+    if (entryReaderDialog && !entryReaderDialog.open) {
+      entryReaderDialog.showModal();
+    }
     try {
       let url = apiUrl("/api/wife-journal/entries/" + encodeURIComponent(id));
       const entry = entries.find((item) => item.id === id);
       const query = entryPasswordQuery(entry);
       if (query === null) {
-        detailEl.textContent = "已取消開啟私密文章 🔐";
+        entryReaderContent.innerHTML = '<p class="status">已取消開啟私密文章 🔐</p>';
         return;
       }
       url += query;
@@ -762,17 +766,16 @@
       const loaded = body.entry || {};
       const visibility = loaded.visibility === "password" || loaded.visibility === "locked" ? "上鎖" : "不上鎖";
       const media = Array.isArray(loaded.media) ? loaded.media : [];
-      detailEl.innerHTML = '<article class="reader-entry">'
+      entryReaderContent.innerHTML = '<article class="reader-entry">'
         + '<div class="entry-title">' + esc(loaded.title || "今天的心情") + '</div>'
         + '<div class="entry-meta">' + esc([loaded.date || "", loaded.time || "", visibility].filter(Boolean).join(" · ")) + '</div>'
         + (loaded.tags && loaded.tags.length ? '<div class="chip-row">' + loaded.tags.map((tag) => '<span class="chip">' + esc(tag) + '</span>').join("") + '</div>' : '')
-        + '<div class="detail" style="margin-top:12px">' + esc(markdownBody(body.markdown || "")) + '</div>'
+        + '<div class="detail">' + esc(markdownBody(body.markdown || "")) + '</div>'
         + (media.length ? '<div class="edit-media-grid full" style="margin-top:14px">' + media.map(readMediaPreview).join("") + '</div>' : '')
         + '<div class="toolbar"><button type="button" data-edit-id="' + esc(loaded.id) + '">✏️ 編輯</button></div>'
       + '</article>';
-      detailEl.scrollIntoView({ behavior: "smooth", block: "start" });
     } catch (error) {
-      detailEl.innerHTML = '<p class="status error">' + esc(error.message) + '</p>';
+      entryReaderContent.innerHTML = '<p class="status error">' + esc(error.message) + '</p>';
     }
   }
 
@@ -1248,6 +1251,19 @@
     if (editButton) openEditEntry(editButton.dataset.editId);
   });
 
+  entryReaderContent.addEventListener("click", (event) => {
+    const viewButton = event.target.closest("[data-view-url]");
+    if (viewButton) {
+      openPhoto(viewButton.dataset.viewUrl);
+      return;
+    }
+    const editButton = event.target.closest("[data-edit-id]");
+    if (editButton) {
+      entryReaderDialog.close();
+      openEditEntry(editButton.dataset.editId);
+    }
+  });
+
   detailEl.addEventListener("change", (event) => {
     const editForm = event.target.closest("#editEntryForm");
     if (!editForm) return;
@@ -1354,6 +1370,10 @@
   });
 
   document.getElementById("connectBtn").addEventListener("click", connect);
+  document.getElementById("closeEntryReader").addEventListener("click", () => entryReaderDialog.close());
+  entryReaderDialog.addEventListener("click", (event) => {
+    if (event.target === entryReaderDialog) entryReaderDialog.close();
+  });
   document.getElementById("closePhotoViewer").addEventListener("click", () => photoViewer.close());
   document.getElementById("clearTokenBtn").addEventListener("click", () => {
     localStorage.removeItem("emilyhome.token");
