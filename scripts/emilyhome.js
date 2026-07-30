@@ -1372,6 +1372,9 @@
     if (!bodyView.hidden) await loadBodyRecords();
     if (!journalView.hidden && libraryPanel.open) await ensureLibrarySummary();
   });
+  document.getElementById("lockAppBtn").addEventListener("click", () => {
+    showGate("已鎖定 Emily's Home，請重新連線 🔒", false);
+  });
   document.querySelectorAll("[data-view]").forEach((button) => {
     button.addEventListener("click", () => {
       setView(button.dataset.view);
