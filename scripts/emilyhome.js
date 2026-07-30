@@ -408,6 +408,8 @@
     gateSettingsBtn.hidden = false;
     gateSettings.hidden = true;
     gateSettingsBtn.setAttribute("aria-expanded", "false");
+    tokenField.hidden = true;
+    toggleTokenInputBtn.setAttribute("aria-expanded", "false");
     siteHeader.classList.remove("nav-open");
     brandMenuBtn.setAttribute("aria-expanded", "false");
     gateStatus.textContent = message || "";

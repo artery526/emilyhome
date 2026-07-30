@@ -669,6 +669,20 @@
       display: grid;
       place-items: center;
     }
+    .gate-hero {
+      display: grid;
+      place-items: center;
+      padding: 18px 14px 10px;
+    }
+    .gate-hero img {
+      width: min(520px, 82vw);
+      height: auto;
+      display: block;
+      border-radius: 10px;
+      mix-blend-mode: multiply;
+      opacity: .94;
+      filter: saturate(.98) contrast(.96);
+    }
     .gate .card {
       width: min(620px, 100%);
     }
@@ -792,6 +806,9 @@
 
   <main>
     <section class="gate" id="gate">
+      <div class="gate-hero">
+        <img src="front.png" alt="">
+      </div>
     </section>
 
     <section class="app" id="app" hidden>
@@ -1000,6 +1017,6 @@
     <img id="photoViewerImg" alt="">
   </dialog>
 
-  <script src="scripts/emilyhome.js?v=20260730-garden-login"></script>
+  <script src="scripts/emilyhome.js?v=20260730-front-login"></script>
 </body>
 </html>
