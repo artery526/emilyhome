@@ -108,6 +108,10 @@
   const siteHeader = document.getElementById("siteHeader");
   const brandMenuBtn = document.getElementById("brandMenuBtn");
   const logoNav = document.getElementById("logoNav");
+  const gateSettingsBtn = document.getElementById("gateSettingsBtn");
+  const gateSettings = document.getElementById("gateSettings");
+  const toggleTokenInputBtn = document.getElementById("toggleTokenInputBtn");
+  const tokenField = document.getElementById("tokenField");
   const gateStatus = document.getElementById("gateStatus");
   const apiBaseInput = document.getElementById("apiBaseInput");
   const tokenInput = document.getElementById("tokenInput");
@@ -392,12 +396,18 @@
     gate.hidden = true;
     app.hidden = false;
     logoNav.hidden = false;
+    gateSettings.hidden = true;
+    gateSettingsBtn.hidden = true;
+    gateSettingsBtn.setAttribute("aria-expanded", "false");
   }
 
   function showGate(message, isError) {
     app.hidden = true;
     gate.hidden = false;
     logoNav.hidden = true;
+    gateSettingsBtn.hidden = false;
+    gateSettings.hidden = true;
+    gateSettingsBtn.setAttribute("aria-expanded", "false");
     siteHeader.classList.remove("nav-open");
     brandMenuBtn.setAttribute("aria-expanded", "false");
     gateStatus.textContent = message || "";
@@ -1155,6 +1165,8 @@
       showApp();
     } catch (error) {
       showGate(friendlyConnectionError(error), true);
+      gateSettings.hidden = false;
+      gateSettingsBtn.setAttribute("aria-expanded", "true");
     }
   }
 
@@ -1328,6 +1340,12 @@
   });
 
   document.getElementById("connectBtn").addEventListener("click", connect);
+  document.getElementById("gateSettingsBtn").addEventListener("click", () => toggleSettingsPanel("gateSettingsBtn", "gateSettings"));
+  toggleTokenInputBtn.addEventListener("click", () => {
+    const nextHidden = !tokenField.hidden;
+    tokenField.hidden = nextHidden;
+    toggleTokenInputBtn.setAttribute("aria-expanded", String(!nextHidden));
+  });
   brandMenuBtn.addEventListener("click", () => {
     if (logoNav.hidden) return;
     const open = !siteHeader.classList.contains("nav-open");
@@ -1347,6 +1365,8 @@
     tokenInput.value = "";
     sheetTokenInput.value = "";
     showGate("已清除記住的 Token，請重新輸入 🧹", false);
+    gateSettings.hidden = false;
+    gateSettingsBtn.setAttribute("aria-expanded", "true");
   });
   sheetTokenInput.addEventListener("change", () => saveSheetToken(false));
   sheetTokenInput.addEventListener("blur", () => saveSheetToken(false));

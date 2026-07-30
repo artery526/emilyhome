@@ -58,6 +58,26 @@
       background: transparent;
       cursor: pointer;
     }
+    .gate-settings-toggle {
+      position: absolute;
+      left: calc(50% + 154px);
+      top: 18px;
+    }
+    .gate-login-panel {
+      position: absolute;
+      left: 50%;
+      top: calc(100% + 10px);
+      z-index: 5;
+      width: min(360px, calc(100vw - 32px));
+      transform: translateX(-50%);
+      text-align: left;
+    }
+    .login-location-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: end;
+    }
     .brand-logo img {
       display: block;
       width: 100%;
@@ -446,6 +466,13 @@
       color: var(--sage);
     }
     .settings-panel[hidden] { display: none; }
+    .gate-heading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
     .library-controls {
       display: grid;
       grid-template-columns: 1fr 1fr auto;
@@ -694,6 +721,11 @@
       .brand-logo {
         width: min(260px, 82vw);
       }
+      .gate-settings-toggle {
+        left: auto;
+        right: 16px;
+        top: 14px;
+      }
       .view-tabs {
         position: static;
         left: auto;
@@ -729,6 +761,26 @@
     <button class="brand-button" type="button" id="brandMenuBtn" aria-expanded="false" aria-controls="logoNav">
       <h1 class="brand-logo"><img src="cssindex.png" alt="Emily's Home"></h1>
     </button>
+    <button class="icon-button gate-settings-toggle" type="button" id="gateSettingsBtn" aria-expanded="false" aria-controls="gateSettings" title="登入設定">⚙️</button>
+    <div class="card gate-login-panel" id="gateSettings" hidden>
+      <div class="gate-heading">
+        <h2>🔐進入秘密小花園</h2>
+      </div>
+      <div class="form-grid">
+        <div class="full login-location-row">
+          <label>登入位置
+            <input id="apiBaseInput" placeholder="例如 https://api.ark-os26.cc">
+          </label>
+          <button class="ghost" type="button" id="toggleTokenInputBtn" aria-expanded="false" aria-controls="tokenField" title="編輯密碼 Token">✍️</button>
+        </div>
+        <label class="full" id="tokenField" hidden>密碼 Token
+          <input id="tokenInput" type="password" placeholder="請輸入後端 Token">
+        </label>
+        <button class="primary full" type="button" id="connectBtn">🌙 連線</button>
+        <button class="ghost full" type="button" id="clearTokenBtn">🧹 清除已記住的 Token</button>
+      </div>
+      <p class="status" id="gateStatus"></p>
+    </div>
     <div class="view-tabs" id="logoNav" hidden>
       <button class="view-tab active" type="button" data-view="journal">🌿 心情日記</button>
       <button class="view-tab" type="button" data-view="cards">🔮 記錄卡牌</button>
@@ -740,21 +792,6 @@
 
   <main>
     <section class="gate" id="gate">
-      <div class="card">
-        <h2>🔐 需要連線到私密後端</h2>
-        <p class="muted">這個 GitHub Pages 入口不會直接存放或顯示文章內容。通過後端登入後，才會載入時間軸、月曆、照片與抽牌記錄 🐰✨</p>
-        <div class="form-grid" style="margin-top:14px">
-          <label class="full">API 位置
-            <input id="apiBaseInput" placeholder="例如 https://api.ark-os26.cc">
-          </label>
-          <label class="full">本機測試 Token
-            <input id="tokenInput" type="password" placeholder="正式 Cloudflare Access 可留空">
-          </label>
-          <button class="primary full" type="button" id="connectBtn">🌙 連線</button>
-          <button class="ghost full" type="button" id="clearTokenBtn">🧹 清除已記住的 Token</button>
-        </div>
-        <p class="status" id="gateStatus"></p>
-      </div>
     </section>
 
     <section class="app" id="app" hidden>
@@ -963,6 +1000,6 @@
     <img id="photoViewerImg" alt="">
   </dialog>
 
-  <script src="scripts/emilyhome.js?v=20260730-lock-button"></script>
+  <script src="scripts/emilyhome.js?v=20260730-garden-login"></script>
 </body>
 </html>
