@@ -397,9 +397,16 @@
     gateStatus.className = "status" + (isError ? " error" : "");
   }
 
+  function journalCalendarMonth() {
+    const now = new Date();
+    return now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0");
+  }
+
   function entriesForTimeline() {
     const moodEntries = entries.filter((entry) => entry.type !== "card" && !entry.cardOnly);
-    return activeDate ? moodEntries.filter((entry) => entry.date === activeDate) : moodEntries;
+    if (activeDate) return moodEntries.filter((entry) => entry.date === activeDate);
+    const activeMonth = journalCalendarMonth();
+    return moodEntries.filter((entry) => String(entry.date || "").slice(0, 7) === activeMonth);
   }
 
   function cardEntries() {
@@ -663,7 +670,7 @@
   function renderEntries() {
     const visibleEntries = entriesForTimeline();
     if (!visibleEntries.length) {
-      entryListEl.innerHTML = '<p class="muted">' + (activeDate ? esc(activeDate) + ' 沒有心情日記 🐰' : '目前還沒有心情日記 🐰') + '</p>';
+      entryListEl.innerHTML = '<p class="muted">' + (activeDate ? esc(activeDate) + ' 沒有心情日記 🐰' : '本月還沒有心情日記 🐰') + '</p>';
       return;
     }
     entryListEl.innerHTML = visibleEntries.map((entry) => {
