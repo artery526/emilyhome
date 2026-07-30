@@ -35,7 +35,7 @@
       z-index: 4;
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: flex-start;
       gap: 16px;
       padding: 14px 20px;
       background: transparent;
@@ -50,6 +50,13 @@
       border-radius: 8px;
       background: rgba(255, 250, 240, .14);
       box-shadow: 0 4px 10px rgba(156, 96, 91, .045);
+    }
+    .brand-button {
+      border: 0;
+      min-height: 0;
+      padding: 0;
+      background: transparent;
+      cursor: pointer;
     }
     .brand-logo img {
       display: block;
@@ -167,7 +174,21 @@
       flex-wrap: wrap;
       align-items: center;
       gap: 8px;
-      margin: 0 0 16px;
+      max-width: 0;
+      max-height: 46px;
+      margin: 8px 0 0;
+      opacity: 0;
+      overflow: hidden;
+      pointer-events: none;
+      transform: translateX(-8px);
+      transition: max-width .22s ease, opacity .18s ease, transform .18s ease;
+      white-space: nowrap;
+    }
+    header.nav-open .view-tabs {
+      max-width: 760px;
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateX(0);
     }
     .view-tabs #refreshBtn { margin-left: 0; }
     .view-tab.active {
@@ -638,15 +659,26 @@
         margin-right: 4px;
       }
       main { padding: 14px; }
-      header { align-items: start; }
+      header {
+        align-items: start;
+        flex-direction: column;
+        gap: 8px;
+      }
       .brand-logo {
         width: min(210px, 76vw);
       }
       .view-tabs {
-        position: sticky;
-        top: 0;
-        z-index: 3;
+        max-width: 100%;
+        max-height: 0;
+        margin: 0;
         padding-bottom: 8px;
+        transform: translateY(-6px);
+        transition: max-height .22s ease, opacity .18s ease, transform .18s ease;
+        white-space: normal;
+      }
+      header.nav-open .view-tabs {
+        max-height: 150px;
+        transform: translateY(0);
       }
       .view-tabs #refreshBtn { margin-left: 0; }
       .media-grid {
@@ -663,8 +695,16 @@
   </style>
 </head>
 <body>
-  <header>
-    <h1 class="brand-logo"><img src="cssindex.png" alt="Emily's Home"></h1>
+  <header id="siteHeader">
+    <button class="brand-button" type="button" id="brandMenuBtn" aria-expanded="false" aria-controls="logoNav">
+      <h1 class="brand-logo"><img src="cssindex.png" alt="Emily's Home"></h1>
+    </button>
+    <div class="view-tabs" id="logoNav" hidden>
+      <button class="view-tab active" type="button" data-view="journal">🌿 心情日記</button>
+      <button class="view-tab" type="button" data-view="cards">🔮 記錄卡牌</button>
+      <button class="view-tab" type="button" data-view="body">🌙 身體記錄</button>
+      <button class="ghost" type="button" id="refreshBtn">🔄 重新整理</button>
+    </div>
   </header>
 
   <main>
@@ -687,13 +727,6 @@
     </section>
 
     <section class="app" id="app" hidden>
-      <div class="view-tabs">
-        <button class="view-tab active" type="button" data-view="journal">🌿 心情日記</button>
-        <button class="view-tab" type="button" data-view="cards">🔮 記錄卡牌</button>
-        <button class="view-tab" type="button" data-view="body">🌙 身體記錄</button>
-        <button class="ghost" type="button" id="refreshBtn">🔄 重新整理</button>
-      </div>
-
       <section class="view-panel" id="journalView">
       <div class="grid">
         <section class="card span-12">
@@ -899,6 +932,6 @@
     <img id="photoViewerImg" alt="">
   </dialog>
 
-  <script src="scripts/emilyhome.js?v=20260730-calendar-counts"></script>
+  <script src="scripts/emilyhome.js?v=20260730-logo-menu"></script>
 </body>
 </html>

@@ -105,6 +105,9 @@
 
   const gate = document.getElementById("gate");
   const app = document.getElementById("app");
+  const siteHeader = document.getElementById("siteHeader");
+  const brandMenuBtn = document.getElementById("brandMenuBtn");
+  const logoNav = document.getElementById("logoNav");
   const gateStatus = document.getElementById("gateStatus");
   const apiBaseInput = document.getElementById("apiBaseInput");
   const tokenInput = document.getElementById("tokenInput");
@@ -388,11 +391,15 @@
   function showApp() {
     gate.hidden = true;
     app.hidden = false;
+    logoNav.hidden = false;
   }
 
   function showGate(message, isError) {
     app.hidden = true;
     gate.hidden = false;
+    logoNav.hidden = true;
+    siteHeader.classList.remove("nav-open");
+    brandMenuBtn.setAttribute("aria-expanded", "false");
     gateStatus.textContent = message || "";
     gateStatus.className = "status" + (isError ? " error" : "");
   }
@@ -1321,6 +1328,12 @@
   });
 
   document.getElementById("connectBtn").addEventListener("click", connect);
+  brandMenuBtn.addEventListener("click", () => {
+    if (logoNav.hidden) return;
+    const open = !siteHeader.classList.contains("nav-open");
+    siteHeader.classList.toggle("nav-open", open);
+    brandMenuBtn.setAttribute("aria-expanded", open ? "true" : "false");
+  });
   document.getElementById("closeEntryReader").addEventListener("click", () => entryReaderDialog.close());
   entryReaderDialog.addEventListener("click", (event) => {
     if (event.target === entryReaderDialog) entryReaderDialog.close();
@@ -1352,13 +1365,19 @@
   document.getElementById("bodyLockSettingsBtn").addEventListener("click", () => toggleSettingsPanel("bodyLockSettingsBtn", "bodyLockSettings"));
   bodyForm.elements.type.addEventListener("change", updateBodyTemplateFields);
   document.getElementById("refreshBtn").addEventListener("click", async () => {
+    siteHeader.classList.remove("nav-open");
+    brandMenuBtn.setAttribute("aria-expanded", "false");
     await loadEntries();
     if (!cardView.hidden) await ensureCardsLoaded();
     if (!bodyView.hidden) await loadBodyRecords();
     if (!journalView.hidden && libraryPanel.open) await ensureLibrarySummary();
   });
   document.querySelectorAll("[data-view]").forEach((button) => {
-    button.addEventListener("click", () => setView(button.dataset.view));
+    button.addEventListener("click", () => {
+      setView(button.dataset.view);
+      siteHeader.classList.remove("nav-open");
+      brandMenuBtn.setAttribute("aria-expanded", "false");
+    });
   });
   document.querySelectorAll("[data-draw-mode]").forEach((button) => {
     button.addEventListener("click", () => setDrawMode(button.dataset.drawMode));
