@@ -90,6 +90,8 @@
   let oshoCards = [];
   let bodyRecords = [];
   let activeDate = "";
+  let timelineSearchOpen = false;
+  let timelineSearchQuery = "";
   let activeCardMonth = "";
   let activeBodyDate = "";
   let bodyUnlocked = false;
@@ -116,6 +118,10 @@
   const apiBaseInput = document.getElementById("apiBaseInput");
   const tokenInput = document.getElementById("tokenInput");
   const entryListEl = document.getElementById("entryList");
+  const timelineSearchBtn = document.getElementById("timelineSearchBtn");
+  const timelineSearchPanel = document.getElementById("timelineSearchPanel");
+  const timelineSearchInput = document.getElementById("timelineSearchInput");
+  const timelineSearchClearBtn = document.getElementById("timelineSearchClearBtn");
   const calendarEl = document.getElementById("calendar");
   const createCard = document.getElementById("createCard");
   const form = document.getElementById("entryForm");
@@ -423,9 +429,24 @@
 
   function entriesForTimeline() {
     const moodEntries = entries.filter((entry) => entry.type !== "card" && !entry.cardOnly);
-    if (activeDate) return moodEntries.filter((entry) => entry.date === activeDate);
-    const activeMonth = journalCalendarMonth();
-    return moodEntries.filter((entry) => String(entry.date || "").slice(0, 7) === activeMonth);
+    let scopedEntries = moodEntries;
+    if (activeDate) scopedEntries = moodEntries.filter((entry) => entry.date === activeDate);
+    else {
+      const activeMonth = journalCalendarMonth();
+      scopedEntries = moodEntries.filter((entry) => String(entry.date || "").slice(0, 7) === activeMonth);
+    }
+    const query = timelineSearchQuery.trim().toLowerCase();
+    if (!query) return scopedEntries;
+    return scopedEntries.filter((entry) => {
+      const haystack = [
+        entry.title,
+        entry.excerpt,
+        entry.date,
+        entry.time,
+        Array.isArray(entry.tags) ? entry.tags.join(" ") : "",
+      ].join(" ").toLowerCase();
+      return haystack.includes(query);
+    });
   }
 
   function cardEntries() {
@@ -689,7 +710,10 @@
   function renderEntries() {
     const visibleEntries = entriesForTimeline();
     if (!visibleEntries.length) {
-      entryListEl.innerHTML = '<p class="muted">' + (activeDate ? esc(activeDate) + ' 沒有心情日記 🐰' : '本月還沒有心情日記 🐰') + '</p>';
+      const emptyText = timelineSearchQuery.trim()
+        ? '找不到「' + esc(timelineSearchQuery.trim()) + '」相關心情日記 🔍'
+        : (activeDate ? esc(activeDate) + ' 沒有心情日記 🐰' : '本月還沒有心情日記 🐰');
+      entryListEl.innerHTML = '<p class="muted">' + emptyText + '</p>';
       return;
     }
     entryListEl.innerHTML = visibleEntries.map((entry) => {
@@ -1369,6 +1393,22 @@
     showGate("已清除記住的 Token，請重新輸入 🧹", false);
     gateSettings.hidden = false;
     gateSettingsBtn.setAttribute("aria-expanded", "true");
+  });
+  timelineSearchBtn.addEventListener("click", () => {
+    timelineSearchOpen = !timelineSearchOpen;
+    timelineSearchPanel.hidden = !timelineSearchOpen;
+    timelineSearchBtn.setAttribute("aria-expanded", String(timelineSearchOpen));
+    if (timelineSearchOpen) timelineSearchInput.focus();
+  });
+  timelineSearchInput.addEventListener("input", () => {
+    timelineSearchQuery = timelineSearchInput.value;
+    renderEntries();
+  });
+  timelineSearchClearBtn.addEventListener("click", () => {
+    timelineSearchQuery = "";
+    timelineSearchInput.value = "";
+    renderEntries();
+    timelineSearchInput.focus();
   });
   sheetTokenInput.addEventListener("change", () => saveSheetToken(false));
   sheetTokenInput.addEventListener("blur", () => saveSheetToken(false));

@@ -221,6 +221,22 @@
       color: #fff;
     }
     .view-panel[hidden] { display: none; }
+    .timeline-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .timeline-heading h3 {
+      margin: 0;
+    }
+    .timeline-search {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
     .draw-mode {
       display: flex;
       gap: 8px;
@@ -820,7 +836,14 @@
           <div class="calendar" id="calendar"></div>
         </section>
         <section class="card span-12">
-          <h3>🌿 時間軸</h3>
+          <div class="timeline-heading">
+            <h3>🌿 時間軸</h3>
+            <button class="icon-button" type="button" id="timelineSearchBtn" aria-expanded="false" aria-controls="timelineSearchPanel" title="搜尋時間軸">🔍</button>
+          </div>
+          <div class="timeline-search" id="timelineSearchPanel" hidden>
+            <input id="timelineSearchInput" type="search" placeholder="搜尋標題、摘要、日期或時間">
+            <button class="ghost" type="button" id="timelineSearchClearBtn">清除</button>
+          </div>
           <div class="entry-list" id="entryList"><p class="muted">載入中...</p></div>
         </section>
 
@@ -1018,6 +1041,6 @@
     <img id="photoViewerImg" alt="">
   </dialog>
 
-  <script src="scripts/emilyhome.js?v=20260730-hidden-fix"></script>
+  <script src="scripts/emilyhome.js?v=20260731-timeline-search"></script>
 </body>
 </html>
