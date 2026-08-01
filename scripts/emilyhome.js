@@ -428,8 +428,12 @@
   }
 
   function journalCalendarMonth() {
+    return activeJournalMonth || currentJournalMonth();
+  }
+
+  function currentJournalMonth() {
     const now = new Date();
-    return activeJournalMonth || (now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0"));
+    return now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0");
   }
 
   function journalEntryMonths() {
@@ -437,7 +441,7 @@
       .filter((entry) => entry.type !== "card" && !entry.cardOnly)
       .map((entry) => String(entry.date || "").slice(0, 7))
       .filter((month) => /^\d{4}-\d{2}$/.test(month))));
-    const currentMonth = journalCalendarMonth();
+    const currentMonth = currentJournalMonth();
     if (!months.includes(currentMonth)) months.push(currentMonth);
     return months.sort().reverse();
   }
@@ -1313,8 +1317,7 @@
   });
 
   journalMonthTodayBtn.addEventListener("click", () => {
-    const now = new Date();
-    activeJournalMonth = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0");
+    activeJournalMonth = currentJournalMonth();
     activeDate = "";
     syncJournalMonthControls();
     renderCalendar();
