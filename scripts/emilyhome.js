@@ -90,6 +90,7 @@
   let oshoCards = [];
   let bodyRecords = [];
   let activeDate = "";
+  let activeJournalMonth = "";
   let timelineSearchOpen = false;
   let timelineSearchQuery = "";
   let activeCardMonth = "";
@@ -123,6 +124,9 @@
   const timelineSearchInput = document.getElementById("timelineSearchInput");
   const timelineSearchClearBtn = document.getElementById("timelineSearchClearBtn");
   const calendarEl = document.getElementById("calendar");
+  const journalYear = document.getElementById("journalYear");
+  const journalMonth = document.getElementById("journalMonth");
+  const journalMonthTodayBtn = document.getElementById("journalMonthTodayBtn");
   const createCard = document.getElementById("createCard");
   const form = document.getElementById("entryForm");
   const entryFormTitle = document.getElementById("entryFormTitle");
@@ -424,7 +428,30 @@
 
   function journalCalendarMonth() {
     const now = new Date();
-    return now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0");
+    return activeJournalMonth || (now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0"));
+  }
+
+  function journalEntryMonths() {
+    const months = Array.from(new Set(entries
+      .filter((entry) => entry.type !== "card" && !entry.cardOnly)
+      .map((entry) => String(entry.date || "").slice(0, 7))
+      .filter((month) => /^\d{4}-\d{2}$/.test(month))));
+    const currentMonth = journalCalendarMonth();
+    if (!months.includes(currentMonth)) months.push(currentMonth);
+    return months.sort().reverse();
+  }
+
+  function syncJournalMonthControls() {
+    const months = journalEntryMonths();
+    if (!activeJournalMonth || !months.includes(activeJournalMonth)) activeJournalMonth = months[0] || journalCalendarMonth();
+    const years = Array.from(new Set(months.map((month) => month.slice(0, 4))));
+    const activeYear = activeJournalMonth.slice(0, 4);
+    journalYear.innerHTML = years.map((year) => '<option value="' + year + '"' + (year === activeYear ? " selected" : "") + '>' + year + '年</option>').join("");
+    const yearMonths = months.filter((month) => month.startsWith(activeYear + "-"));
+    journalMonth.innerHTML = yearMonths.map((month) => {
+      const monthNumber = Number(month.slice(5, 7));
+      return '<option value="' + month + '"' + (month === activeJournalMonth ? " selected" : "") + '>' + monthNumber + '月</option>';
+    }).join("");
   }
 
   function entriesForTimeline() {
@@ -712,7 +739,7 @@
     if (!visibleEntries.length) {
       const emptyText = timelineSearchQuery.trim()
         ? '找不到「' + esc(timelineSearchQuery.trim()) + '」相關心情日記 🔍'
-        : (activeDate ? esc(activeDate) + ' 沒有心情日記 🐰' : '本月還沒有心情日記 🐰');
+        : (activeDate ? esc(activeDate) + ' 沒有心情日記 🐰' : '選定月份還沒有心情日記 🐰');
       entryListEl.innerHTML = '<p class="muted">' + emptyText + '</p>';
       return;
     }
@@ -735,9 +762,9 @@
   }
 
   function renderCalendar() {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth();
+    const activeMonth = journalCalendarMonth();
+    const year = Number(activeMonth.slice(0, 4));
+    const month = Number(activeMonth.slice(5, 7)) - 1;
     const days = new Date(year, month + 1, 0).getDate();
     const byDate = entries.filter((entry) => entry.type !== "card" && !entry.cardOnly).reduce((map, entry) => {
       map.set(entry.date, (map.get(entry.date) || 0) + 1);
@@ -765,6 +792,7 @@
     entryListEl.innerHTML = '<p class="muted">載入中... ✨</p>';
     const body = await fetch(apiUrl("/api/wife-journal/entries"), { cache: "no-store", headers: headers() }).then(readJson);
     entries = Array.isArray(body.entries) ? body.entries : [];
+    syncJournalMonthControls();
     renderEntries();
     renderCalendar();
     syncCardTimelineFilters();
@@ -1240,6 +1268,32 @@
     const button = event.target.closest("[data-date]");
     if (!button) return;
     activeDate = activeDate === button.dataset.date ? "" : button.dataset.date;
+    renderCalendar();
+    renderEntries();
+  });
+
+  journalYear.addEventListener("change", () => {
+    const months = journalEntryMonths().filter((month) => month.startsWith(journalYear.value + "-"));
+    activeJournalMonth = months[0] || journalCalendarMonth();
+    activeDate = "";
+    syncJournalMonthControls();
+    renderCalendar();
+    renderEntries();
+  });
+
+  journalMonth.addEventListener("change", () => {
+    activeJournalMonth = journalMonth.value || journalCalendarMonth();
+    activeDate = "";
+    syncJournalMonthControls();
+    renderCalendar();
+    renderEntries();
+  });
+
+  journalMonthTodayBtn.addEventListener("click", () => {
+    const now = new Date();
+    activeJournalMonth = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0");
+    activeDate = "";
+    syncJournalMonthControls();
     renderCalendar();
     renderEntries();
   });
