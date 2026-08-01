@@ -115,6 +115,7 @@
   const gateSettings = document.getElementById("gateSettings");
   const toggleTokenInputBtn = document.getElementById("toggleTokenInputBtn");
   const tokenField = document.getElementById("tokenField");
+  const gateHeroLoginBtn = document.getElementById("gateHeroLoginBtn");
   const gateStatus = document.getElementById("gateStatus");
   const apiBaseInput = document.getElementById("apiBaseInput");
   const tokenInput = document.getElementById("tokenInput");
@@ -1224,6 +1225,28 @@
     }
   }
 
+  function openGateSettings(message, showToken) {
+    gateSettings.hidden = false;
+    gateSettingsBtn.setAttribute("aria-expanded", "true");
+    if (showToken) {
+      tokenField.hidden = false;
+      toggleTokenInputBtn.setAttribute("aria-expanded", "true");
+      tokenInput.focus();
+    }
+    gateStatus.className = "status";
+    gateStatus.textContent = message || "";
+  }
+
+  async function connectFromHero() {
+    const rememberedToken = localStorage.getItem("emilyhome.token") || "";
+    if (!tokenInput.value.trim() && rememberedToken) tokenInput.value = rememberedToken;
+    if (!tokenInput.value.trim()) {
+      openGateSettings("請先在齒輪內設定密碼 Token，再點中間圖案登入 🔐", true);
+      return;
+    }
+    await connect();
+  }
+
   tagPicker.addEventListener("click", (event) => {
     const button = event.target.closest("[data-tag]");
     if (!button) return;
@@ -1420,6 +1443,7 @@
   });
 
   document.getElementById("connectBtn").addEventListener("click", connect);
+  gateHeroLoginBtn.addEventListener("click", connectFromHero);
   document.getElementById("gateSettingsBtn").addEventListener("click", () => toggleSettingsPanel("gateSettingsBtn", "gateSettings"));
   toggleTokenInputBtn.addEventListener("click", () => {
     const nextHidden = !tokenField.hidden;

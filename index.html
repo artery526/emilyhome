@@ -691,6 +691,13 @@
       place-items: center;
       padding: 18px 14px 10px;
     }
+    .gate-hero-button {
+      border: 0;
+      min-height: 0;
+      padding: 0;
+      background: transparent;
+      cursor: pointer;
+    }
     .gate-hero img {
       width: min(520px, 82vw);
       height: auto;
@@ -824,7 +831,9 @@
   <main>
     <section class="gate" id="gate">
       <div class="gate-hero">
-        <img src="front.png" alt="">
+        <button class="gate-hero-button" type="button" id="gateHeroLoginBtn" title="進入秘密小花園">
+          <img src="front.png" alt="">
+        </button>
       </div>
     </section>
 
@@ -1046,6 +1055,6 @@
     <img id="photoViewerImg" alt="">
   </dialog>
 
-  <script src="scripts/emilyhome.js?v=20260801-journal-month-picker"></script>
+  <script src="scripts/emilyhome.js?v=20260801-hero-login"></script>
 </body>
 </html>
