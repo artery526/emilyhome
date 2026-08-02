@@ -816,6 +816,20 @@
     renderCardRecords();
   }
 
+  function clearTimelineSearch() {
+    timelineSearchQuery = "";
+    if (timelineSearchInput) timelineSearchInput.value = "";
+  }
+
+  function changeJournalMonth(nextMonth) {
+    activeJournalMonth = nextMonth || journalCalendarMonth();
+    activeDate = "";
+    clearTimelineSearch();
+    syncJournalMonthControls();
+    renderCalendar();
+    renderEntries();
+  }
+
   function markdownBody(markdown) {
     return String(markdown || "").replace(/^---[\s\S]*?---\s*/, "").trim();
   }
@@ -1312,27 +1326,15 @@
 
   journalYear.addEventListener("change", () => {
     const months = journalEntryMonths().filter((month) => month.startsWith(journalYear.value + "-"));
-    activeJournalMonth = months[0] || journalCalendarMonth();
-    activeDate = "";
-    syncJournalMonthControls();
-    renderCalendar();
-    renderEntries();
+    changeJournalMonth(months[0] || journalCalendarMonth());
   });
 
   journalMonth.addEventListener("change", () => {
-    activeJournalMonth = journalMonth.value || journalCalendarMonth();
-    activeDate = "";
-    syncJournalMonthControls();
-    renderCalendar();
-    renderEntries();
+    changeJournalMonth(journalMonth.value || journalCalendarMonth());
   });
 
   journalMonthTodayBtn.addEventListener("click", () => {
-    activeJournalMonth = currentJournalMonth();
-    activeDate = "";
-    syncJournalMonthControls();
-    renderCalendar();
-    renderEntries();
+    changeJournalMonth(currentJournalMonth());
   });
 
   bodyCalendar.addEventListener("click", (event) => {
