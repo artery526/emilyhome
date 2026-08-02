@@ -599,10 +599,11 @@
   function renderBodyRecords() {
     const records = activeBodyDate
       ? bodyRecords.filter((record) => record.date === activeBodyDate)
-      : [];
-    bodyDayTitle.textContent = activeBodyDate ? "📍 " + activeBodyDate + " 當日記錄" : "📍 當日記錄";
+      : bodyRecords;
+    const selectedMonthLabel = String(Number(bodyMonth.value || "0")) + "月";
+    bodyDayTitle.textContent = activeBodyDate ? "📍 " + activeBodyDate + " 當日記錄" : "📍 " + selectedMonthLabel + "整月記錄";
     if (!records.length) {
-      bodyRecordList.innerHTML = '<p class="muted">' + (activeBodyDate ? '這一天還沒有身體記錄 🌙' : '點選月曆日期查看記錄。') + '</p>';
+      bodyRecordList.innerHTML = '<p class="muted">' + (activeBodyDate ? '這一天還沒有身體記錄 🌙' : '這個月還沒有身體記錄 🌙') + '</p>';
       return;
     }
     bodyRecordList.innerHTML = records.map((record) => {
@@ -1333,6 +1334,13 @@
   bodyCalendar.addEventListener("click", (event) => {
     const button = event.target.closest("[data-body-date]");
     if (!button) return;
+    const hasRecords = bodyRecordsByDate().has(button.dataset.bodyDate);
+    if (!hasRecords) {
+      activeBodyDate = "";
+      renderBodyCalendar();
+      renderBodyRecords();
+      return;
+    }
     activeBodyDate = activeBodyDate === button.dataset.bodyDate ? "" : button.dataset.bodyDate;
     if (activeBodyDate) bodyForm.elements.date.value = activeBodyDate;
     renderBodyCalendar();
