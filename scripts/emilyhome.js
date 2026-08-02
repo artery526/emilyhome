@@ -680,6 +680,11 @@
     }
   }
 
+  async function changeBodyMonth() {
+    activeBodyDate = "";
+    await loadBodyRecords();
+  }
+
   async function refreshBodyLockStatus() {
     const status = await sheetRequest("emilyBodyLockStatus");
     bodyLockConfigured = !!status.locked;
@@ -1272,9 +1277,8 @@
     if (libraryPanel.open) ensureLibrarySummary().catch(() => {});
   });
   document.getElementById("loadLibraryBtn").addEventListener("click", loadLibraryMonth);
-  document.getElementById("bodyLoadBtn").addEventListener("click", loadBodyRecords);
-  bodyYear.addEventListener("change", loadBodyRecords);
-  bodyMonth.addEventListener("change", loadBodyRecords);
+  bodyYear.addEventListener("change", changeBodyMonth);
+  bodyMonth.addEventListener("change", changeBodyMonth);
   cardTimelineYear.addEventListener("change", () => {
     activeCardMonth = "";
     syncCardTimelineMonths();

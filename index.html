@@ -496,6 +496,9 @@
       gap: 8px;
       margin-bottom: 10px;
     }
+    .body-month-controls {
+      grid-template-columns: 1fr 1fr;
+    }
     .library-panel summary {
       cursor: pointer;
       font-weight: 700;
@@ -945,10 +948,9 @@
         <div class="grid">
           <section class="card span-8">
             <h3 id="bodyCalendarTitle">🌙 身體記錄月曆</h3>
-            <div class="library-controls">
+            <div class="library-controls body-month-controls">
               <select id="bodyYear"></select>
               <select id="bodyMonth"></select>
-              <button type="button" id="bodyLoadBtn">載入 ✨</button>
             </div>
             <div class="calendar" id="bodyCalendar"></div>
             <p class="status" id="bodyStatus"></p>
@@ -1058,6 +1060,6 @@
     <img id="photoViewerImg" alt="">
   </dialog>
 
-  <script src="scripts/emilyhome.js?v=20260802-body-month-list"></script>
+  <script src="scripts/emilyhome.js?v=20260802-body-auto-load"></script>
 </body>
 </html>
