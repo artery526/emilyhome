@@ -116,6 +116,7 @@
   const toggleTokenInputBtn = document.getElementById("toggleTokenInputBtn");
   const tokenField = document.getElementById("tokenField");
   const gateHeroLoginBtn = document.getElementById("gateHeroLoginBtn");
+  const gateSheetTokenInput = document.getElementById("gateSheetTokenInput");
   const gateStatus = document.getElementById("gateStatus");
   const apiBaseInput = document.getElementById("apiBaseInput");
   const tokenInput = document.getElementById("tokenInput");
@@ -172,6 +173,7 @@
   apiBaseInput.value = apiBase;
   tokenInput.value = apiToken;
   sheetTokenInput.value = sheetToken;
+  gateSheetTokenInput.value = sheetToken;
   updateEntryPasswordField(form);
 
   function esc(value) {
@@ -200,14 +202,18 @@
   }
 
   function currentSheetToken() {
-    sheetToken = sheetTokenInput.value.trim();
+    sheetToken = (gateSheetTokenInput.value.trim() || sheetTokenInput.value.trim());
+    gateSheetTokenInput.value = sheetToken;
+    sheetTokenInput.value = sheetToken;
     if (sheetToken) localStorage.setItem("emilyhome.sheetToken", sheetToken);
     else localStorage.removeItem("emilyhome.sheetToken");
     return sheetToken || apiToken;
   }
 
   function saveSheetToken(showMessage) {
-    sheetToken = sheetTokenInput.value.trim();
+    sheetToken = (gateSheetTokenInput.value.trim() || sheetTokenInput.value.trim());
+    gateSheetTokenInput.value = sheetToken;
+    sheetTokenInput.value = sheetToken;
     if (sheetToken) {
       localStorage.setItem("emilyhome.sheetToken", sheetToken);
       if (showMessage) {
@@ -1471,6 +1477,7 @@
     sheetToken = "";
     tokenInput.value = "";
     sheetTokenInput.value = "";
+    gateSheetTokenInput.value = "";
     showGate("已清除記住的 Token，請重新輸入 🧹", false);
     gateSettings.hidden = false;
     gateSettingsBtn.setAttribute("aria-expanded", "true");
@@ -1491,12 +1498,15 @@
     renderEntries();
     timelineSearchInput.focus();
   });
+  gateSheetTokenInput.addEventListener("change", () => saveSheetToken(false));
+  gateSheetTokenInput.addEventListener("blur", () => saveSheetToken(false));
   sheetTokenInput.addEventListener("change", () => saveSheetToken(false));
   sheetTokenInput.addEventListener("blur", () => saveSheetToken(false));
   document.getElementById("saveSheetTokenBtn").addEventListener("click", () => saveSheetToken(true));
   document.getElementById("clearSheetTokenBtn").addEventListener("click", () => {
     sheetToken = "";
     sheetTokenInput.value = "";
+    gateSheetTokenInput.value = "";
     localStorage.removeItem("emilyhome.sheetToken");
     bodyStatus.className = "status";
     bodyStatus.textContent = "已清除本機記住的試算表 Token 🧹";
