@@ -128,7 +128,6 @@
   const calendarEl = document.getElementById("calendar");
   const journalYear = document.getElementById("journalYear");
   const journalMonth = document.getElementById("journalMonth");
-  const journalMonthTodayBtn = document.getElementById("journalMonthTodayBtn");
   const createCard = document.getElementById("createCard");
   const form = document.getElementById("entryForm");
   const entryFormTitle = document.getElementById("entryFormTitle");
@@ -1331,10 +1330,6 @@
 
   journalMonth.addEventListener("change", () => {
     changeJournalMonth(journalMonth.value || journalCalendarMonth());
-  });
-
-  journalMonthTodayBtn.addEventListener("click", () => {
-    changeJournalMonth(currentJournalMonth());
   });
 
   bodyCalendar.addEventListener("click", (event) => {
