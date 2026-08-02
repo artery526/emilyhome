@@ -275,10 +275,10 @@
   }
 
   async function syncJournalPasswordFromBrowser(entry, data, serverResult) {
-    if (serverResult && serverResult.ok) return serverResult;
     const visibility = String(data.get("visibility") || entry.visibility || "normal");
     const password = String(data.get("entryPassword") || "").trim();
-    if (visibility !== "password" || !password) return serverResult;
+    if (visibility !== "password" || !password) return { skipped: true };
+    if (serverResult && serverResult.ok) return serverResult;
     try {
       const result = await sheetRequest("emilyJournalPasswordSave", {
         entryId: entry.id || entry.slug || "",
