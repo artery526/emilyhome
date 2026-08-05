@@ -84,6 +84,7 @@
   ];
   const cardPositions = ["正位", "逆位"];
   const threePositions = ["過去 / 起點", "現在 / 核心", "未來 / 提醒"];
+  const entryUploadBatchSize = 12;
   const selectedLibraryImages = new Map();
   let entries = [];
   let cards = [];
@@ -364,6 +365,71 @@
   function selectedUploadFiles(sourceForm) {
     return Array.from(sourceForm.querySelectorAll('input[type="file"][name="media"]'))
       .flatMap((input) => Array.from(input.files || []));
+  }
+
+  function chunkFiles(files, size) {
+    const chunks = [];
+    for (let index = 0; index < files.length; index += size) {
+      chunks.push(files.slice(index, index + size));
+    }
+    return chunks;
+  }
+
+  function entryFormData(files, options) {
+    const settings = Object.assign({ includeLibraryImages: true, includeRemoveMedia: true }, options || {});
+    const data = new FormData(form);
+    data.delete("media");
+    data.delete("libraryImageIds");
+    data.delete("removeMedia");
+    files.forEach((file) => data.append("media", file));
+    if (settings.includeLibraryImages) {
+      selectedLibraryImages.forEach((_value, id) => data.append("libraryImageIds", id));
+    }
+    if (settings.includeRemoveMedia) {
+      form.querySelectorAll("input[name='removeMedia']:checked").forEach((input) => {
+        data.append("removeMedia", input.value);
+      });
+    }
+    return data;
+  }
+
+  async function saveJournalEntryBatch(entryId, data) {
+    const path = entryId ? "/api/wife-journal/entries/" + encodeURIComponent(entryId) : "/api/wife-journal/entries";
+    return fetch(apiUrl(path), {
+      method: entryId ? "PUT" : "POST",
+      headers: headers(),
+      body: data,
+    }).then(readJson);
+  }
+
+  async function saveJournalEntryWithBatchedMedia(editId, uploadFiles) {
+    const batches = chunkFiles(uploadFiles, entryUploadBatchSize);
+    let entryId = editId;
+    let body = null;
+    let firstData = null;
+    if (!batches.length) {
+      const data = entryFormData([], { includeLibraryImages: true, includeRemoveMedia: true });
+      body = await saveJournalEntryBatch(entryId, data);
+      return { body, data };
+    }
+
+    for (const [index, files] of batches.entries()) {
+      if (batches.length > 1) {
+        statusEl.textContent = "附件分批上傳中：" + (index + 1) + " / " + batches.length;
+      }
+      const data = entryFormData(files, {
+        includeLibraryImages: index === 0,
+        includeRemoveMedia: index === 0,
+      });
+      body = await saveJournalEntryBatch(entryId, data);
+      if (!firstData) firstData = data;
+      if (!entryId) {
+        entryId = body.entry && (body.entry.id || body.entry.slug);
+        if (!entryId && index < batches.length - 1) throw new Error("Entry id missing after first upload batch.");
+      }
+    }
+
+    return { body, data: firstData };
   }
 
   function uploadKind(file) {
@@ -1428,16 +1494,9 @@
     statusEl.textContent = editId ? "儲存編輯中... 🧸" : "記錄中... 🧸";
     statusEl.className = "status";
     try {
-      const data = new FormData(form);
-      selectedLibraryImages.forEach((_value, id) => data.append("libraryImageIds", id));
-      form.querySelectorAll("input[name='removeMedia']:checked").forEach((input) => {
-        data.append("removeMedia", input.value);
-      });
-      const body = await fetch(apiUrl(editId ? "/api/wife-journal/entries/" + encodeURIComponent(editId) : "/api/wife-journal/entries"), {
-        method: editId ? "PUT" : "POST",
-        headers: headers(),
-        body: data,
-      }).then(readJson);
+      const result = await saveJournalEntryWithBatchedMedia(editId, uploadFiles);
+      const body = result.body;
+      const data = result.data;
       const passwordSheetSync = await syncJournalPasswordFromBrowser(body.entry || {}, data, body.passwordSheetSync);
       const syncMessage = journalPasswordSyncText(passwordSheetSync);
       statusEl.className = "status ok";
