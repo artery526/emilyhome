@@ -653,6 +653,31 @@
     dialog.photo-viewer::backdrop {
       background: rgba(20, 24, 22, .62);
     }
+    .photo-viewer .toolbar {
+      display: grid;
+      grid-template-columns: auto 1fr auto auto;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .photo-counter {
+      color: var(--muted);
+      font-size: 14px;
+      text-align: center;
+    }
+    .photo-nav {
+      width: 42px;
+      height: 38px;
+      padding: 0;
+      font-size: 24px;
+      line-height: 1;
+    }
+    .photo-stage {
+      position: relative;
+      overflow: hidden;
+      touch-action: pan-y;
+      user-select: none;
+    }
     .photo-viewer img {
       width: 100%;
       max-height: 78vh;
@@ -1054,11 +1079,16 @@
 
   <dialog class="photo-viewer" id="photoViewer">
     <div class="toolbar">
+      <button class="ghost photo-nav" type="button" id="photoPrevBtn" aria-label="上一張">‹</button>
+      <span class="photo-counter" id="photoCounter"></span>
+      <button class="ghost photo-nav" type="button" id="photoNextBtn" aria-label="下一張">›</button>
       <button class="ghost" type="button" id="closePhotoViewer">關閉</button>
     </div>
-    <img id="photoViewerImg" alt="">
+    <div class="photo-stage" id="photoStage">
+      <img id="photoViewerImg" alt="">
+    </div>
   </dialog>
 
-  <script src="scripts/emilyhome.js?v=20260805-batched-journal-upload"></script>
+  <script src="scripts/emilyhome.js?v=20260808-photo-gallery"></script>
 </body>
 </html>

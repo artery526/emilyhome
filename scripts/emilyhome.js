@@ -96,6 +96,11 @@
   let timelineSearchQuery = "";
   let activeCardMonth = "";
   let activeBodyDate = "";
+  let entryReaderGallery = [];
+  let photoGalleryItems = [];
+  let photoGalleryIndex = 0;
+  let photoTouchStartX = 0;
+  let photoTouchStartY = 0;
   let bodyUnlocked = false;
   let bodyLockConfigured = false;
   let bodyPassword = "";
@@ -149,6 +154,10 @@
   const calendarTitle = document.getElementById("calendarTitle");
   const photoViewer = document.getElementById("photoViewer");
   const photoViewerImg = document.getElementById("photoViewerImg");
+  const photoStage = document.getElementById("photoStage");
+  const photoPrevBtn = document.getElementById("photoPrevBtn");
+  const photoNextBtn = document.getElementById("photoNextBtn");
+  const photoCounter = document.getElementById("photoCounter");
   const journalView = document.getElementById("journalView");
   const cardView = document.getElementById("cardView");
   const bodyView = document.getElementById("bodyView");
@@ -918,10 +927,20 @@
     }
     const thumb = mediaUrl(item.thumbnailUrl || item.originalUrl, item.updatedAt || key);
     const original = mediaUrl(item.originalUrl || item.thumbnailUrl, item.updatedAt || key);
-    return '<button class="media-card" type="button" data-view-url="' + esc(original) + '"><img src="' + esc(thumb) + '" alt="" loading="lazy"></button>';
+    const galleryIndex = entryReaderGallery.findIndex((photo) => photo.url === original);
+    return '<button class="media-card" type="button" data-gallery-index="' + esc(String(galleryIndex)) + '" data-view-url="' + esc(original) + '"><img src="' + esc(thumb) + '" alt="" loading="lazy"></button>';
+  }
+
+  function photoGalleryItem(item) {
+    const key = item.libraryId || item.legacyLibraryId || item.fileName || item.url || item.originalUrl || item.thumbnailUrl || "";
+    if (!item || item.type === "audio") return null;
+    const url = mediaUrl(item.originalUrl || item.thumbnailUrl || "", item.updatedAt || key);
+    const thumb = mediaUrl(item.thumbnailUrl || item.originalUrl || "", item.updatedAt || key);
+    return url ? { url, thumb } : null;
   }
 
   async function openReadEntry(id) {
+    entryReaderGallery = [];
     entryReaderContent.innerHTML = '<p class="status">讀取完整文章中... 📖</p>';
     if (entryReaderDialog && !entryReaderDialog.open) {
       entryReaderDialog.showModal();
@@ -939,6 +958,7 @@
       const loaded = body.entry || {};
       const visibility = loaded.visibility === "password" || loaded.visibility === "locked" ? "上鎖" : "不上鎖";
       const media = Array.isArray(loaded.media) ? loaded.media : [];
+      entryReaderGallery = media.map(photoGalleryItem).filter(Boolean);
       entryReaderContent.innerHTML = '<article class="reader-entry">'
         + '<div class="entry-title">' + esc(loaded.title || "今天的心情") + '</div>'
         + '<div class="entry-meta">' + esc([loaded.date || "", loaded.time || "", visibility].filter(Boolean).join(" · ")) + '</div>'
@@ -953,9 +973,33 @@
   }
 
   function openPhoto(url) {
-    if (!url) return;
-    photoViewerImg.src = url;
+    openPhotoGallery([{ url }], 0);
+  }
+
+  function renderPhotoGallery() {
+    const item = photoGalleryItems[photoGalleryIndex] || {};
+    photoViewerImg.src = item.url || "";
+    const total = photoGalleryItems.length;
+    photoCounter.textContent = total > 1 ? (photoGalleryIndex + 1) + " / " + total : "";
+    photoPrevBtn.hidden = total <= 1;
+    photoNextBtn.hidden = total <= 1;
+  }
+
+  function openPhotoGallery(items, index) {
+    const validItems = (Array.isArray(items) ? items : [])
+      .map((item) => typeof item === "string" ? { url: item } : item)
+      .filter((item) => item && item.url);
+    if (!validItems.length) return;
+    photoGalleryItems = validItems;
+    photoGalleryIndex = Math.min(Math.max(Number(index) || 0, 0), validItems.length - 1);
+    renderPhotoGallery();
     photoViewer.showModal();
+  }
+
+  function movePhotoGallery(delta) {
+    if (photoGalleryItems.length <= 1) return;
+    photoGalleryIndex = (photoGalleryIndex + delta + photoGalleryItems.length) % photoGalleryItems.length;
+    renderPhotoGallery();
   }
 
   function mediaPreview(item, index) {
@@ -1459,7 +1503,12 @@
   entryReaderContent.addEventListener("click", (event) => {
     const viewButton = event.target.closest("[data-view-url]");
     if (viewButton) {
-      openPhoto(viewButton.dataset.viewUrl);
+      const galleryIndex = Number(viewButton.dataset.galleryIndex);
+      if (Number.isInteger(galleryIndex) && galleryIndex >= 0 && entryReaderGallery[galleryIndex]) {
+        openPhotoGallery(entryReaderGallery, galleryIndex);
+      } else {
+        openPhoto(viewButton.dataset.viewUrl);
+      }
       return;
     }
     const editButton = event.target.closest("[data-edit-id]");
@@ -1538,6 +1587,30 @@
     if (event.target === entryReaderDialog) entryReaderDialog.close();
   });
   document.getElementById("closePhotoViewer").addEventListener("click", () => photoViewer.close());
+  photoPrevBtn.addEventListener("click", () => movePhotoGallery(-1));
+  photoNextBtn.addEventListener("click", () => movePhotoGallery(1));
+  photoStage.addEventListener("touchstart", (event) => {
+    const touch = event.changedTouches && event.changedTouches[0];
+    if (!touch) return;
+    photoTouchStartX = touch.clientX;
+    photoTouchStartY = touch.clientY;
+  }, { passive: true });
+  photoStage.addEventListener("touchend", (event) => {
+    const touch = event.changedTouches && event.changedTouches[0];
+    if (!touch) return;
+    const deltaX = touch.clientX - photoTouchStartX;
+    const deltaY = touch.clientY - photoTouchStartY;
+    if (Math.abs(deltaX) < 44 || Math.abs(deltaX) < Math.abs(deltaY) * 1.15) return;
+    movePhotoGallery(deltaX < 0 ? 1 : -1);
+  }, { passive: true });
+  photoViewer.addEventListener("click", (event) => {
+    if (event.target === photoViewer) photoViewer.close();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (!photoViewer.open) return;
+    if (event.key === "ArrowLeft") movePhotoGallery(-1);
+    if (event.key === "ArrowRight") movePhotoGallery(1);
+  });
   document.getElementById("clearTokenBtn").addEventListener("click", () => {
     localStorage.removeItem("emilyhome.token");
     localStorage.removeItem("emilyhome.sheetToken");
