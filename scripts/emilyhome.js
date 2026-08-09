@@ -174,7 +174,8 @@
   const clientRecordList = document.getElementById("clientRecordList");
   const clientRecordStatus = document.getElementById("clientRecordStatus");
   const clientUploadStatus = document.getElementById("clientUploadStatus");
-  const clientCardNames = document.getElementById("clientCardNames");
+  const clientCardFields = document.getElementById("clientCardFields");
+  const addClientCardBtn = document.getElementById("addClientCardBtn");
   const clientRefreshBtn = document.getElementById("clientRefreshBtn");
   const clientPersonDeleteBtn = document.getElementById("clientPersonDeleteBtn");
   const cardForm = document.getElementById("cardForm");
@@ -1372,19 +1373,33 @@
     });
   }
 
-  function renderClientCardNames() {
-    if (!clientCardNames) return;
-    clientCardNames.innerHTML = clientCardCatalog().map((card) => {
-      const name = card.name || card.cardName || card.title || card.label || "";
-      return '<option value="' + esc(name) + '"></option>';
-    }).join("");
+  function clientCardSlotMarkup(index, card) {
+    const value = typeof card === "string" ? card : (card?.name || "");
+    const orientation = typeof card === "string" ? "無" : (card?.orientation || "無");
+    return '<div class="client-card-slot" data-client-card-slot="' + index + '">' +
+      '<input name="clientCardName' + index + '" value="' + esc(value) + '" placeholder="第 ' + (index + 1) + ' 張牌卡名稱">' +
+      '<select name="clientCardOrientation' + index + '"><option value="正位"' + (orientation === "正位" ? " selected" : "") + '>正位</option><option value="逆位"' + (orientation === "逆位" ? " selected" : "") + '>逆位</option><option value="無"' + (orientation === "無" ? " selected" : "") + '>無</option></select>' +
+      (index >= 3 ? '<button class="ghost remove-card" type="button" data-remove-client-card="' + index + '" title="移除此格">－</button>' : '<span></span>') +
+    '</div>';
+  }
+
+  function renderClientCardFields(cards) {
+    if (!clientCardFields) return;
+    const values = Array.isArray(cards) && cards.length ? cards : [{ name: "", orientation: "無" }, { name: "", orientation: "無" }, { name: "", orientation: "無" }];
+    clientCardFields.innerHTML = values.map((card, index) => clientCardSlotMarkup(index, card)).join("");
+  }
+
+  function collectClientCards() {
+    return Array.from(clientCardFields.querySelectorAll(".client-card-slot")).map((slot) => {
+      const index = slot.dataset.clientCardSlot;
+      return { name: String(slot.querySelector('[name="clientCardName' + index + '"]')?.value || "").trim(), orientation: slot.querySelector('[name="clientCardOrientation' + index + '"]')?.value || "無" };
+    });
   }
 
   async function loadClientPeople() {
     const body = await fetch(apiUrl("/api/wife-journal/clients"), { cache: "no-store", headers: headers() }).then(readJson);
     clientPeople = Array.isArray(body.people) ? body.people : [];
     renderClientPeople();
-    renderClientCardNames();
     if (activeClientId && clientPeople.some((person) => person.id === activeClientId)) {
       await loadClientRecords(activeClientId);
     } else if (clientPeople.length) {
@@ -1461,7 +1476,7 @@
       return '<article class="client-record" data-client-record="' + esc(record.id) + '">' +
         '<div class="client-record-heading"><div><strong>' + esc([record.date, record.time].filter(Boolean).join(" · ")) + '</strong><div class="entry-meta">' + esc(record.spreadType || "") + '</div></div><button class="ghost" type="button" data-client-edit-id="' + esc(record.id) + '">✏️ 編輯</button></div>' +
         '<p><strong>問題：</strong>' + esc(record.question) + '</p>' +
-        '<p><strong>牌卡：</strong>' + esc((record.cards || []).join("、") || "未指定") + '</p>' +
+        '<p><strong>牌陣卡牌：</strong>' + esc((record.cards || []).map((card) => typeof card === "string" ? card : [card.name, card.orientation !== "無" ? card.orientation : ""].filter(Boolean).join(" ")).join("、") || "未指定") + '</p>' +
         '<p class="preserve-lines"><strong>解讀：</strong>' + esc(record.reading || "") + '</p>' +
         '<div class="client-card-thumbs">' + clientMediaMarkup(record.media) + '</div>' +
         '<div class="client-feedback"><strong>💬 對方反饋</strong>' + (feedback || '<p class="muted">尚未新增反饋。</p>') +
@@ -1479,6 +1494,7 @@
     document.getElementById("clientRecordSubmit").textContent = "✍️ 儲存算牌紀錄";
     document.getElementById("clientRecordCancel").hidden = true;
     clientUploadStatus.innerHTML = "";
+    renderClientCardFields();
   }
 
   function editClientRecord(recordId) {
@@ -1490,7 +1506,7 @@
     clientRecordForm.elements.time.value = record.time || "";
     clientRecordForm.elements.question.value = record.question || "";
     clientRecordForm.elements.spreadType.value = record.spreadType || "塔羅單張";
-    clientRecordForm.elements.cards.value = (record.cards || []).join("\n");
+    renderClientCardFields(record.cards || []);
     clientRecordForm.elements.reading.value = record.reading || "";
     document.getElementById("clientRecordSubmit").textContent = "💾 儲存編輯";
     document.getElementById("clientRecordCancel").hidden = false;
@@ -1503,7 +1519,7 @@
     const button = document.getElementById("clientRecordSubmit");
     const data = new FormData(clientRecordForm);
     const recordId = String(data.get("id") || "");
-    const files = Array.from(clientRecordForm.elements.media.files || []);
+    data.set("cards", JSON.stringify(collectClientCards().filter((card) => card.name)));
     data.delete("id");
     button.disabled = true;
     clientRecordStatus.className = "status";
@@ -1909,6 +1925,19 @@
   clientRecordForm.addEventListener("change", (event) => {
     if (event.target.matches('[name="media"]')) renderUploadStatuses(clientUploadStatus, Array.from(event.target.files || []), "waiting");
   });
+  addClientCardBtn.addEventListener("click", () => {
+    const cards = collectClientCards();
+    cards.push({ name: "", orientation: "無" });
+    renderClientCardFields(cards);
+  });
+  clientCardFields.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-remove-client-card]");
+    if (!button) return;
+    const index = Number(button.dataset.removeClientCard);
+    const cards = collectClientCards();
+    if (Number.isInteger(index)) cards.splice(index, 1);
+    renderClientCardFields(cards);
+  });
   clientRecordList.addEventListener("click", (event) => {
     const editButton = event.target.closest("[data-client-edit-id]");
     if (editButton) editClientRecord(editButton.dataset.clientEditId);
@@ -2038,4 +2067,5 @@
   renderTagPicker();
   clientRecordForm.elements.date.valueAsDate = new Date();
   clientRecordForm.elements.time.value = currentTime();
+  renderClientCardFields();
 })();

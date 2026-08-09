@@ -226,6 +226,9 @@
     .client-feedback-form { display: grid; grid-template-columns: 130px 1fr auto; gap: 8px; align-items: end; margin-top: 10px; }
     .client-card-thumbs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
     .client-card-thumb { width: 44px; height: 64px; object-fit: cover; border-radius: 6px; border: 1px solid var(--line, #d8e1dc); }
+    .client-card-fields { display: grid; gap: 8px; margin-top: 6px; }
+    .client-card-slot { display: grid; grid-template-columns: 1fr 120px auto; gap: 8px; align-items: center; }
+    .client-card-slot .remove-card { min-width: 40px; }
     .view-tab.active {
       background: var(--rose);
       border-color: var(--rose);
@@ -1103,8 +1106,11 @@
               <label>時間<input name="time" type="time" step="60"></label>
               <label class="full">對方問題<input name="question" required placeholder="對方想詢問什麼？"></label>
               <label>抽牌模式<select name="spreadType"><option>塔羅單張</option><option>塔羅三張</option><option>奧修單張</option></select></label>
-              <label class="full">使用牌卡名稱<textarea name="cards" rows="2" list="clientCardNames" placeholder="可輸入多張牌卡，使用逗號或換行分隔"></textarea></label>
-              <datalist id="clientCardNames"></datalist>
+              <div class="full">
+                <label>牌陣卡牌</label>
+                <div id="clientCardFields" class="client-card-fields"></div>
+                <button class="ghost" type="button" id="addClientCardBtn" style="margin-top:8px">＋ 新增卡牌</button>
+              </div>
               <label class="full">解讀內容<textarea name="reading" rows="6" placeholder="記錄這次的解讀內容"></textarea></label>
               <label class="upload-field full">追加附件照片<input name="media" type="file" accept="image/*,.heic,.heif" multiple></label>
               <div class="full upload-status-list" id="clientUploadStatus"></div>
@@ -1141,6 +1147,6 @@
     </div>
   </dialog>
 
-  <script src="scripts/emilyhome.js?v=20260809-client-delete"></script>
+  <script src="scripts/emilyhome.js?v=20260809-client-spread-cards"></script>
 </body>
 </html>
