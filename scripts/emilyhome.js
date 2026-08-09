@@ -176,6 +176,7 @@
   const clientUploadStatus = document.getElementById("clientUploadStatus");
   const clientCardNames = document.getElementById("clientCardNames");
   const clientRefreshBtn = document.getElementById("clientRefreshBtn");
+  const clientPersonDeleteBtn = document.getElementById("clientPersonDeleteBtn");
   const cardForm = document.getElementById("cardForm");
   const cardStatus = document.getElementById("cardStatus");
   const cardDrawFields = document.getElementById("cardDrawFields");
@@ -1396,6 +1397,31 @@
     }
   }
 
+  async function deleteClientPerson() {
+    const personId = String(clientPersonForm.elements.id.value || "");
+    const person = clientPeople.find((item) => item.id === personId);
+    if (!person) return;
+    const confirmed = window.confirm("確定要刪除「" + person.name + "」的人物設定嗎？\n\n人物會從列表移除，但算牌紀錄與 NAS 照片會保留。想要恢復時需要由後端資料處理。 ");
+    if (!confirmed) return;
+    clientPersonDeleteBtn.disabled = true;
+    clientPeopleStatus.className = "status";
+    clientPeopleStatus.textContent = "移除人物設定中...";
+    try {
+      await fetch(apiUrl("/api/wife-journal/clients/" + encodeURIComponent(personId)), { method: "DELETE", headers: headers() }).then(readJson);
+      activeClientId = "";
+      clientPersonForm.reset();
+      clientPersonForm.elements.id.value = "";
+      clientPersonDeleteBtn.hidden = true;
+      document.getElementById("clientPersonSubmit").textContent = "新增人物";
+      clientPeopleStatus.className = "status ok";
+      clientPeopleStatus.textContent = "人物設定已移除，原有紀錄仍保留 ✨";
+      await loadClientPeople();
+    } catch (error) {
+      clientPeopleStatus.className = "status error";
+      clientPeopleStatus.textContent = error.message;
+    } finally { clientPersonDeleteBtn.disabled = false; }
+  }
+
   function renderClientPeople() {
     const query = String(clientSearchInput.value || "").trim().toLowerCase();
     const people = clientPeople.filter((person) => !query || [person.name, person.notes].some((value) => String(value || "").toLowerCase().includes(query)));
@@ -1844,6 +1870,7 @@
     clientPersonForm.elements.id.value = person.id;
     clientPersonForm.elements.name.value = person.name || "";
     clientPersonForm.elements.notes.value = person.notes || "";
+    clientPersonDeleteBtn.hidden = false;
     document.getElementById("clientPersonSubmit").textContent = "儲存人物修改";
     clientPersonForm.closest("details").open = true;
     clientPersonForm.scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -1867,6 +1894,7 @@
       activeClientId = body.person.id;
       clientPersonForm.reset();
       clientPersonForm.elements.id.value = "";
+      clientPersonDeleteBtn.hidden = true;
       button.textContent = "新增人物";
       clientPeopleStatus.className = "status ok";
       clientPeopleStatus.textContent = personId ? "人物資料已更新 ✨" : "人物已新增 ✨";
@@ -1876,6 +1904,7 @@
       clientPeopleStatus.textContent = error.message;
     } finally { button.disabled = false; }
   });
+  clientPersonDeleteBtn.addEventListener("click", deleteClientPerson);
   clientRecordForm.addEventListener("submit", saveClientRecord);
   clientRecordForm.addEventListener("change", (event) => {
     if (event.target.matches('[name="media"]')) renderUploadStatuses(clientUploadStatus, Array.from(event.target.files || []), "waiting");
