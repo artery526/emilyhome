@@ -190,6 +190,8 @@
   const bodyCalendarTitle = document.getElementById("bodyCalendarTitle");
   const bodyStatus = document.getElementById("bodyStatus");
   const bodyForm = document.getElementById("bodyForm");
+  const bodyImageInput = document.getElementById("bodyImageInput");
+  const bodyImageStatus = document.getElementById("bodyImageStatus");
   const bodyRecordList = document.getElementById("bodyRecordList");
   const bodyDayTitle = document.getElementById("bodyDayTitle");
   const sheetTokenInput = document.getElementById("sheetTokenInput");
@@ -700,19 +702,45 @@
     bodyRecordList.innerHTML = records.map((record) => {
       const title = record.type === "氣喘" ? "🫧 氣喘發作日" : "🌸 月經來時";
       const details = [
-        record.severity ? "程度：" + record.severity : "",
         record.flow ? "流量：" + record.flow : "",
         record.painLevel ? "疼痛：" + record.painLevel : "",
         record.asthmaTrigger ? "誘因：" + asthmaTriggerLabel(record.asthmaTrigger) : "",
-        record.medicineUsed ? "用藥：" + record.medicineUsed : "",
       ].filter(Boolean).join(" · ");
       return '<article class="body-record">'
         + '<div class="entry-title">' + esc(title) + '</div>'
         + '<div class="entry-meta">' + esc([record.recordedAt || record.date, details].filter(Boolean).join(" · ")) + '</div>'
-        + (record.notes ? '<div class="entry-meta">' + esc(record.notes) + '</div>' : '')
+        + bodyNotesMarkup(record.notes)
         + '<div class="toolbar"><button class="danger" type="button" data-body-delete-id="' + esc(record.id) + '">🗑️ 刪除</button></div>'
       + '</article>';
     }).join("");
+  }
+
+  function bodyNotesMarkup(value) {
+    const notes = String(value || "").trim();
+    if (!notes) return "";
+    const urls = notes.split(/\s*[,\n]\s*/).map((item) => item.replace(/^圖片附件：\s*/, "").trim()).filter((url) => /^https?:\/\//i.test(url));
+    if (!urls.length) return '<div class="entry-meta">' + esc(notes) + '</div>';
+    return '<div class="client-card-thumbs">' + urls.map((url) => '<a href="' + esc(url) + '" target="_blank" rel="noreferrer"><img class="client-card-thumb" src="' + esc(url) + '" alt="健康記錄附件"></a>').join("") + '</div>';
+  }
+
+  async function uploadBodyImages(files, date) {
+    if (!files.length) return [];
+    renderUploadStatuses(bodyImageStatus, files, "loading");
+    const media = [];
+    try {
+      for (const file of files) {
+        const data = new FormData();
+        data.set("date", date);
+        data.set("media", file);
+        const body = await fetch(apiUrl("/api/wife-journal/body-media"), { method: "POST", headers: headers(), body: data }).then(readJson);
+        if (body.media) media.push(body.media);
+      }
+      renderUploadStatuses(bodyImageStatus, files, "ok");
+      return media;
+    } catch (error) {
+      renderUploadStatuses(bodyImageStatus, files, "error", "上傳失敗");
+      throw error;
+    }
   }
 
   function updateBodyTemplateFields() {
@@ -1851,6 +1879,9 @@
   document.getElementById("bodyTokenSettingsBtn").addEventListener("click", () => toggleSettingsPanel("bodyTokenSettingsBtn", "bodyTokenSettings"));
   document.getElementById("bodyLockSettingsBtn").addEventListener("click", () => toggleSettingsPanel("bodyLockSettingsBtn", "bodyLockSettings"));
   bodyForm.elements.type.addEventListener("change", updateBodyTemplateFields);
+  bodyImageInput.addEventListener("change", () => {
+    renderUploadStatuses(bodyImageStatus, Array.from(bodyImageInput.files || []), "waiting");
+  });
   document.getElementById("refreshBtn").addEventListener("click", async () => {
     siteHeader.classList.remove("nav-open");
     brandMenuBtn.setAttribute("aria-expanded", "false");
@@ -2019,20 +2050,24 @@
     const button = bodyForm.querySelector("button[type='submit']");
     const data = new FormData(bodyForm);
     const date = data.get("date");
+    const type = data.get("type");
+    const imageFiles = type === "氣喘" ? Array.from(bodyImageInput.files || []) : [];
     button.disabled = true;
     bodyStatus.className = "status";
     bodyStatus.textContent = "寫入身體記錄中... 🌙";
     try {
+      const imageMedia = await uploadBodyImages(imageFiles, date);
+      const imageUrls = imageMedia.map((item) => mediaUrl(item.originalUrl || item.thumbnailUrl || item.url || "", item.fileName || "")).filter(Boolean);
       await sheetRequest("emilyBodyRecordWrite", {
         date,
         time: currentTime(),
-        type: data.get("type"),
-        severity: data.get("severity"),
+        type,
+        severity: "",
         flow: data.get("flow"),
         painLevel: data.get("painLevel"),
         asthmaTrigger: data.get("asthmaTrigger"),
-        medicineUsed: data.get("medicineUsed"),
-        notes: data.get("notes"),
+        medicineUsed: "",
+        notes: imageUrls.map((url) => "圖片附件：" + url).join(","),
         source: "EmilyHome",
       });
       bodyYear.value = String(date).slice(0, 4);
@@ -2040,6 +2075,7 @@
       activeBodyDate = date;
       bodyForm.reset();
       bodyForm.elements.date.value = date;
+      bodyImageStatus.innerHTML = "";
       updateBodyTemplateFields();
       await loadBodyRecords();
       bodyStatus.className = "status ok";

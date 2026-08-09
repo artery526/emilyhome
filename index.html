@@ -996,7 +996,7 @@
           </section>
           <section class="card span-4">
             <div class="panel-heading">
-              <h3>🩷 新增身體感受</h3>
+              <h3>♥️ 健康日記</h3>
               <button class="icon-button" type="button" id="bodyTokenSettingsBtn" aria-expanded="false" aria-controls="bodyTokenSettings" title="試算表 Token 設定">⚙️</button>
             </div>
             <div class="settings-panel lock-panel" id="bodyTokenSettings" hidden>
@@ -1014,14 +1014,6 @@
                 <select name="type">
                   <option value="月經">🌸 月經來時</option>
                   <option value="氣喘">🫧 氣喘發作日</option>
-                </select>
-              </label>
-              <label class="body-asthma-field">程度
-                <select name="severity">
-                  <option value="">未指定</option>
-                  <option value="輕微">輕微</option>
-                  <option value="中等">中等</option>
-                  <option value="嚴重">嚴重</option>
                 </select>
               </label>
               <label class="body-period-field">流量
@@ -1045,14 +1037,8 @@
                   <option value="不確定">不確定</option>
                 </select>
               </label>
-              <label class="body-asthma-field">是否用藥
-                <select name="medicineUsed">
-                  <option value="">未指定</option>
-                  <option value="是">是</option>
-                  <option value="否">否</option>
-                </select>
-              </label>
-              <label class="full body-asthma-field">備註<textarea name="notes" placeholder="只記錄觀察，不做醫療判斷 ✨"></textarea></label>
+              <label class="full body-asthma-field">影像記錄<input id="bodyImageInput" name="bodyImage" type="file" accept="image/*,.heic,.heif" multiple><small class="muted">可上傳氣喘發作時的相關照片，不輸入文字備註。</small></label>
+              <div class="full upload-status-list" id="bodyImageStatus"></div>
               <button class="primary full" type="submit">🌙 寫入身體記錄</button>
             </form>
           </section>
@@ -1147,6 +1133,6 @@
     </div>
   </dialog>
 
-  <script src="scripts/emilyhome.js?v=20260809-client-spread-cards"></script>
+  <script src="scripts/emilyhome.js?v=20260809-health-image-log"></script>
 </body>
 </html>
