@@ -90,6 +90,9 @@
   let cards = [];
   let oshoCards = [];
   let bodyRecords = [];
+  let clientPeople = [];
+  let clientRecords = [];
+  let activeClientId = "";
   let activeDate = "";
   let activeJournalMonth = "";
   let timelineSearchOpen = false;
@@ -161,6 +164,18 @@
   const journalView = document.getElementById("journalView");
   const cardView = document.getElementById("cardView");
   const bodyView = document.getElementById("bodyView");
+  const clientView = document.getElementById("clientView");
+  const clientPeopleList = document.getElementById("clientPeopleList");
+  const clientSearchInput = document.getElementById("clientSearchInput");
+  const clientPersonForm = document.getElementById("clientPersonForm");
+  const clientPeopleStatus = document.getElementById("clientPeopleStatus");
+  const clientRecordsTitle = document.getElementById("clientRecordsTitle");
+  const clientRecordForm = document.getElementById("clientRecordForm");
+  const clientRecordList = document.getElementById("clientRecordList");
+  const clientRecordStatus = document.getElementById("clientRecordStatus");
+  const clientUploadStatus = document.getElementById("clientUploadStatus");
+  const clientCardNames = document.getElementById("clientCardNames");
+  const clientRefreshBtn = document.getElementById("clientRefreshBtn");
   const cardForm = document.getElementById("cardForm");
   const cardStatus = document.getElementById("cardStatus");
   const cardDrawFields = document.getElementById("cardDrawFields");
@@ -1175,10 +1190,11 @@
   }
 
   function setView(view) {
-    const next = view === "cards" ? "cards" : (view === "body" ? "body" : "journal");
+    const next = ["cards", "body", "clients"].includes(view) ? view : "journal";
     journalView.hidden = next !== "journal";
     cardView.hidden = next !== "cards";
     bodyView.hidden = next !== "body";
+    clientView.hidden = next !== "clients";
     document.querySelectorAll("[data-view]").forEach((button) => {
       button.classList.toggle("active", button.dataset.view === next);
     });
@@ -1186,6 +1202,7 @@
     if (next === "body" && !bodyLoaded) {
       loadBodyRecords().then(() => { bodyLoaded = true; }).catch(() => {});
     }
+    if (next === "clients") Promise.all([ensureCardsLoaded(), loadClientPeople()]).catch(() => {});
   }
 
   function activeCards() {
@@ -1345,6 +1362,140 @@
         + details
       + '</article>';
     }).join("");
+  }
+
+  function clientCardCatalog() {
+    return [...cards, ...oshoCards].filter((card, index, list) => {
+      const name = card.name || card.cardName || card.title || card.label || "";
+      return name && list.findIndex((item) => (item.name || item.cardName || item.title || item.label || "") === name) === index;
+    });
+  }
+
+  function renderClientCardNames() {
+    if (!clientCardNames) return;
+    clientCardNames.innerHTML = clientCardCatalog().map((card) => {
+      const name = card.name || card.cardName || card.title || card.label || "";
+      return '<option value="' + esc(name) + '"></option>';
+    }).join("");
+  }
+
+  async function loadClientPeople() {
+    const body = await fetch(apiUrl("/api/wife-journal/clients"), { cache: "no-store", headers: headers() }).then(readJson);
+    clientPeople = Array.isArray(body.people) ? body.people : [];
+    renderClientPeople();
+    renderClientCardNames();
+    if (activeClientId && clientPeople.some((person) => person.id === activeClientId)) {
+      await loadClientRecords(activeClientId);
+    } else if (clientPeople.length) {
+      await loadClientRecords(clientPeople[0].id);
+    } else {
+      activeClientId = "";
+      clientRecordsTitle.textContent = "請先新增人物 ✍️";
+      clientRecordForm.hidden = true;
+      clientRecordList.innerHTML = '<p class="muted">目前還沒有客戶人物。</p>';
+    }
+  }
+
+  function renderClientPeople() {
+    const query = String(clientSearchInput.value || "").trim().toLowerCase();
+    const people = clientPeople.filter((person) => !query || [person.name, person.notes].some((value) => String(value || "").toLowerCase().includes(query)));
+    clientPeopleList.innerHTML = people.length ? people.map((person) => (
+      '<div class="client-person-row"><button class="ghost client-person-button' + (person.id === activeClientId ? ' active' : '') + '" type="button" data-client-id="' + esc(person.id) + '">' +
+      '<span>👤 ' + esc(person.name) + '</span><small>' + esc(person.recordCount || 0) + ' 筆</small></button><button class="icon-button" type="button" data-client-edit-person="' + esc(person.id) + '" title="編輯人物">✏️</button></div>'
+    )).join("") : '<p class="muted">找不到符合的人物。</p>';
+  }
+
+  async function loadClientRecords(personId) {
+    const person = clientPeople.find((item) => item.id === personId);
+    if (!person) return;
+    activeClientId = personId;
+    clientRecordsTitle.textContent = "👤 " + person.name + " 的算牌紀錄";
+    clientRecordForm.hidden = false;
+    clientRecordList.innerHTML = '<p class="muted">載入算牌紀錄中...</p>';
+    renderClientPeople();
+    const body = await fetch(apiUrl("/api/wife-journal/clients/" + encodeURIComponent(personId) + "/records"), { cache: "no-store", headers: headers() }).then(readJson);
+    clientRecords = Array.isArray(body.records) ? body.records : [];
+    renderClientRecords();
+  }
+
+  function clientMediaMarkup(media) {
+    return (media || []).filter((item) => item.type === "photo" || item.source === "photo-library").map((item) => {
+      const url = mediaUrl(item.thumbnailUrl || item.originalUrl || item.url || "", item.updatedAt || item.fileName || "");
+      return url ? '<img class="client-card-thumb" src="' + esc(url) + '" alt="附件照片" loading="lazy">' : "";
+    }).join("");
+  }
+
+  function renderClientRecords() {
+    if (!clientRecords.length) {
+      clientRecordList.innerHTML = '<p class="muted">這位客戶目前還沒有算牌紀錄。</p>';
+      return;
+    }
+    clientRecordList.innerHTML = clientRecords.map((record) => {
+      const feedback = (record.feedback || []).map((item) => '<div class="client-feedback-item"><strong>' + esc([item.date, item.time].filter(Boolean).join(" · ")) + '</strong><br>' + esc(item.content) + '</div>').join("");
+      return '<article class="client-record" data-client-record="' + esc(record.id) + '">' +
+        '<div class="client-record-heading"><div><strong>' + esc([record.date, record.time].filter(Boolean).join(" · ")) + '</strong><div class="entry-meta">' + esc(record.spreadType || "") + '</div></div><button class="ghost" type="button" data-client-edit-id="' + esc(record.id) + '">✏️ 編輯</button></div>' +
+        '<p><strong>問題：</strong>' + esc(record.question) + '</p>' +
+        '<p><strong>牌卡：</strong>' + esc((record.cards || []).join("、") || "未指定") + '</p>' +
+        '<p class="preserve-lines"><strong>解讀：</strong>' + esc(record.reading || "") + '</p>' +
+        '<div class="client-card-thumbs">' + clientMediaMarkup(record.media) + '</div>' +
+        '<div class="client-feedback"><strong>💬 對方反饋</strong>' + (feedback || '<p class="muted">尚未新增反饋。</p>') +
+        '<form class="client-feedback-form" data-feedback-record-id="' + esc(record.id) + '"><input name="date" type="date" value="' + esc(new Date().toISOString().slice(0, 10)) + '"><input name="content" required placeholder="補充對方的短篇反饋"><button class="ghost" type="submit">追加</button></form></div>' +
+      '</article>';
+    }).join("");
+  }
+
+  function resetClientRecordForm() {
+    clientRecordForm.reset();
+    clientRecordForm.elements.date.valueAsDate = new Date();
+    clientRecordForm.elements.time.value = currentTime();
+    clientRecordForm.elements.id.value = "";
+    clientRecordForm.elements.spreadType.value = "塔羅單張";
+    document.getElementById("clientRecordSubmit").textContent = "✍️ 儲存算牌紀錄";
+    document.getElementById("clientRecordCancel").hidden = true;
+    clientUploadStatus.innerHTML = "";
+  }
+
+  function editClientRecord(recordId) {
+    const record = clientRecords.find((item) => item.id === recordId);
+    if (!record) return;
+    clientRecordForm.hidden = false;
+    clientRecordForm.elements.id.value = record.id;
+    clientRecordForm.elements.date.value = record.date || "";
+    clientRecordForm.elements.time.value = record.time || "";
+    clientRecordForm.elements.question.value = record.question || "";
+    clientRecordForm.elements.spreadType.value = record.spreadType || "塔羅單張";
+    clientRecordForm.elements.cards.value = (record.cards || []).join("\n");
+    clientRecordForm.elements.reading.value = record.reading || "";
+    document.getElementById("clientRecordSubmit").textContent = "💾 儲存編輯";
+    document.getElementById("clientRecordCancel").hidden = false;
+    clientRecordForm.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  async function saveClientRecord(event) {
+    event.preventDefault();
+    if (!activeClientId) return;
+    const button = document.getElementById("clientRecordSubmit");
+    const data = new FormData(clientRecordForm);
+    const recordId = String(data.get("id") || "");
+    const files = Array.from(clientRecordForm.elements.media.files || []);
+    data.delete("id");
+    button.disabled = true;
+    clientRecordStatus.className = "status";
+    clientRecordStatus.textContent = recordId ? "儲存編輯中... ✍️" : "新增算牌紀錄中... ✍️";
+    try {
+      const path = recordId
+        ? "/api/wife-journal/clients/" + encodeURIComponent(activeClientId) + "/records/" + encodeURIComponent(recordId)
+        : "/api/wife-journal/clients/" + encodeURIComponent(activeClientId) + "/records";
+      const response = await fetch(apiUrl(path), { method: recordId ? "PUT" : "POST", headers: headers(), body: data });
+      const body = await readJson(response);
+      clientRecordStatus.className = "status ok";
+      clientRecordStatus.textContent = recordId ? "已更新算牌紀錄 ✨" : "已新增算牌紀錄 ✨";
+      resetClientRecordForm();
+      await loadClientPeople();
+    } catch (error) {
+      clientRecordStatus.className = "status error";
+      clientRecordStatus.textContent = error.message;
+    } finally { button.disabled = false; }
   }
 
   async function connect() {
@@ -1664,6 +1815,7 @@
     await loadEntries();
     if (!cardView.hidden) await ensureCardsLoaded();
     if (!bodyView.hidden) await loadBodyRecords();
+    if (!clientView.hidden) await loadClientPeople();
     if (!journalView.hidden && libraryPanel.open) await ensureLibrarySummary();
   });
   document.getElementById("lockAppBtn").addEventListener("click", () => {
@@ -1676,6 +1828,80 @@
       brandMenuBtn.setAttribute("aria-expanded", "false");
     });
   });
+  clientPeopleList.addEventListener("click", (event) => {
+    const selectButton = event.target.closest("[data-client-id]");
+    if (selectButton) {
+      loadClientRecords(selectButton.dataset.clientId).catch((error) => {
+        clientPeopleStatus.className = "status error";
+        clientPeopleStatus.textContent = error.message;
+      });
+      return;
+    }
+    const editButton = event.target.closest("[data-client-edit-person]");
+    if (!editButton) return;
+    const person = clientPeople.find((item) => item.id === editButton.dataset.clientEditPerson);
+    if (!person) return;
+    clientPersonForm.elements.id.value = person.id;
+    clientPersonForm.elements.name.value = person.name || "";
+    clientPersonForm.elements.notes.value = person.notes || "";
+    document.getElementById("clientPersonSubmit").textContent = "儲存人物修改";
+    clientPersonForm.closest("details").open = true;
+    clientPersonForm.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  });
+  clientSearchInput.addEventListener("input", renderClientPeople);
+  clientRefreshBtn.addEventListener("click", () => loadClientPeople().catch((error) => {
+    clientPeopleStatus.className = "status error";
+    clientPeopleStatus.textContent = error.message;
+  }));
+  clientPersonForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const data = Object.fromEntries(new FormData(clientPersonForm).entries());
+    const personId = String(data.id || "");
+    const button = document.getElementById("clientPersonSubmit");
+    button.disabled = true;
+    clientPeopleStatus.className = "status";
+    clientPeopleStatus.textContent = personId ? "更新人物中..." : "新增人物中...";
+    try {
+      const path = personId ? "/api/wife-journal/clients/" + encodeURIComponent(personId) : "/api/wife-journal/clients";
+      const body = await fetch(apiUrl(path), { method: personId ? "PUT" : "POST", headers: headers({ "content-type": "application/json" }), body: JSON.stringify({ name: data.name, notes: data.notes }) }).then(readJson);
+      activeClientId = body.person.id;
+      clientPersonForm.reset();
+      clientPersonForm.elements.id.value = "";
+      button.textContent = "新增人物";
+      clientPeopleStatus.className = "status ok";
+      clientPeopleStatus.textContent = personId ? "人物資料已更新 ✨" : "人物已新增 ✨";
+      await loadClientPeople();
+    } catch (error) {
+      clientPeopleStatus.className = "status error";
+      clientPeopleStatus.textContent = error.message;
+    } finally { button.disabled = false; }
+  });
+  clientRecordForm.addEventListener("submit", saveClientRecord);
+  clientRecordForm.addEventListener("change", (event) => {
+    if (event.target.matches('[name="media"]')) renderUploadStatuses(clientUploadStatus, Array.from(event.target.files || []), "waiting");
+  });
+  clientRecordList.addEventListener("click", (event) => {
+    const editButton = event.target.closest("[data-client-edit-id]");
+    if (editButton) editClientRecord(editButton.dataset.clientEditId);
+  });
+  clientRecordList.addEventListener("submit", async (event) => {
+    const feedbackForm = event.target.closest("[data-feedback-record-id]");
+    if (!feedbackForm) return;
+    event.preventDefault();
+    const content = feedbackForm.elements.content.value.trim();
+    if (!content) return;
+    const button = feedbackForm.querySelector("button");
+    button.disabled = true;
+    try {
+      await fetch(apiUrl("/api/wife-journal/clients/" + encodeURIComponent(activeClientId) + "/records/" + encodeURIComponent(feedbackForm.dataset.feedbackRecordId) + "/feedback"), { method: "POST", headers: headers({ "content-type": "application/json" }), body: JSON.stringify({ date: feedbackForm.elements.date.value, content }) }).then(readJson);
+      await loadClientRecords(activeClientId);
+    } catch (error) {
+      clientRecordStatus.className = "status error";
+      clientRecordStatus.textContent = error.message;
+      button.disabled = false;
+    }
+  });
+  document.getElementById("clientRecordCancel").addEventListener("click", resetClientRecordForm);
   document.querySelectorAll("[data-draw-mode]").forEach((button) => {
     button.addEventListener("click", () => setDrawMode(button.dataset.drawMode));
   });
@@ -1781,4 +2007,6 @@
   renderBodyRecords();
   renderCardDrawFields();
   renderTagPicker();
+  clientRecordForm.elements.date.valueAsDate = new Date();
+  clientRecordForm.elements.time.value = currentTime();
 })();

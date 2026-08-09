@@ -215,6 +215,17 @@
       transform: translateY(-50%) translateX(0);
     }
     .view-tabs #refreshBtn { margin-left: 0; }
+    .client-people-list, .client-record-list { display: grid; gap: 10px; }
+    .client-person-row { display: grid; grid-template-columns: 1fr auto; gap: 6px; align-items: center; }
+    .client-person-button { width: 100%; text-align: left; display: flex; justify-content: space-between; gap: 10px; }
+    .client-person-button.active { background: var(--green, #4d7966); color: #fff; }
+    .client-record { border: 1px solid var(--line, #d8e1dc); border-radius: 12px; padding: 14px; background: rgba(255,255,255,.72); }
+    .client-record-heading { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+    .client-feedback { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line, #d8e1dc); }
+    .client-feedback-item { padding: 8px 0; border-bottom: 1px dashed var(--line, #d8e1dc); white-space: pre-wrap; }
+    .client-feedback-form { display: grid; grid-template-columns: 130px 1fr auto; gap: 8px; align-items: end; margin-top: 10px; }
+    .client-card-thumbs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    .client-card-thumb { width: 44px; height: 64px; object-fit: cover; border-radius: 6px; border: 1px solid var(--line, #d8e1dc); }
     .view-tab.active {
       background: var(--rose);
       border-color: var(--rose);
@@ -854,6 +865,7 @@
       <button class="view-tab active" type="button" data-view="journal">🌿 心情日記</button>
       <button class="view-tab" type="button" data-view="cards">🔮 記錄卡牌</button>
       <button class="view-tab" type="button" data-view="body">🌙 身體記錄</button>
+      <button class="view-tab" type="button" data-view="clients">✍️ 客戶記錄</button>
       <button class="ghost" type="button" id="refreshBtn">🔄 重新整理</button>
       <button class="ghost" type="button" id="lockAppBtn">🔒 鎖定</button>
     </div>
@@ -1061,6 +1073,45 @@
               </div>
             </div>
             <div class="body-record-list" id="bodyRecordList"><p class="muted">載入後會顯示整月身體記錄。</p></div>
+          </section>
+        </div>
+      </section>
+
+      <section class="view-panel" id="clientView" hidden>
+        <div class="grid">
+          <section class="card span-4">
+            <h3>✍️ 客戶記錄</h3>
+            <input id="clientSearchInput" type="search" placeholder="搜尋人物名稱或備註" style="margin-top:12px">
+            <div class="client-people-list" id="clientPeopleList" style="margin-top:12px"><p class="muted">載入中...</p></div>
+            <details class="settings-panel" style="margin-top:14px">
+              <summary>新增人物</summary>
+              <form id="clientPersonForm" class="form-grid" style="margin-top:12px">
+                <input type="hidden" name="id">
+                <label class="full">人物名稱<input name="name" required placeholder="例如：小美"></label>
+                <label class="full">備註<textarea name="notes" rows="3" placeholder="人物背景或提醒"></textarea></label>
+                <button class="primary full" type="submit" id="clientPersonSubmit">新增人物</button>
+              </form>
+            </details>
+            <p class="status" id="clientPeopleStatus"></p>
+          </section>
+          <section class="card span-8">
+            <div class="panel-heading"><h3 id="clientRecordsTitle">請先選擇人物 ✍️</h3><button class="ghost" type="button" id="clientRefreshBtn">🔄</button></div>
+            <form id="clientRecordForm" class="form-grid" style="margin-top:14px" hidden>
+              <input type="hidden" name="id">
+              <label>日期<input name="date" type="date" required></label>
+              <label>時間<input name="time" type="time" step="60"></label>
+              <label class="full">對方問題<input name="question" required placeholder="對方想詢問什麼？"></label>
+              <label>抽牌模式<select name="spreadType"><option>塔羅單張</option><option>塔羅三張</option><option>奧修單張</option></select></label>
+              <label class="full">使用牌卡名稱<textarea name="cards" rows="2" list="clientCardNames" placeholder="可輸入多張牌卡，使用逗號或換行分隔"></textarea></label>
+              <datalist id="clientCardNames"></datalist>
+              <label class="full">解讀內容<textarea name="reading" rows="6" placeholder="記錄這次的解讀內容"></textarea></label>
+              <label class="upload-field full">追加附件照片<input name="media" type="file" accept="image/*,.heic,.heif" multiple></label>
+              <div class="full upload-status-list" id="clientUploadStatus"></div>
+              <button class="primary" type="submit" id="clientRecordSubmit">✍️ 儲存算牌紀錄</button>
+              <button class="ghost" type="button" id="clientRecordCancel" hidden>取消編輯</button>
+            </form>
+            <p class="status" id="clientRecordStatus"></p>
+            <div class="client-record-list" id="clientRecordList"><p class="muted">選擇人物後顯示算牌紀錄。</p></div>
           </section>
         </div>
       </section>
