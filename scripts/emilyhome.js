@@ -976,10 +976,14 @@
     renderCalendar();
   }
 
+  function localDateString(date = new Date()) {
+    return String(date.getFullYear()) + "-" + String(date.getMonth() + 1).padStart(2, "0") + "-" + String(date.getDate()).padStart(2, "0");
+  }
+
   function resetTodoForm() {
     todoForm.reset();
     todoForm.elements.id.value = "";
-    todoForm.elements.date.value = activeTodoDate || journalCalendarMonth() + "-01";
+    todoForm.elements.date.value = activeTodoDate || localDateString();
     todoSubmitBtn.textContent = "＋ 新增待辦";
     todoCancelBtn.hidden = true;
   }
