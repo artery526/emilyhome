@@ -229,6 +229,14 @@
     .client-card-fields { display: grid; gap: 8px; margin-top: 6px; }
     .client-card-slot { display: grid; grid-template-columns: 1fr 120px auto; gap: 8px; align-items: center; }
     .client-card-slot .remove-card { min-width: 40px; }
+    .todo-list { display: grid; gap: 8px; margin-top: 12px; }
+    .todo-item { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: start; padding: 9px; border: 1px solid var(--line, #d8e1dc); border-radius: 10px; background: rgba(255,255,255,.72); }
+    .todo-item.completed { opacity: .62; }
+    .todo-item.completed .todo-title { text-decoration: line-through; }
+    .todo-check { width: 20px; height: 20px; margin-top: 2px; }
+    .todo-date { display: block; font-size: .82em; color: var(--muted, #718079); margin-top: 3px; }
+    .todo-actions { display: flex; gap: 4px; }
+    .todo-count-badge { display: inline-block; margin-top: 3px; padding: 2px 5px; border-radius: 999px; background: #eef4ef; color: var(--sage, #4d7966); font-size: 11px; }
     .view-tab.active {
       background: var(--rose);
       border-color: var(--rose);
@@ -886,13 +894,25 @@
     <section class="app" id="app" hidden>
       <section class="view-panel" id="journalView">
       <div class="grid">
-        <section class="card span-12">
+        <section class="card span-8">
           <h3 id="calendarTitle">🌙 本月月曆</h3>
           <div class="library-controls">
             <select id="journalYear"></select>
             <select id="journalMonth"></select>
           </div>
           <div class="calendar" id="calendar"></div>
+        </section>
+        <section class="card span-4" id="todoCard">
+          <div class="panel-heading"><h3>📋 待辦事項</h3><button class="icon-button" type="button" id="todoRefreshBtn" title="重新載入待辦">🔄</button></div>
+          <form id="todoForm" class="form-grid" style="margin-top:12px">
+            <input type="hidden" name="id">
+            <label class="full">日期<input name="date" type="date" required></label>
+            <label class="full">事項<input name="title" placeholder="今天要完成什麼？" required></label>
+            <button class="primary full" type="submit" id="todoSubmitBtn">＋ 新增待辦</button>
+            <button class="ghost full" type="button" id="todoCancelBtn" hidden>取消編輯</button>
+          </form>
+          <p class="status" id="todoStatus"></p>
+          <div class="todo-list" id="todoList"><p class="muted">載入中...</p></div>
         </section>
         <section class="card span-12">
           <div class="timeline-heading">
@@ -1133,6 +1153,6 @@
     </div>
   </dialog>
 
-  <script src="scripts/emilyhome.js?v=20260809-health-image-log"></script>
+  <script src="scripts/emilyhome.js?v=20260810-todos"></script>
 </body>
 </html>

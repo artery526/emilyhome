@@ -95,6 +95,8 @@
   let activeClientId = "";
   let activeDate = "";
   let activeJournalMonth = "";
+  let todos = [];
+  let activeTodoDate = "";
   let timelineSearchOpen = false;
   let timelineSearchQuery = "";
   let activeCardMonth = "";
@@ -137,6 +139,12 @@
   const calendarEl = document.getElementById("calendar");
   const journalYear = document.getElementById("journalYear");
   const journalMonth = document.getElementById("journalMonth");
+  const todoForm = document.getElementById("todoForm");
+  const todoList = document.getElementById("todoList");
+  const todoStatus = document.getElementById("todoStatus");
+  const todoSubmitBtn = document.getElementById("todoSubmitBtn");
+  const todoCancelBtn = document.getElementById("todoCancelBtn");
+  const todoRefreshBtn = document.getElementById("todoRefreshBtn");
   const createCard = document.getElementById("createCard");
   const form = document.getElementById("entryForm");
   const entryFormTitle = document.getElementById("entryFormTitle");
@@ -906,6 +914,10 @@
       map.set(entry.date, (map.get(entry.date) || 0) + 1);
       return map;
     }, new Map());
+    const todoByDate = todos.reduce((map, todo) => {
+      map.set(todo.date, (map.get(todo.date) || 0) + 1);
+      return map;
+    }, new Map());
     const firstDay = new Date(year, month, 1).getDay();
     const leadingBlanks = (firstDay + 6) % 7;
     const weekdayNames = ["一", "二", "三", "四", "五", "六", "日"];
@@ -919,7 +931,9 @@
       const isWeekend = weekday === 0 || weekday === 6;
       const count = byDate.get(date) || 0;
       const countBadge = count ? '<div><span class="entry-count-badge">' + esc(count > 9 ? "9+" : String(count)) + '</span></div>' : '';
-      return '<button type="button" class="day' + (isWeekend ? ' weekend' : '') + (count ? ' has-entry' : '') + (activeDate === date ? ' active' : '') + '" data-date="' + date + '">' + day + countBadge + '</button>';
+      const todoCount = todoByDate.get(date) || 0;
+      const todoBadge = todoCount ? '<div><span class="todo-count-badge">待辦 ' + esc(todoCount > 9 ? "9+" : String(todoCount)) + '</span></div>' : '';
+      return '<button type="button" class="day' + (isWeekend ? ' weekend' : '') + (count ? ' has-entry' : '') + (todoCount ? ' has-todo' : '') + (activeDate === date ? ' active' : '') + '" data-date="' + date + '">' + day + countBadge + todoBadge + '</button>';
     });
     calendarEl.innerHTML = head.concat(blanks, dayCells).join("");
   }
@@ -929,6 +943,7 @@
     const body = await fetch(apiUrl("/api/wife-journal/entries"), { cache: "no-store", headers: headers() }).then(readJson);
     entries = Array.isArray(body.entries) ? body.entries : [];
     syncJournalMonthControls();
+    await loadTodosForMonth(journalCalendarMonth());
     renderEntries();
     renderCalendar();
     syncCardTimelineFilters();
@@ -947,6 +962,77 @@
     syncJournalMonthControls();
     renderCalendar();
     renderEntries();
+    loadTodosForMonth(activeJournalMonth).catch((error) => {
+      todoStatus.className = "status error";
+      todoStatus.textContent = error.message;
+    });
+  }
+
+  async function loadTodosForMonth(ym) {
+    const body = await fetch(apiUrl("/api/wife-journal/todos?ym=" + encodeURIComponent(ym)), { cache: "no-store", headers: headers() }).then(readJson);
+    todos = Array.isArray(body.todos) ? body.todos : [];
+    activeTodoDate = "";
+    renderTodos();
+    renderCalendar();
+  }
+
+  function resetTodoForm() {
+    todoForm.reset();
+    todoForm.elements.id.value = "";
+    todoForm.elements.date.value = activeTodoDate || journalCalendarMonth() + "-01";
+    todoSubmitBtn.textContent = "＋ 新增待辦";
+    todoCancelBtn.hidden = true;
+  }
+
+  function renderTodos() {
+    const visibleTodos = activeTodoDate ? todos.filter((todo) => todo.date === activeTodoDate) : todos;
+    if (!visibleTodos.length) {
+      todoList.innerHTML = '<p class="muted">' + (activeTodoDate ? esc(activeTodoDate) + ' 沒有待辦事項。' : '這個月還沒有待辦事項。') + '</p>';
+      return;
+    }
+    todoList.innerHTML = visibleTodos.map((todo) => '<div class="todo-item' + (todo.completed ? ' completed' : '') + '">' +
+      '<input class="todo-check" type="checkbox" data-todo-toggle="' + esc(todo.id) + '"' + (todo.completed ? ' checked' : '') + ' aria-label="完成待辦">' +
+      '<div><div class="todo-title">' + esc(todo.title) + '</div><span class="todo-date">' + esc(todo.date) + '</span></div>' +
+      '<div class="todo-actions"><button class="icon-button" type="button" data-todo-edit="' + esc(todo.id) + '" title="編輯待辦">✏️</button><button class="icon-button" type="button" data-todo-delete="' + esc(todo.id) + '" title="刪除待辦">🗑️</button></div>' +
+      '</div>').join("");
+  }
+
+  function editTodo(todoId) {
+    const todo = todos.find((item) => item.id === todoId);
+    if (!todo) return;
+    todoForm.elements.id.value = todo.id;
+    todoForm.elements.date.value = todo.date;
+    todoForm.elements.title.value = todo.title;
+    todoSubmitBtn.textContent = "💾 儲存修改";
+    todoCancelBtn.hidden = false;
+    todoForm.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  async function saveTodo(event) {
+    event.preventDefault();
+    const data = Object.fromEntries(new FormData(todoForm).entries());
+    const todoId = String(data.id || "");
+    todoSubmitBtn.disabled = true;
+    todoStatus.className = "status";
+    todoStatus.textContent = todoId ? "更新待辦中..." : "新增待辦中...";
+    try {
+      const path = todoId ? "/api/wife-journal/todos/" + encodeURIComponent(journalCalendarMonth()) + "/" + encodeURIComponent(todoId) : "/api/wife-journal/todos";
+      await fetch(apiUrl(path), { method: todoId ? "PUT" : "POST", headers: headers({ "content-type": "application/json" }), body: JSON.stringify({ date: data.date, title: data.title, completed: false }) }).then(readJson);
+      todoStatus.className = "status ok";
+      todoStatus.textContent = todoId ? "待辦已更新 ✨" : "待辦已新增 ✨";
+      resetTodoForm();
+      await loadTodosForMonth(journalCalendarMonth());
+    } catch (error) {
+      todoStatus.className = "status error";
+      todoStatus.textContent = error.message;
+    } finally { todoSubmitBtn.disabled = false; }
+  }
+
+  async function toggleTodo(todoId, completed) {
+    try {
+      await fetch(apiUrl("/api/wife-journal/todos/" + encodeURIComponent(journalCalendarMonth()) + "/" + encodeURIComponent(todoId)), { method: "PUT", headers: headers({ "content-type": "application/json" }), body: JSON.stringify({ completed }) }).then(readJson);
+      await loadTodosForMonth(journalCalendarMonth());
+    } catch (error) { todoStatus.className = "status error"; todoStatus.textContent = error.message; }
   }
 
   function markdownBody(markdown) {
@@ -1650,8 +1736,10 @@
     const button = event.target.closest("[data-date]");
     if (!button) return;
     activeDate = activeDate === button.dataset.date ? "" : button.dataset.date;
+    activeTodoDate = activeTodoDate === button.dataset.date ? "" : button.dataset.date;
     renderCalendar();
     renderEntries();
+    renderTodos();
   });
 
   journalYear.addEventListener("change", () => {
@@ -1661,6 +1749,30 @@
 
   journalMonth.addEventListener("change", () => {
     changeJournalMonth(journalMonth.value || journalCalendarMonth());
+  });
+
+  todoForm.addEventListener("submit", saveTodo);
+  todoCancelBtn.addEventListener("click", resetTodoForm);
+  todoRefreshBtn.addEventListener("click", () => loadTodosForMonth(journalCalendarMonth()).catch((error) => {
+    todoStatus.className = "status error";
+    todoStatus.textContent = error.message;
+  }));
+  todoList.addEventListener("change", (event) => {
+    const checkbox = event.target.closest("[data-todo-toggle]");
+    if (checkbox) toggleTodo(checkbox.dataset.todoToggle, checkbox.checked);
+  });
+  todoList.addEventListener("click", async (event) => {
+    const editButton = event.target.closest("[data-todo-edit]");
+    if (editButton) { editTodo(editButton.dataset.todoEdit); return; }
+    const deleteButton = event.target.closest("[data-todo-delete]");
+    if (!deleteButton) return;
+    const todo = todos.find((item) => item.id === deleteButton.dataset.todoDelete);
+    if (!todo || !window.confirm("確定要刪除這個待辦事項嗎？")) return;
+    deleteButton.disabled = true;
+    try {
+      await fetch(apiUrl("/api/wife-journal/todos/" + encodeURIComponent(journalCalendarMonth()) + "/" + encodeURIComponent(todo.id)), { method: "DELETE", headers: headers() }).then(readJson);
+      await loadTodosForMonth(journalCalendarMonth());
+    } catch (error) { todoStatus.className = "status error"; todoStatus.textContent = error.message; }
   });
 
   bodyCalendar.addEventListener("click", (event) => {
@@ -1889,6 +2001,7 @@
     if (!cardView.hidden) await ensureCardsLoaded();
     if (!bodyView.hidden) await loadBodyRecords();
     if (!clientView.hidden) await loadClientPeople();
+    if (!journalView.hidden) await loadTodosForMonth(journalCalendarMonth());
     if (!journalView.hidden && libraryPanel.open) await ensureLibrarySummary();
   });
   document.getElementById("lockAppBtn").addEventListener("click", () => {
@@ -2099,6 +2212,7 @@
   updateBodyTemplateFields();
   renderBodyCalendar();
   renderBodyRecords();
+  resetTodoForm();
   renderCardDrawFields();
   renderTagPicker();
   clientRecordForm.elements.date.valueAsDate = new Date();
