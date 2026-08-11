@@ -1611,7 +1611,7 @@
     clientRecordForm.elements.date.valueAsDate = new Date();
     clientRecordForm.elements.time.value = currentTime();
     clientRecordForm.elements.id.value = "";
-    clientRecordForm.elements.spreadType.value = "塔羅單張";
+    clientRecordForm.elements.spreadType.value = "選擇牌陣";
     document.getElementById("clientRecordSubmit").textContent = "✍️ 儲存算牌紀錄";
     document.getElementById("clientRecordCancel").hidden = true;
     clientUploadStatus.innerHTML = "";
