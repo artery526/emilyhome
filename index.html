@@ -228,6 +228,10 @@
     .client-feedback-form { display: grid; grid-template-columns: 120px 1fr auto auto; gap: 8px; align-items: end; margin-top: 10px; }
     .client-card-thumbs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
     .client-card-thumb { width: 44px; height: 64px; object-fit: cover; border-radius: 6px; border: 1px solid var(--line, #d8e1dc); }
+    .client-edit-media { display: flex; flex-wrap: wrap; gap: 10px; padding: 10px; border: 1px dashed var(--line, #d8e1dc); border-radius: 10px; }
+    .client-edit-media-item { display: grid; gap: 5px; justify-items: center; }
+    .client-edit-media-item img { width: 68px; height: 84px; object-fit: cover; border-radius: 7px; cursor: zoom-in; border: 1px solid var(--line, #d8e1dc); }
+    .client-photo-button { border: 0; padding: 0; background: transparent; min-height: 0; }
     .client-card-fields { display: grid; gap: 8px; margin-top: 6px; }
     .client-card-slot { display: grid; grid-template-columns: 1fr 120px auto; gap: 8px; align-items: center; }
     .client-card-slot .remove-card { min-width: 40px; }
@@ -1128,6 +1132,7 @@
               </div>
               <label class="full">解讀內容<textarea name="reading" rows="6" placeholder="記錄這次的解讀內容"></textarea></label>
               <label class="upload-field full">追加附件照片<input name="media" type="file" accept="image/*,.heic,.heif" multiple></label>
+              <div class="full client-edit-media" id="clientEditMedia" hidden></div>
               <div class="full upload-status-list" id="clientUploadStatus"></div>
               <button class="primary" type="submit" id="clientRecordSubmit">✍️ 儲存算牌紀錄</button>
               <button class="ghost" type="button" id="clientRecordCancel" hidden>取消編輯</button>
@@ -1162,6 +1167,6 @@
     </div>
   </dialog>
 
-  <script src="scripts/emilyhome.js?v=20260811-client-spread-select"></script>
+  <script src="scripts/emilyhome.js?v=20260811-client-photo-edit"></script>
 </body>
 </html>

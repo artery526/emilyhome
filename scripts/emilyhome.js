@@ -183,6 +183,7 @@
   const clientRecordList = document.getElementById("clientRecordList");
   const clientRecordStatus = document.getElementById("clientRecordStatus");
   const clientUploadStatus = document.getElementById("clientUploadStatus");
+  const clientEditMedia = document.getElementById("clientEditMedia");
   const clientCardFields = document.getElementById("clientCardFields");
   const addClientCardBtn = document.getElementById("addClientCardBtn");
   const clientRefreshBtn = document.getElementById("clientRefreshBtn");
@@ -1583,8 +1584,18 @@
   function clientMediaMarkup(media) {
     return (media || []).filter((item) => item.type === "photo" || item.source === "photo-library").map((item) => {
       const url = mediaUrl(item.thumbnailUrl || item.originalUrl || item.url || "", item.updatedAt || item.fileName || "");
-      return url ? '<img class="client-card-thumb" src="' + esc(url) + '" alt="附件照片" loading="lazy">' : "";
+      return url ? '<button class="client-photo-button" type="button" data-client-photo-url="' + esc(url) + '"><img class="client-card-thumb" src="' + esc(url) + '" alt="附件照片" loading="lazy"></button>' : "";
     }).join("");
+  }
+
+  function renderClientEditMedia(media) {
+    const items = (media || []).filter((item) => item.type === "photo" || item.source === "photo-library");
+    clientEditMedia.hidden = !items.length;
+    clientEditMedia.innerHTML = items.length ? items.map((item) => {
+      const url = mediaUrl(item.thumbnailUrl || item.originalUrl || item.url || "", item.updatedAt || item.fileName || "");
+      const mediaIndex = (media || []).indexOf(item);
+      return '<div class="client-edit-media-item"><button class="client-photo-button" type="button" data-client-photo-url="' + esc(url) + '"><img src="' + esc(url) + '" alt="附件照片" loading="lazy"></button><button class="danger" type="button" data-client-delete-media="' + mediaIndex + '">🗑️ 移除</button></div>';
+    }).join("") : "";
   }
 
   function renderClientRecords() {
@@ -1615,6 +1626,8 @@
     document.getElementById("clientRecordSubmit").textContent = "✍️ 儲存算牌紀錄";
     document.getElementById("clientRecordCancel").hidden = true;
     clientUploadStatus.innerHTML = "";
+    clientEditMedia.hidden = true;
+    clientEditMedia.innerHTML = "";
     renderClientCardFields();
   }
 
@@ -1629,6 +1642,7 @@
     clientRecordForm.elements.spreadType.value = record.spreadType || "塔羅單張";
     renderClientCardFields(record.cards || []);
     clientRecordForm.elements.reading.value = record.reading || "";
+    renderClientEditMedia(record.media || []);
     document.getElementById("clientRecordSubmit").textContent = "💾 儲存編輯";
     document.getElementById("clientRecordCancel").hidden = false;
     clientRecordForm.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -2092,6 +2106,8 @@
   clientRecordList.addEventListener("click", (event) => {
     const editButton = event.target.closest("[data-client-edit-id]");
     if (editButton) { editClientRecord(editButton.dataset.clientEditId); return; }
+    const photoButton = event.target.closest("[data-client-photo-url]");
+    if (photoButton) openPhoto(photoButton.dataset.clientPhotoUrl);
     const feedbackEditButton = event.target.closest("[data-feedback-edit-id]");
     if (feedbackEditButton) {
       const record = clientRecords.find((item) => item.id === feedbackEditButton.dataset.feedbackEditRecord);
@@ -2124,6 +2140,29 @@
           clientRecordStatus.className = "status error";
           clientRecordStatus.textContent = error.message;
         });
+    }
+  });
+  clientEditMedia.addEventListener("click", async (event) => {
+    const photoButton = event.target.closest("[data-client-photo-url]");
+    if (photoButton) { openPhoto(photoButton.dataset.clientPhotoUrl); return; }
+    const deleteButton = event.target.closest("[data-client-delete-media]");
+    if (!deleteButton) return;
+    const recordId = String(clientRecordForm.elements.id.value || "");
+    if (!activeClientId || !recordId || !window.confirm("確定要移除這張附件照片嗎？\n\n只會解除本篇算牌紀錄的附件關聯，NAS 原始照片會保留。")) return;
+    deleteButton.disabled = true;
+    try {
+      const body = await fetch(apiUrl("/api/wife-journal/clients/" + encodeURIComponent(activeClientId) + "/records/" + encodeURIComponent(recordId) + "/media/" + encodeURIComponent(deleteButton.dataset.clientDeleteMedia)), { method: "DELETE", headers: headers() }).then(readJson);
+      const record = body.record;
+      const index = clientRecords.findIndex((item) => item.id === recordId);
+      if (index >= 0) clientRecords[index] = record;
+      renderClientEditMedia(record.media || []);
+      renderClientRecords();
+      clientRecordStatus.className = "status ok";
+      clientRecordStatus.textContent = "附件已從本篇紀錄移除，NAS 照片已保留 ✨";
+    } catch (error) {
+      clientRecordStatus.className = "status error";
+      clientRecordStatus.textContent = error.message;
+      deleteButton.disabled = false;
     }
   });
   clientRecordList.addEventListener("submit", async (event) => {
