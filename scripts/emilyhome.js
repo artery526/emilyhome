@@ -1593,15 +1593,15 @@
       return;
     }
     clientRecordList.innerHTML = clientRecords.map((record) => {
-      const feedback = (record.feedback || []).map((item) => '<div class="client-feedback-item"><strong>' + esc([item.date, item.time].filter(Boolean).join(" · ")) + '</strong><br>' + esc(item.content) + '</div>').join("");
+      const feedback = (record.feedback || []).map((item) => '<div class="client-feedback-item"><div><strong>' + esc([item.date, item.time].filter(Boolean).join(" · ")) + '</strong><br>' + esc(item.content) + '</div><div class="client-feedback-actions"><button class="icon-button" type="button" data-feedback-edit-record="' + esc(record.id) + '" data-feedback-edit-id="' + esc(item.id) + '" title="編輯反饋">✏️</button><button class="icon-button" type="button" data-feedback-delete-record="' + esc(record.id) + '" data-feedback-delete-id="' + esc(item.id) + '" title="刪除反饋">🗑️</button></div></div>').join("");
       return '<article class="client-record" data-client-record="' + esc(record.id) + '">' +
         '<div class="client-record-heading"><div><strong>' + esc([record.date, record.time].filter(Boolean).join(" · ")) + '</strong><div class="entry-meta">' + esc(record.spreadType || "") + '</div></div><button class="ghost" type="button" data-client-edit-id="' + esc(record.id) + '">✏️ 編輯</button></div>' +
-        '<p><strong>問題：</strong>' + esc(record.question) + '</p>' +
+        '<p class="preserve-lines"><strong>問題：</strong>' + esc(record.question) + '</p>' +
         '<p><strong>牌陣卡牌：</strong>' + esc((record.cards || []).map((card) => typeof card === "string" ? card : [card.name, card.orientation !== "無" ? card.orientation : ""].filter(Boolean).join(" ")).join("、") || "未指定") + '</p>' +
         '<p class="preserve-lines"><strong>解讀：</strong>' + esc(record.reading || "") + '</p>' +
         '<div class="client-card-thumbs">' + clientMediaMarkup(record.media) + '</div>' +
         '<div class="client-feedback"><strong>💬 對方反饋</strong>' + (feedback || '<p class="muted">尚未新增反饋。</p>') +
-        '<form class="client-feedback-form" data-feedback-record-id="' + esc(record.id) + '"><input name="date" type="date" value="' + esc(new Date().toISOString().slice(0, 10)) + '"><input name="content" required placeholder="補充對方的短篇反饋"><button class="ghost" type="submit">追加</button></form></div>' +
+        '<form class="client-feedback-form" data-feedback-record-id="' + esc(record.id) + '"><input type="hidden" name="feedbackId"><input name="date" type="date" value="' + esc(new Date().toISOString().slice(0, 10)) + '"><input name="content" required placeholder="補充對方的短篇反饋"><button class="ghost" type="submit">追加</button><button class="ghost" type="button" data-feedback-cancel>取消</button></form></div>' +
       '</article>';
     }).join("");
   }
@@ -2091,7 +2091,40 @@
   });
   clientRecordList.addEventListener("click", (event) => {
     const editButton = event.target.closest("[data-client-edit-id]");
-    if (editButton) editClientRecord(editButton.dataset.clientEditId);
+    if (editButton) { editClientRecord(editButton.dataset.clientEditId); return; }
+    const feedbackEditButton = event.target.closest("[data-feedback-edit-id]");
+    if (feedbackEditButton) {
+      const record = clientRecords.find((item) => item.id === feedbackEditButton.dataset.feedbackEditRecord);
+      const feedback = record?.feedback?.find((item) => item.id === feedbackEditButton.dataset.feedbackEditId);
+      const feedbackForm = feedbackEditButton.closest(".client-record")?.querySelector("[data-feedback-record-id]");
+      if (feedback && feedbackForm) {
+        feedbackForm.elements.feedbackId.value = feedback.id;
+        feedbackForm.elements.date.value = feedback.date || "";
+        feedbackForm.elements.content.value = feedback.content || "";
+        feedbackForm.querySelector('button[type="submit"]').textContent = "儲存修改";
+        feedbackForm.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+      return;
+    }
+    const feedbackCancelButton = event.target.closest("[data-feedback-cancel]");
+    if (feedbackCancelButton) {
+      const feedbackForm = feedbackCancelButton.closest("[data-feedback-record-id]");
+      if (feedbackForm) {
+        feedbackForm.reset();
+        feedbackForm.elements.feedbackId.value = "";
+        feedbackForm.querySelector('button[type="submit"]').textContent = "追加";
+      }
+      return;
+    }
+    const feedbackDeleteButton = event.target.closest("[data-feedback-delete-id]");
+    if (feedbackDeleteButton) {
+      if (!window.confirm("確定要刪除這則對方反饋嗎？")) return;
+      fetch(apiUrl("/api/wife-journal/clients/" + encodeURIComponent(activeClientId) + "/records/" + encodeURIComponent(feedbackDeleteButton.dataset.feedbackDeleteRecord) + "/feedback/" + encodeURIComponent(feedbackDeleteButton.dataset.feedbackDeleteId)), { method: "DELETE", headers: headers() })
+        .then(readJson).then(() => loadClientRecords(activeClientId)).catch((error) => {
+          clientRecordStatus.className = "status error";
+          clientRecordStatus.textContent = error.message;
+        });
+    }
   });
   clientRecordList.addEventListener("submit", async (event) => {
     const feedbackForm = event.target.closest("[data-feedback-record-id]");
@@ -2099,10 +2132,12 @@
     event.preventDefault();
     const content = feedbackForm.elements.content.value.trim();
     if (!content) return;
-    const button = feedbackForm.querySelector("button");
+    const feedbackId = String(feedbackForm.elements.feedbackId.value || "");
+    const button = feedbackForm.querySelector('button[type="submit"]');
     button.disabled = true;
     try {
-      await fetch(apiUrl("/api/wife-journal/clients/" + encodeURIComponent(activeClientId) + "/records/" + encodeURIComponent(feedbackForm.dataset.feedbackRecordId) + "/feedback"), { method: "POST", headers: headers({ "content-type": "application/json" }), body: JSON.stringify({ date: feedbackForm.elements.date.value, content }) }).then(readJson);
+      const feedbackPath = "/api/wife-journal/clients/" + encodeURIComponent(activeClientId) + "/records/" + encodeURIComponent(feedbackForm.dataset.feedbackRecordId) + "/feedback";
+      await fetch(apiUrl(feedbackId ? feedbackPath + "/" + encodeURIComponent(feedbackId) : feedbackPath), { method: feedbackId ? "PUT" : "POST", headers: headers({ "content-type": "application/json" }), body: JSON.stringify({ date: feedbackForm.elements.date.value, content }) }).then(readJson);
       await loadClientRecords(activeClientId);
     } catch (error) {
       clientRecordStatus.className = "status error";
