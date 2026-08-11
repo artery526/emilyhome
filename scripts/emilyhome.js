@@ -142,6 +142,7 @@
   const todoForm = document.getElementById("todoForm");
   const todoList = document.getElementById("todoList");
   const todoStatus = document.getElementById("todoStatus");
+  const todoSummaryCount = document.getElementById("todoSummaryCount");
   const todoSubmitBtn = document.getElementById("todoSubmitBtn");
   const todoCancelBtn = document.getElementById("todoCancelBtn");
   const todoRefreshBtn = document.getElementById("todoRefreshBtn");
@@ -989,6 +990,8 @@
   }
 
   function renderTodos() {
+    const remainingCount = todos.filter((todo) => !todo.completed).length;
+    todoSummaryCount.textContent = todos.length ? "（" + remainingCount + " 項未完成／共 " + todos.length + " 項）" : "（本月尚無）";
     const visibleTodos = activeTodoDate ? todos.filter((todo) => todo.date === activeTodoDate) : todos;
     if (!visibleTodos.length) {
       todoList.innerHTML = '<p class="muted">' + (activeTodoDate ? esc(activeTodoDate) + ' 沒有待辦事項。' : '這個月還沒有待辦事項。') + '</p>';
