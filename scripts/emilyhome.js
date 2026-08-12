@@ -1706,6 +1706,7 @@
       clientRecordStatus.className = "status ok";
       clientRecordStatus.textContent = recordId ? "已更新算牌紀錄 ✨" : "已新增算牌紀錄 ✨";
       resetClientRecordForm();
+      if (files.length) renderClientUploadStatuses(files, uploadStates);
       await loadClientPeople();
     } catch (error) {
       if (files.length) {
