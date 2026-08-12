@@ -496,6 +496,15 @@
     )).join("");
   }
 
+  function renderClientUploadStatuses(files, states) {
+    if (!clientUploadStatus) return;
+    clientUploadStatus.innerHTML = files.map((file) => {
+      const state = states.get(file) || "waiting";
+      const statusText = { waiting: "等待上傳", loading: "上傳中...", ok: "上傳成功", error: "上傳失敗" }[state] || state;
+      return '<div class="upload-status-item ' + esc(state) + '"><strong>' + esc("照片：" + file.name) + '</strong><span>' + esc(statusText) + '</span></div>';
+    }).join("");
+  }
+
   function parseTags() {
     return String(tagsInput.value || "").split(",").map((tag) => tag.trim()).filter(Boolean);
   }
@@ -1652,24 +1661,58 @@
     event.preventDefault();
     if (!activeClientId) return;
     const button = document.getElementById("clientRecordSubmit");
-    const data = new FormData(clientRecordForm);
-    const recordId = String(data.get("id") || "");
-    data.set("cards", JSON.stringify(collectClientCards().filter((card) => card.name)));
-    data.delete("id");
+    const formData = new FormData(clientRecordForm);
+    const recordId = String(formData.get("id") || "");
+    const files = Array.from(clientRecordForm.elements.media?.files || []);
+    const commonFields = {
+      date: String(formData.get("date") || ""),
+      time: String(formData.get("time") || ""),
+      question: String(formData.get("question") || ""),
+      spreadType: String(formData.get("spreadType") || ""),
+      reading: String(formData.get("reading") || ""),
+      cards: JSON.stringify(collectClientCards().filter((card) => card.name)),
+    };
+    const uploadStates = new Map(files.map((file) => [file, "waiting"]));
+    renderClientUploadStatuses(files, uploadStates);
     button.disabled = true;
     clientRecordStatus.className = "status";
     clientRecordStatus.textContent = recordId ? "儲存編輯中... ✍️" : "新增算牌紀錄中... ✍️";
     try {
-      const path = recordId
-        ? "/api/wife-journal/clients/" + encodeURIComponent(activeClientId) + "/records/" + encodeURIComponent(recordId)
-        : "/api/wife-journal/clients/" + encodeURIComponent(activeClientId) + "/records";
-      const response = await fetch(apiUrl(path), { method: recordId ? "PUT" : "POST", headers: headers(), body: data });
-      const body = await readJson(response);
+      let currentRecordId = recordId;
+      let body;
+      if (files.length) {
+        for (const file of files) {
+          uploadStates.set(file, "loading");
+          renderClientUploadStatuses(files, uploadStates);
+          const uploadData = new FormData();
+          Object.entries(commonFields).forEach(([key, value]) => uploadData.set(key, value));
+          uploadData.set("media", file);
+          const path = currentRecordId
+            ? "/api/wife-journal/clients/" + encodeURIComponent(activeClientId) + "/records/" + encodeURIComponent(currentRecordId)
+            : "/api/wife-journal/clients/" + encodeURIComponent(activeClientId) + "/records";
+          body = await fetch(apiUrl(path), { method: currentRecordId ? "PUT" : "POST", headers: headers(), body: uploadData }).then(readJson);
+          if (!currentRecordId) currentRecordId = body.record && body.record.id;
+          uploadStates.set(file, "ok");
+          renderClientUploadStatuses(files, uploadStates);
+        }
+      } else {
+        const saveData = new FormData();
+        Object.entries(commonFields).forEach(([key, value]) => saveData.set(key, value));
+        const path = currentRecordId
+          ? "/api/wife-journal/clients/" + encodeURIComponent(activeClientId) + "/records/" + encodeURIComponent(currentRecordId)
+          : "/api/wife-journal/clients/" + encodeURIComponent(activeClientId) + "/records";
+        body = await fetch(apiUrl(path), { method: currentRecordId ? "PUT" : "POST", headers: headers(), body: saveData }).then(readJson);
+      }
       clientRecordStatus.className = "status ok";
       clientRecordStatus.textContent = recordId ? "已更新算牌紀錄 ✨" : "已新增算牌紀錄 ✨";
       resetClientRecordForm();
       await loadClientPeople();
     } catch (error) {
+      if (files.length) {
+        const pending = files.find((file) => uploadStates.get(file) === "loading" || uploadStates.get(file) === "waiting");
+        if (pending) uploadStates.set(pending, "error");
+        renderClientUploadStatuses(files, uploadStates);
+      }
       clientRecordStatus.className = "status error";
       clientRecordStatus.textContent = error.message;
     } finally { button.disabled = false; }
