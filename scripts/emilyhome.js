@@ -1612,7 +1612,7 @@
         '<p class="preserve-lines"><strong>解讀：</strong>' + esc(record.reading || "") + '</p>' +
         '<div class="client-card-thumbs">' + clientMediaMarkup(record.media) + '</div>' +
         '<div class="client-feedback"><strong>💬 對方反饋</strong>' + (feedback || '<p class="muted">尚未新增反饋。</p>') +
-        '<form class="client-feedback-form" data-feedback-record-id="' + esc(record.id) + '"><input type="hidden" name="feedbackId"><input name="date" type="date" value="' + esc(new Date().toISOString().slice(0, 10)) + '"><input name="content" required placeholder="補充對方的短篇反饋"><button class="ghost" type="submit">追加</button><button class="ghost" type="button" data-feedback-cancel>取消</button></form></div>' +
+        '<form class="client-feedback-form" data-feedback-record-id="' + esc(record.id) + '"><input type="hidden" name="feedbackId"><label>日期<input name="date" type="date" value="' + esc(new Date().toISOString().slice(0, 10)) + '"></label><label>後續回饋<textarea name="content" required placeholder="請記錄對方後續的感受、回應或新進展"></textarea></label><button class="ghost" type="submit">追加</button><button class="ghost" type="button" data-feedback-cancel>取消</button></form></div>' +
       '</article>';
     }).join("");
   }

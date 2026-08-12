@@ -225,7 +225,9 @@
     .client-feedback-item { padding: 8px 0; border-bottom: 1px dashed var(--line, #d8e1dc); white-space: pre-wrap; }
     .client-feedback-item { display: flex; justify-content: space-between; gap: 8px; }
     .client-feedback-actions { display: flex; gap: 3px; flex-shrink: 0; }
-    .client-feedback-form { display: grid; grid-template-columns: 120px 1fr auto auto; gap: 8px; align-items: end; margin-top: 10px; }
+    .client-feedback-form { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: end; margin-top: 10px; }
+    .client-feedback-form input[name="date"], .client-feedback-form textarea[name="content"] { grid-column: 1 / -1; }
+    .client-feedback-form textarea[name="content"] { min-height: 120px; resize: vertical; }
     .client-card-thumbs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
     .client-card-thumb { width: 44px; height: 64px; object-fit: cover; border-radius: 6px; border: 1px solid var(--line, #d8e1dc); }
     .client-edit-media { display: flex; flex-wrap: wrap; gap: 10px; padding: 10px; border: 1px dashed var(--line, #d8e1dc); border-radius: 10px; }
@@ -1167,6 +1169,6 @@
     </div>
   </dialog>
 
-  <script src="scripts/emilyhome.js?v=20260811-client-2of1"></script>
+  <script src="scripts/emilyhome.js?v=20260812-feedback-box"></script>
 </body>
 </html>
