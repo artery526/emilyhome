@@ -940,11 +940,13 @@
       const date = year + "-" + String(month + 1).padStart(2, "0") + "-" + String(day).padStart(2, "0");
       const weekday = new Date(year, month, day).getDay();
       const isWeekend = weekday === 0 || weekday === 6;
+      const isToday = date === localDateString();
       const count = byDate.get(date) || 0;
       const countBadge = count ? '<div><span class="entry-count-badge">' + esc(count > 9 ? "9+" : String(count)) + '</span></div>' : '';
       const todoCount = todoByDate.get(date) || 0;
       const todoBadge = todoCount ? '<div><span class="todo-count-badge">待' + esc(todoCount > 9 ? "9+" : String(todoCount)) + '</span></div>' : '';
-      return '<button type="button" class="day' + (isWeekend ? ' weekend' : '') + (count ? ' has-entry' : '') + (todoCount ? ' has-todo' : '') + (activeDate === date ? ' active' : '') + '" data-date="' + date + '">' + day + countBadge + todoBadge + '</button>';
+      const todayLabel = isToday ? '<span class="today-label">今天</span>' : '';
+      return '<button type="button" class="day' + (isWeekend ? ' weekend' : '') + (count ? ' has-entry' : '') + (todoCount ? ' has-todo' : '') + (isToday ? ' today' : '') + (activeDate === date ? ' active' : '') + '" data-date="' + date + '">' + day + todayLabel + countBadge + todoBadge + '</button>';
     });
     calendarEl.innerHTML = head.concat(blanks, dayCells).join("");
   }
