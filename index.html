@@ -239,6 +239,14 @@
     .client-card-fields { display: grid; gap: 8px; margin-top: 6px; }
     .client-card-slot { display: grid; grid-template-columns: 1fr 120px auto; gap: 8px; align-items: center; }
     .client-card-slot .remove-card { min-width: 40px; }
+    .learning-entry-list { display: grid; gap: 10px; }
+    .learning-entry { border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: #fff; }
+    .learning-entry-heading { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+    .learning-entry-content { white-space: pre-wrap; line-height: 1.7; margin-top: 8px; }
+    .learning-gallery { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .learning-gallery button { border: 0; padding: 0; min-height: 0; background: transparent; }
+    .learning-gallery img { width: 84px; height: 84px; object-fit: cover; border-radius: 8px; cursor: zoom-in; border: 1px solid var(--line); }
+    .learning-search { display: grid; grid-template-columns: 1fr auto; gap: 8px; margin: 10px 0 12px; }
     .todo-list { display: grid; gap: 6px; margin-top: 10px; }
     .todo-card > summary { cursor: pointer; font-size: 16px; font-weight: 700; list-style-position: inside; }
     .todo-panel-body { margin-top: 10px; }
@@ -704,7 +712,7 @@
     }
     .photo-viewer .toolbar {
       display: grid;
-      grid-template-columns: auto 1fr auto auto;
+      grid-template-columns: auto auto auto auto 1fr auto auto;
       align-items: center;
       gap: 8px;
       margin-bottom: 8px;
@@ -733,6 +741,8 @@
       object-fit: contain;
       display: block;
       border-radius: 8px;
+      transition: transform .18s ease;
+      transform-origin: center center;
     }
     @media (max-width: 1500px) {
       header {
@@ -904,6 +914,7 @@
       <button class="view-tab" type="button" data-view="cards">🔮 記錄卡牌</button>
       <button class="view-tab" type="button" data-view="body">🌙 身體記錄</button>
       <button class="view-tab" type="button" data-view="clients">✍️ 客戶記錄</button>
+      <button class="view-tab" type="button" data-view="learning">📚 學習日誌</button>
       <button class="ghost" type="button" id="refreshBtn">🔄 重新整理</button>
       <button class="ghost" type="button" id="lockAppBtn">🔒 鎖定</button>
     </div>
@@ -1159,6 +1170,36 @@
           </section>
         </div>
       </section>
+
+      <section class="view-panel" id="learningView" hidden>
+        <div class="grid">
+          <section class="card span-12">
+            <div class="panel-heading">
+              <h3>📚 學習日誌</h3>
+              <button class="icon-button" type="button" id="learningSearchBtn" aria-expanded="false" aria-controls="learningSearchPanel" title="搜尋學習日誌">🔍</button>
+            </div>
+            <div class="learning-search" id="learningSearchPanel" hidden>
+              <input id="learningSearchInput" type="search" placeholder="搜尋標題、內容或日期">
+              <button class="ghost" type="button" id="learningSearchClearBtn">清除</button>
+            </div>
+            <form id="learningForm" class="form-grid" style="margin-top:14px">
+              <input type="hidden" name="id">
+              <label>標題<input name="title" required placeholder="今天學到了什麼？"></label>
+              <label>日期<input name="date" type="date" required></label>
+              <label class="full">學習內容<textarea name="content" rows="7" required placeholder="記錄筆記、心得或下一步"></textarea></label>
+              <label class="upload-field full">上傳照片<input name="media" type="file" accept="image/*,.heic,.heif" multiple></label>
+              <div class="full upload-status-list" id="learningUploadStatus"></div>
+              <div class="full edit-media-grid" id="learningEditMedia" hidden></div>
+              <button class="primary" type="submit" id="learningSubmitBtn">📚 儲存學習日誌</button>
+              <button class="ghost" type="button" id="learningCancelBtn" hidden>取消編輯</button>
+            </form>
+            <p class="status" id="learningStatus"></p>
+          </section>
+          <section class="card span-12">
+            <div class="learning-entry-list" id="learningEntryList"><p class="muted">載入中...</p></div>
+          </section>
+        </div>
+      </section>
     </section>
   </main>
 
@@ -1174,6 +1215,9 @@
 
   <dialog class="photo-viewer" id="photoViewer">
     <div class="toolbar">
+      <button class="ghost" type="button" id="photoZoomOutBtn" aria-label="縮小">−</button>
+      <button class="ghost" type="button" id="photoZoomResetBtn" aria-label="原始大小">100%</button>
+      <button class="ghost" type="button" id="photoZoomInBtn" aria-label="放大">＋</button>
       <button class="ghost photo-nav" type="button" id="photoPrevBtn" aria-label="上一張">‹</button>
       <span class="photo-counter" id="photoCounter"></span>
       <button class="ghost photo-nav" type="button" id="photoNextBtn" aria-label="下一張">›</button>
@@ -1184,6 +1228,6 @@
     </div>
   </dialog>
 
-  <script src="scripts/emilyhome.js?v=20260815-calendar-today"></script>
+  <script src="scripts/emilyhome.js?v=20260816-learning-journal"></script>
 </body>
 </html>

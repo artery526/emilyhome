@@ -92,6 +92,10 @@
   let bodyRecords = [];
   let clientPeople = [];
   let clientRecords = [];
+  let learningRecords = [];
+  let learningSearchOpen = false;
+  let learningSearchQuery = "";
+  let photoZoom = 1;
   let activeClientId = "";
   let activeDate = "";
   let activeJournalMonth = "";
@@ -170,10 +174,25 @@
   const photoPrevBtn = document.getElementById("photoPrevBtn");
   const photoNextBtn = document.getElementById("photoNextBtn");
   const photoCounter = document.getElementById("photoCounter");
+  const photoZoomInBtn = document.getElementById("photoZoomInBtn");
+  const photoZoomOutBtn = document.getElementById("photoZoomOutBtn");
+  const photoZoomResetBtn = document.getElementById("photoZoomResetBtn");
   const journalView = document.getElementById("journalView");
   const cardView = document.getElementById("cardView");
   const bodyView = document.getElementById("bodyView");
   const clientView = document.getElementById("clientView");
+  const learningView = document.getElementById("learningView");
+  const learningForm = document.getElementById("learningForm");
+  const learningEntryList = document.getElementById("learningEntryList");
+  const learningStatus = document.getElementById("learningStatus");
+  const learningUploadStatus = document.getElementById("learningUploadStatus");
+  const learningEditMedia = document.getElementById("learningEditMedia");
+  const learningSubmitBtn = document.getElementById("learningSubmitBtn");
+  const learningCancelBtn = document.getElementById("learningCancelBtn");
+  const learningSearchBtn = document.getElementById("learningSearchBtn");
+  const learningSearchPanel = document.getElementById("learningSearchPanel");
+  const learningSearchInput = document.getElementById("learningSearchInput");
+  const learningSearchClearBtn = document.getElementById("learningSearchClearBtn");
   const clientPeopleList = document.getElementById("clientPeopleList");
   const clientSearchInput = document.getElementById("clientSearchInput");
   const clientPersonForm = document.getElementById("clientPersonForm");
@@ -1129,6 +1148,7 @@
   function renderPhotoGallery() {
     const item = photoGalleryItems[photoGalleryIndex] || {};
     photoViewerImg.src = item.url || "";
+    photoViewerImg.style.transform = "scale(" + photoZoom + ")";
     const total = photoGalleryItems.length;
     photoCounter.textContent = total > 1 ? (photoGalleryIndex + 1) + " / " + total : "";
     photoPrevBtn.hidden = total <= 1;
@@ -1141,6 +1161,7 @@
       .filter((item) => item && item.url);
     if (!validItems.length) return;
     photoGalleryItems = validItems;
+    photoZoom = 1;
     photoGalleryIndex = Math.min(Math.max(Number(index) || 0, 0), validItems.length - 1);
     renderPhotoGallery();
     photoViewer.showModal();
@@ -1324,12 +1345,97 @@
     await loadCards();
   }
 
+  function renderLearningEntries() {
+    const query = learningSearchQuery.trim().toLowerCase();
+    const records = learningRecords.filter((record) => !query || [record.title, record.content, record.date].some((value) => String(value || "").toLowerCase().includes(query)));
+    if (!records.length) {
+      learningEntryList.innerHTML = '<p class="muted">' + (query ? '找不到相關學習日誌 🔍' : '目前還沒有學習日誌。') + '</p>';
+      return;
+    }
+    learningEntryList.innerHTML = records.map((record) => {
+      const media = (record.media || []).map(photoGalleryItem).filter(Boolean);
+      return '<article class="learning-entry" data-learning-id="' + esc(record.id) + '">' +
+        '<div class="learning-entry-heading"><div><strong>' + esc(record.title) + '</strong><div class="entry-meta">' + esc(record.date) + '</div></div><button class="ghost" type="button" data-learning-edit="' + esc(record.id) + '">✏️ 編輯</button></div>' +
+        '<div class="learning-entry-content">' + esc(record.content) + '</div>' +
+        (media.length ? '<div class="learning-gallery">' + media.map((item, index) => '<button type="button" data-learning-photo="' + esc(record.id) + '" data-learning-photo-index="' + index + '"><img src="' + esc(item.thumbnailUrl || item.url) + '" alt="學習附件" loading="lazy"></button>').join("") + '</div>' : '') +
+      '</article>';
+    }).join("");
+  }
+
+  async function loadLearningRecords() {
+    learningEntryList.innerHTML = '<p class="muted">載入學習日誌中...</p>';
+    const body = await fetch(apiUrl("/api/wife-journal/learning"), { cache: "no-store", headers: headers() }).then(readJson);
+    learningRecords = Array.isArray(body.records) ? body.records : [];
+    renderLearningEntries();
+  }
+
+  function resetLearningForm() {
+    learningForm.reset();
+    learningForm.elements.id.value = "";
+    learningForm.elements.date.value = localDateString();
+    learningSubmitBtn.textContent = "📚 儲存學習日誌";
+    learningCancelBtn.hidden = true;
+    learningUploadStatus.innerHTML = "";
+    learningEditMedia.hidden = true;
+    learningEditMedia.innerHTML = "";
+  }
+
+  function editLearningRecord(id) {
+    const record = learningRecords.find((item) => item.id === id);
+    if (!record) return;
+    learningForm.elements.id.value = record.id;
+    learningForm.elements.title.value = record.title || "";
+    learningForm.elements.date.value = record.date || localDateString();
+    learningForm.elements.content.value = record.content || "";
+    learningSubmitBtn.textContent = "💾 儲存學習日誌編輯";
+    learningCancelBtn.hidden = false;
+    const media = (record.media || []).map(photoGalleryItem).filter(Boolean);
+    learningEditMedia.hidden = !media.length;
+    learningEditMedia.innerHTML = media.map((item, index) => '<button class="media-card" type="button" data-learning-edit-photo="' + index + '"><img src="' + esc(item.thumbnailUrl || item.url) + '" alt="學習附件"></button>').join("");
+    learningForm.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  async function saveLearningRecord(event) {
+    event.preventDefault();
+    const data = new FormData(learningForm);
+    const files = Array.from(learningForm.elements.media?.files || []);
+    const recordId = String(data.get("id") || "");
+    learningStatus.className = "status";
+    learningStatus.textContent = "儲存學習日誌中...";
+    learningSubmitBtn.disabled = true;
+    try {
+      if (!files.length) {
+        const body = await fetch(apiUrl(recordId ? "/api/wife-journal/learning/" + encodeURIComponent(recordId) : "/api/wife-journal/learning"), { method: recordId ? "PUT" : "POST", headers: headers(), body: data }).then(readJson);
+        const index = learningRecords.findIndex((item) => item.id === body.record.id);
+        if (index >= 0) learningRecords[index] = body.record; else learningRecords.unshift(body.record);
+      } else {
+        renderUploadStatuses(learningUploadStatus, files, "waiting");
+        const uploadData = new FormData();
+        ["id", "title", "date", "content"].forEach((name) => uploadData.append(name, data.get(name) || ""));
+        files.forEach((file) => uploadData.append("media", file, file.name));
+        const body = await fetch(apiUrl(recordId ? "/api/wife-journal/learning/" + encodeURIComponent(recordId) : "/api/wife-journal/learning"), { method: recordId ? "PUT" : "POST", headers: headers(), body: uploadData }).then(readJson);
+        renderUploadStatuses(learningUploadStatus, files, "success");
+        const index = learningRecords.findIndex((item) => item.id === body.record.id);
+        if (index >= 0) learningRecords[index] = body.record; else learningRecords.unshift(body.record);
+      }
+      learningStatus.className = "status ok";
+      learningStatus.textContent = "學習日誌已儲存，照片已上傳 ✨";
+      renderLearningEntries();
+      resetLearningForm();
+    } catch (error) {
+      learningStatus.className = "status error";
+      learningStatus.textContent = error.message || "學習日誌儲存失敗";
+      if (files.length) renderUploadStatuses(learningUploadStatus, files, "error", error.message);
+    } finally { learningSubmitBtn.disabled = false; }
+  }
+
   function setView(view) {
-    const next = ["cards", "body", "clients"].includes(view) ? view : "journal";
+    const next = ["cards", "body", "clients", "learning"].includes(view) ? view : "journal";
     journalView.hidden = next !== "journal";
     cardView.hidden = next !== "cards";
     bodyView.hidden = next !== "body";
     clientView.hidden = next !== "clients";
+    learningView.hidden = next !== "learning";
     document.querySelectorAll("[data-view]").forEach((button) => {
       button.classList.toggle("active", button.dataset.view === next);
     });
@@ -1338,6 +1444,7 @@
       loadBodyRecords().then(() => { bodyLoaded = true; }).catch(() => {});
     }
     if (next === "clients") Promise.all([ensureCardsLoaded(), loadClientPeople()]).catch(() => {});
+    if (next === "learning") loadLearningRecords().catch((error) => { learningStatus.className = "status error"; learningStatus.textContent = error.message; });
   }
 
   function activeCards() {
@@ -1989,6 +2096,9 @@
   document.getElementById("closePhotoViewer").addEventListener("click", () => photoViewer.close());
   photoPrevBtn.addEventListener("click", () => movePhotoGallery(-1));
   photoNextBtn.addEventListener("click", () => movePhotoGallery(1));
+  photoZoomInBtn.addEventListener("click", () => { photoZoom = Math.min(3, +(photoZoom + .25).toFixed(2)); renderPhotoGallery(); });
+  photoZoomOutBtn.addEventListener("click", () => { photoZoom = Math.max(.5, +(photoZoom - .25).toFixed(2)); renderPhotoGallery(); });
+  photoZoomResetBtn.addEventListener("click", () => { photoZoom = 1; renderPhotoGallery(); });
   photoStage.addEventListener("touchstart", (event) => {
     const touch = event.changedTouches && event.changedTouches[0];
     if (!touch) return;
@@ -2038,6 +2148,26 @@
     timelineSearchInput.value = "";
     renderEntries();
     timelineSearchInput.focus();
+  });
+  learningSearchBtn.addEventListener("click", () => {
+    learningSearchOpen = !learningSearchOpen;
+    learningSearchPanel.hidden = !learningSearchOpen;
+    learningSearchBtn.setAttribute("aria-expanded", String(learningSearchOpen));
+    if (learningSearchOpen) learningSearchInput.focus();
+  });
+  learningSearchInput.addEventListener("input", () => { learningSearchQuery = learningSearchInput.value; renderLearningEntries(); });
+  learningSearchClearBtn.addEventListener("click", () => { learningSearchQuery = ""; learningSearchInput.value = ""; renderLearningEntries(); learningSearchInput.focus(); });
+  learningForm.addEventListener("submit", saveLearningRecord);
+  learningCancelBtn.addEventListener("click", resetLearningForm);
+  learningForm.elements.media.addEventListener("change", () => renderUploadStatuses(learningUploadStatus, Array.from(learningForm.elements.media.files || []), "waiting"));
+  learningEntryList.addEventListener("click", (event) => {
+    const editButton = event.target.closest("[data-learning-edit]");
+    if (editButton) { editLearningRecord(editButton.dataset.learningEdit); return; }
+    const photoButton = event.target.closest("[data-learning-photo]");
+    if (photoButton) {
+      const record = learningRecords.find((item) => item.id === photoButton.dataset.learningPhoto);
+      if (record) openPhotoGallery((record.media || []).map(photoGalleryItem).filter(Boolean), Number(photoButton.dataset.learningPhotoIndex || 0));
+    }
   });
   gateSheetTokenInput.addEventListener("change", () => saveSheetToken(false));
   gateSheetTokenInput.addEventListener("blur", () => saveSheetToken(false));
