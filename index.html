@@ -955,31 +955,6 @@
             <div class="todo-list" id="todoList"><p class="muted">載入中...</p></div>
           </div>
         </details>
-        <section class="card span-12">
-          <div class="timeline-heading">
-            <h3>🌿 時間軸</h3>
-            <button class="icon-button" type="button" id="timelineSearchBtn" aria-expanded="false" aria-controls="timelineSearchPanel" title="搜尋時間軸">🔍</button>
-          </div>
-          <div class="timeline-search" id="timelineSearchPanel" hidden>
-            <input id="timelineSearchInput" type="search" placeholder="搜尋標題、摘要、日期或時間">
-            <button class="ghost" type="button" id="timelineSearchClearBtn">清除</button>
-          </div>
-          <div class="entry-list" id="entryList"><p class="muted">載入中...</p></div>
-        </section>
-
-        <details class="card span-12 library-panel" id="libraryPanel">
-          <summary>🖼️找尋歷史軌跡</summary>
-          <div class="library-body">
-            <div class="library-controls">
-              <select id="libraryYear"></select>
-              <select id="libraryMonth"></select>
-              <button type="button" id="loadLibraryBtn">載入 ✨</button>
-            </div>
-            <p class="status" id="libraryStatus">尚未載入 Photos。</p>
-            <div class="media-grid" id="libraryGrid"></div>
-          </div>
-        </details>
-
         <section class="card span-12" id="createCard">
           <h3 id="entryFormTitle">💌 新增心情日記</h3>
           <form id="entryForm" class="form-grid entry-form">
@@ -1007,6 +982,30 @@
           </form>
           <p class="status" id="formStatus"></p>
         </section>
+        <section class="card span-12">
+          <div class="timeline-heading">
+            <h3>🌿 時間軸</h3>
+            <button class="icon-button" type="button" id="timelineSearchBtn" aria-expanded="false" aria-controls="timelineSearchPanel" title="搜尋時間軸">🔍</button>
+          </div>
+          <div class="timeline-search" id="timelineSearchPanel" hidden>
+            <input id="timelineSearchInput" type="search" placeholder="搜尋標題、摘要、日期或時間">
+            <button class="ghost" type="button" id="timelineSearchClearBtn">清除</button>
+          </div>
+          <div class="entry-list" id="entryList"><p class="muted">載入中...</p></div>
+        </section>
+
+        <details class="card span-12 library-panel" id="libraryPanel">
+          <summary>🖼️找尋歷史軌跡</summary>
+          <div class="library-body">
+            <div class="library-controls">
+              <select id="libraryYear"></select>
+              <select id="libraryMonth"></select>
+              <button type="button" id="loadLibraryBtn">載入 ✨</button>
+            </div>
+            <p class="status" id="libraryStatus">尚未載入 Photos。</p>
+            <div class="media-grid" id="libraryGrid"></div>
+          </div>
+        </details>
 
       </div>
       </section>
@@ -1228,6 +1227,6 @@
     </div>
   </dialog>
 
-  <script src="scripts/emilyhome.js?v=20260816-learning-journal"></script>
+  <script src="scripts/emilyhome.js?v=20260819-journal-form-order"></script>
 </body>
 </html>
