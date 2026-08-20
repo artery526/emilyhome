@@ -1699,20 +1699,24 @@
     renderClientRecords();
   }
 
-  function clientMediaMarkup(media) {
-    return (media || []).filter((item) => item.type === "photo" || item.source === "photo-library").map((item) => {
-      const url = mediaUrl(item.thumbnailUrl || item.originalUrl || item.url || "", item.updatedAt || item.fileName || "");
-      return url ? '<button class="client-photo-button" type="button" data-client-photo-url="' + esc(url) + '"><img class="client-card-thumb" src="' + esc(url) + '" alt="附件照片" loading="lazy"></button>' : "";
+  function clientRecordPhotoGallery(record) {
+    return (record?.media || []).map(photoGalleryItem).filter(Boolean);
+  }
+
+  function clientMediaMarkup(record) {
+    return clientRecordPhotoGallery(record).map((item, index) => {
+      return '<button class="client-photo-button" type="button" data-client-record-id="' + esc(record.id) + '" data-client-photo-index="' + index + '"><img class="client-card-thumb" src="' + esc(item.thumb || item.url) + '" alt="附件照片" loading="lazy"></button>';
     }).join("");
   }
 
-  function renderClientEditMedia(media) {
-    const items = (media || []).filter((item) => item.type === "photo" || item.source === "photo-library");
+  function renderClientEditMedia(record) {
+    const media = record?.media || [];
+    const items = clientRecordPhotoGallery(record);
     clientEditMedia.hidden = !items.length;
-    clientEditMedia.innerHTML = items.length ? items.map((item) => {
-      const url = mediaUrl(item.thumbnailUrl || item.originalUrl || item.url || "", item.updatedAt || item.fileName || "");
-      const mediaIndex = (media || []).indexOf(item);
-      return '<div class="client-edit-media-item"><button class="client-photo-button" type="button" data-client-photo-url="' + esc(url) + '"><img src="' + esc(url) + '" alt="附件照片" loading="lazy"></button><button class="danger" type="button" data-client-delete-media="' + mediaIndex + '">🗑️ 移除</button></div>';
+    clientEditMedia.innerHTML = items.length ? items.map((item, photoIndex) => {
+      const sourceItem = media.find((mediaItem) => photoGalleryItem(mediaItem)?.url === item.url);
+      const mediaIndex = media.indexOf(sourceItem);
+      return '<div class="client-edit-media-item"><button class="client-photo-button" type="button" data-client-record-id="' + esc(record.id) + '" data-client-photo-index="' + photoIndex + '"><img src="' + esc(item.thumb || item.url) + '" alt="附件照片" loading="lazy"></button><button class="danger" type="button" data-client-delete-media="' + mediaIndex + '">🗑️ 移除</button></div>';
     }).join("") : "";
   }
 
@@ -1728,7 +1732,7 @@
         '<p class="preserve-lines"><strong>問題：</strong>' + esc(record.question) + '</p>' +
         '<p><strong>牌陣卡牌：</strong>' + esc((record.cards || []).map((card) => typeof card === "string" ? card : [card.name, card.orientation !== "無" ? card.orientation : ""].filter(Boolean).join(" ")).join("、") || "未指定") + '</p>' +
         '<p class="preserve-lines"><strong>解讀：</strong>' + esc(record.reading || "") + '</p>' +
-        '<div class="client-card-thumbs">' + clientMediaMarkup(record.media) + '</div>' +
+        '<div class="client-card-thumbs">' + clientMediaMarkup(record) + '</div>' +
         '<div class="client-feedback"><strong>💬 對方反饋</strong>' + (feedback || '<p class="muted">尚未新增反饋。</p>') +
         '<form class="client-feedback-form" data-feedback-record-id="' + esc(record.id) + '"><input type="hidden" name="feedbackId"><label>日期<input name="date" type="date" value="' + esc(new Date().toISOString().slice(0, 10)) + '"></label><label>後續回饋<textarea name="content" required placeholder="請記錄對方後續的感受、回應或新進展"></textarea></label><button class="ghost" type="submit">追加</button><button class="ghost" type="button" data-feedback-cancel>取消</button></form></div>' +
       '</article>';
@@ -1760,7 +1764,7 @@
     clientRecordForm.elements.spreadType.value = record.spreadType || "塔羅單張";
     renderClientCardFields(record.cards || []);
     clientRecordForm.elements.reading.value = record.reading || "";
-    renderClientEditMedia(record.media || []);
+    renderClientEditMedia(record);
     document.getElementById("clientRecordSubmit").textContent = "💾 儲存編輯";
     document.getElementById("clientRecordCancel").hidden = false;
     clientRecordForm.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -2282,8 +2286,12 @@
   clientRecordList.addEventListener("click", (event) => {
     const editButton = event.target.closest("[data-client-edit-id]");
     if (editButton) { editClientRecord(editButton.dataset.clientEditId); return; }
-    const photoButton = event.target.closest("[data-client-photo-url]");
-    if (photoButton) openPhoto(photoButton.dataset.clientPhotoUrl);
+    const photoButton = event.target.closest("[data-client-record-id]");
+    if (photoButton) {
+      const record = clientRecords.find((item) => item.id === photoButton.dataset.clientRecordId);
+      if (record) openPhotoGallery(clientRecordPhotoGallery(record), Number(photoButton.dataset.clientPhotoIndex || 0));
+      return;
+    }
     const feedbackEditButton = event.target.closest("[data-feedback-edit-id]");
     if (feedbackEditButton) {
       const record = clientRecords.find((item) => item.id === feedbackEditButton.dataset.feedbackEditRecord);
@@ -2319,8 +2327,12 @@
     }
   });
   clientEditMedia.addEventListener("click", async (event) => {
-    const photoButton = event.target.closest("[data-client-photo-url]");
-    if (photoButton) { openPhoto(photoButton.dataset.clientPhotoUrl); return; }
+    const photoButton = event.target.closest("[data-client-record-id]");
+    if (photoButton) {
+      const record = clientRecords.find((item) => item.id === photoButton.dataset.clientRecordId);
+      if (record) openPhotoGallery(clientRecordPhotoGallery(record), Number(photoButton.dataset.clientPhotoIndex || 0));
+      return;
+    }
     const deleteButton = event.target.closest("[data-client-delete-media]");
     if (!deleteButton) return;
     const recordId = String(clientRecordForm.elements.id.value || "");
@@ -2331,7 +2343,7 @@
       const record = body.record;
       const index = clientRecords.findIndex((item) => item.id === recordId);
       if (index >= 0) clientRecords[index] = record;
-      renderClientEditMedia(record.media || []);
+      renderClientEditMedia(record);
       renderClientRecords();
       clientRecordStatus.className = "status ok";
       clientRecordStatus.textContent = "附件已從本篇紀錄移除，NAS 照片已保留 ✨";
