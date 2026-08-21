@@ -1728,7 +1728,7 @@
     clientRecordList.innerHTML = clientRecords.map((record) => {
       const feedback = (record.feedback || []).map((item) => '<div class="client-feedback-item"><div><strong>' + esc([item.date, item.time].filter(Boolean).join(" · ")) + '</strong><br>' + esc(item.content) + '</div><div class="client-feedback-actions"><button class="icon-button" type="button" data-feedback-edit-record="' + esc(record.id) + '" data-feedback-edit-id="' + esc(item.id) + '" title="編輯反饋">✏️</button><button class="icon-button" type="button" data-feedback-delete-record="' + esc(record.id) + '" data-feedback-delete-id="' + esc(item.id) + '" title="刪除反饋">🗑️</button></div></div>').join("");
       return '<article class="client-record" data-client-record="' + esc(record.id) + '">' +
-        '<div class="client-record-heading"><div><strong>' + esc([record.date, record.time].filter(Boolean).join(" · ")) + '</strong><div class="entry-meta">' + esc(record.spreadType || "") + '</div></div><button class="ghost" type="button" data-client-edit-id="' + esc(record.id) + '">✏️ 編輯</button></div>' +
+        '<div class="client-record-heading"><div><strong>' + esc([record.date, record.time].filter(Boolean).join(" · ")) + '</strong><div class="entry-meta">' + esc(record.spreadType || "") + '</div></div><div class="toolbar"><button class="ghost" type="button" data-client-edit-id="' + esc(record.id) + '">✏️ 編輯</button><button class="danger" type="button" data-client-delete-id="' + esc(record.id) + '">🗑️ 移除</button></div></div>' +
         '<p class="preserve-lines"><strong>問題：</strong>' + esc(record.question) + '</p>' +
         '<p><strong>牌陣卡牌：</strong>' + esc((record.cards || []).map((card) => typeof card === "string" ? card : [card.name, card.orientation !== "無" ? card.orientation : ""].filter(Boolean).join(" ")).join("、") || "未指定") + '</p>' +
         '<p class="preserve-lines"><strong>解讀：</strong>' + esc(record.reading || "") + '</p>' +
@@ -2284,6 +2284,28 @@
     renderClientCardFields(cards);
   });
   clientRecordList.addEventListener("click", (event) => {
+    const deleteButton = event.target.closest("[data-client-delete-id]");
+    if (deleteButton) {
+      const recordId = deleteButton.dataset.clientDeleteId;
+      const record = clientRecords.find((item) => item.id === recordId);
+      if (!record || !window.confirm("確定要移除這篇算牌紀錄嗎？\n\n本篇文字、反饋與紀錄附件關聯會移除，NAS 原始照片會保留。")) return;
+      deleteButton.disabled = true;
+      fetch(apiUrl("/api/wife-journal/clients/" + encodeURIComponent(activeClientId) + "/records/" + encodeURIComponent(recordId)), { method: "DELETE", headers: headers() })
+        .then(readJson)
+        .then(() => {
+          clientRecords = clientRecords.filter((item) => item.id !== recordId);
+          if (clientRecordForm.elements.id.value === recordId) resetClientRecordForm();
+          renderClientRecords();
+          clientRecordStatus.className = "status ok";
+          clientRecordStatus.textContent = "算牌紀錄已移除，NAS 原始照片已保留 ✨";
+        })
+        .catch((error) => {
+          deleteButton.disabled = false;
+          clientRecordStatus.className = "status error";
+          clientRecordStatus.textContent = error.message;
+        });
+      return;
+    }
     const editButton = event.target.closest("[data-client-edit-id]");
     if (editButton) { editClientRecord(editButton.dataset.clientEditId); return; }
     const photoButton = event.target.closest("[data-client-record-id]");
