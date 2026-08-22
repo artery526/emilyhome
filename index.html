@@ -747,6 +747,13 @@
       transition: transform .18s ease;
       transform-origin: center center;
     }
+    .photo-viewer video {
+      width: 100%;
+      max-height: 78vh;
+      display: block;
+      border-radius: 8px;
+      background: #111;
+    }
     @media (max-width: 1500px) {
       header {
         align-items: center;
@@ -980,7 +987,7 @@
             <div class="tag-row full" id="tagPicker"></div>
             <label class="full">日記內容<textarea name="content" required placeholder="今天發生什麼？我想留下什麼？"></textarea></label>
             <div class="full" id="entryEditMedia" hidden></div>
-            <label class="upload-field">上傳照片<input name="media" type="file" accept="image/*,.heic,.heif" multiple></label>
+            <label class="upload-field">上傳照片或影片<input name="media" type="file" accept="image/*,video/*,.heic,.heif" multiple></label>
             <label class="upload-field">語音備忘<input name="media" type="file" accept="audio/*,.m4a,.mp3,.wav,.webm" multiple></label>
             <div class="upload-status-list full" id="entryUploadStatus"></div>
             <button class="primary full" type="submit" id="entrySubmitBtn">🧸 記錄</button>
@@ -1230,9 +1237,10 @@
     </div>
     <div class="photo-stage" id="photoStage">
       <img id="photoViewerImg" alt="">
+      <video id="photoViewerVideo" controls playsinline hidden></video>
     </div>
   </dialog>
 
-  <script src="scripts/emilyhome.js?v=20260822-client-record-delete"></script>
+  <script src="scripts/emilyhome.js?v=20260822-journal-video-upload"></script>
 </body>
 </html>

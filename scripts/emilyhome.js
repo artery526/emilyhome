@@ -170,6 +170,7 @@
   const calendarTitle = document.getElementById("calendarTitle");
   const photoViewer = document.getElementById("photoViewer");
   const photoViewerImg = document.getElementById("photoViewerImg");
+  const photoViewerVideo = document.getElementById("photoViewerVideo");
   const photoStage = document.getElementById("photoStage");
   const photoPrevBtn = document.getElementById("photoPrevBtn");
   const photoNextBtn = document.getElementById("photoNextBtn");
@@ -492,6 +493,7 @@
   function uploadKind(file) {
     const type = String(file && file.type || "");
     if (type.startsWith("audio/")) return "語音";
+    if (type.startsWith("video/")) return "影片";
     return "照片";
   }
 
@@ -1094,6 +1096,12 @@
         + '<audio controls src="' + esc(mediaUrl(item.url || "", item.updatedAt || key)) + '"></audio>'
       + '</div>';
     }
+    if (item.type === "video") {
+      return '<div class="edit-media-card">'
+        + '<label>影片 ' + (index + 1) + '</label>'
+        + '<video controls playsinline src="' + esc(mediaUrl(item.originalUrl || item.url || "", item.updatedAt || key)) + '"></video>'
+      + '</div>';
+    }
     const thumb = mediaUrl(item.thumbnailUrl || item.originalUrl, item.updatedAt || key);
     const original = mediaUrl(item.originalUrl || item.thumbnailUrl, item.updatedAt || key);
     const galleryIndex = entryReaderGallery.findIndex((photo) => photo.url === original);
@@ -1105,7 +1113,7 @@
     if (!item || item.type === "audio") return null;
     const url = mediaUrl(item.originalUrl || item.thumbnailUrl || "", item.updatedAt || key);
     const thumb = mediaUrl(item.thumbnailUrl || item.originalUrl || "", item.updatedAt || key);
-    return url ? { url, thumb } : null;
+    return url ? { url, thumb, type: item.type || "photo" } : null;
   }
 
   async function openReadEntry(id) {
@@ -1147,8 +1155,19 @@
 
   function renderPhotoGallery() {
     const item = photoGalleryItems[photoGalleryIndex] || {};
-    photoViewerImg.src = item.url || "";
+    const isVideo = item.type === "video";
+    photoViewerImg.hidden = isVideo;
+    photoViewerVideo.hidden = !isVideo;
+    photoViewerImg.src = isVideo ? "" : (item.url || "");
     photoViewerImg.style.transform = "scale(" + photoZoom + ")";
+    if (isVideo) {
+      photoViewerVideo.src = item.url || "";
+      photoViewerVideo.load();
+    } else {
+      photoViewerVideo.pause();
+      photoViewerVideo.removeAttribute("src");
+      photoViewerVideo.load();
+    }
     const total = photoGalleryItems.length;
     photoCounter.textContent = total > 1 ? (photoGalleryIndex + 1) + " / " + total : "";
     photoPrevBtn.hidden = total <= 1;
@@ -1179,6 +1198,13 @@
       return '<div class="edit-media-card">'
         + '<label><input type="checkbox" name="removeMedia" value="' + esc(key) + '"> 移除語音 ' + (index + 1) + '</label>'
         + '<audio controls src="' + esc(mediaUrl(item.url || "", item.updatedAt || key)) + '"></audio>'
+      + '</div>';
+    }
+    if (item.type === "video") {
+      const videoUrl = mediaUrl(item.originalUrl || item.url || "", item.updatedAt || key);
+      return '<div class="edit-media-card">'
+        + '<label><input type="checkbox" name="removeMedia" value="' + esc(key) + '"> 移除影片 ' + (index + 1) + '</label>'
+        + '<video controls playsinline src="' + esc(videoUrl) + '"></video>'
       + '</div>';
     }
     const thumb = mediaUrl(item.thumbnailUrl || item.originalUrl || "", item.updatedAt || key);
