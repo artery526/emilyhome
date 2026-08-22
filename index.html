@@ -657,6 +657,9 @@
       margin-top: 12px;
       font-size: 16px;
     }
+    .reader-entry .edit-media-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
     .edit-media-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
@@ -674,6 +677,16 @@
       aspect-ratio: 1;
       object-fit: cover;
       display: block;
+    }
+    .edit-media-card video {
+      display: block;
+      width: auto;
+      max-width: 100%;
+      height: auto;
+      max-height: 70vh;
+      margin: 0 auto;
+      object-fit: contain;
+      background: #111;
     }
     .edit-media-card label {
       padding: 8px;
@@ -1241,6 +1254,6 @@
     </div>
   </dialog>
 
-  <script src="scripts/emilyhome.js?v=20260822-journal-video-upload"></script>
+  <script src="scripts/emilyhome.js?v=20260822-journal-video-layout"></script>
 </body>
 </html>
