@@ -269,11 +269,22 @@
     }
     .view-tab-image {
       display: block;
-      width: 112px;
-      height: 34px;
+      width: 96px;
+      height: 29px;
       object-fit: contain;
       border-radius: 6px;
-      mix-blend-mode: multiply;
+      mix-blend-mode: normal;
+    }
+    .view-tab[data-view="journal"] {
+      min-height: 34px;
+      padding: 2px 6px;
+      background: rgba(255, 255, 255, .72);
+      border-color: var(--line);
+    }
+    .view-tab[data-view="journal"].active {
+      background: rgba(255, 255, 255, .86);
+      border-color: #cbd8d0;
+      color: var(--ink);
     }
     .view-panel[hidden] { display: none; }
     .timeline-heading {
