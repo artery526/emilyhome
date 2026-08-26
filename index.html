@@ -267,6 +267,14 @@
       border-color: var(--rose);
       color: #fff;
     }
+    .view-tab-image {
+      display: block;
+      width: 112px;
+      height: 34px;
+      object-fit: contain;
+      border-radius: 6px;
+      mix-blend-mode: multiply;
+    }
     .view-panel[hidden] { display: none; }
     .timeline-heading {
       display: flex;
@@ -936,7 +944,7 @@
       <p class="status" id="gateStatus"></p>
     </div>
     <div class="view-tabs" id="logoNav" hidden>
-      <button class="view-tab active" type="button" data-view="journal">🌿 心情日記</button>
+      <button class="view-tab active" type="button" data-view="journal" aria-label="心情日記" title="心情日記"><img class="view-tab-image" src="diary.png" alt="心情日記"></button>
       <button class="view-tab" type="button" data-view="cards">🔮 記錄卡牌</button>
       <button class="view-tab" type="button" data-view="body">🌙 身體記錄</button>
       <button class="view-tab" type="button" data-view="clients">✍️ 客戶記錄</button>
