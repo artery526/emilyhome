@@ -84,6 +84,12 @@
   ];
   const cardPositions = ["正位", "逆位"];
   const threePositions = ["過去 / 起點", "現在 / 核心", "未來 / 提醒"];
+  const learningSubjects = [
+    { id: "chinese", label: "國文" },
+    { id: "english", label: "英文" },
+    { id: "law", label: "法律" },
+    { id: "uncategorized", label: "未分類" },
+  ];
   const entryUploadBatchSize = 12;
   const selectedLibraryImages = new Map();
   let entries = [];
@@ -95,12 +101,11 @@
   let learningRecords = [];
   let learningSearchOpen = false;
   let learningSearchQuery = "";
+  let activeLearningSubject = ["chinese", "english", "law", "uncategorized"].includes(localStorage.getItem("emilyhome.learningSubject")) ? localStorage.getItem("emilyhome.learningSubject") : "chinese";
   let photoZoom = 1;
   let activeClientId = "";
   let activeDate = "";
   let activeJournalMonth = "";
-  let todos = [];
-  let activeTodoDate = "";
   let timelineSearchOpen = false;
   let timelineSearchQuery = "";
   let activeCardMonth = "";
@@ -125,6 +130,7 @@
   const app = document.getElementById("app");
   const siteHeader = document.getElementById("siteHeader");
   const brandMenuBtn = document.getElementById("brandMenuBtn");
+  const brandVideo = document.getElementById("brandVideo");
   const logoNav = document.getElementById("logoNav");
   const gateSettingsBtn = document.getElementById("gateSettingsBtn");
   const gateSettings = document.getElementById("gateSettings");
@@ -143,13 +149,6 @@
   const calendarEl = document.getElementById("calendar");
   const journalYear = document.getElementById("journalYear");
   const journalMonth = document.getElementById("journalMonth");
-  const todoForm = document.getElementById("todoForm");
-  const todoList = document.getElementById("todoList");
-  const todoStatus = document.getElementById("todoStatus");
-  const todoSummaryCount = document.getElementById("todoSummaryCount");
-  const todoSubmitBtn = document.getElementById("todoSubmitBtn");
-  const todoCancelBtn = document.getElementById("todoCancelBtn");
-  const todoRefreshBtn = document.getElementById("todoRefreshBtn");
   const createCard = document.getElementById("createCard");
   const form = document.getElementById("entryForm");
   const entryFormTitle = document.getElementById("entryFormTitle");
@@ -194,6 +193,8 @@
   const learningSearchPanel = document.getElementById("learningSearchPanel");
   const learningSearchInput = document.getElementById("learningSearchInput");
   const learningSearchClearBtn = document.getElementById("learningSearchClearBtn");
+  const learningSubjectTabs = document.getElementById("learningSubjectTabs");
+  const learningListTitle = document.getElementById("learningListTitle");
   const clientPeopleList = document.getElementById("clientPeopleList");
   const clientSearchInput = document.getElementById("clientSearchInput");
   const clientPersonForm = document.getElementById("clientPersonForm");
@@ -551,6 +552,13 @@
     gateSettingsBtn.setAttribute("aria-expanded", "false");
   }
 
+  function playBrandVideo() {
+    if (!brandVideo) return;
+    brandVideo.currentTime = 0;
+    const playback = brandVideo.play();
+    if (playback && typeof playback.catch === "function") playback.catch(() => {});
+  }
+
   function showGate(message, isError) {
     app.hidden = true;
     gate.hidden = false;
@@ -625,9 +633,10 @@
   }
 
   function shortTimelineExcerpt(value) {
-    const text = String(value || "").replace(/\s+/g, " ").trim();
-    if (text.length <= 46) return text;
-    return text.slice(0, 46).trimEnd() + "...";
+    const firstParagraph = String(value || "").split(/\r?\n\s*\r?\n|\r?\n/)[0];
+    const text = firstParagraph.replace(/\s+/g, " ").trim();
+    if (text.length <= 18) return text;
+    return text.slice(0, 18).trimEnd() + "...";
   }
 
   function cardEntryMonth(entry) {
@@ -922,15 +931,15 @@
     entryListEl.innerHTML = visibleEntries.map((entry) => {
       const cover = mediaUrl(entry.coverImageUrl, entry.updatedAt || entry.id);
       const locked = entry.visibility === "password" || entry.visibility === "locked";
-      const visibility = locked ? "上鎖" : "不上鎖";
-      const meta = [entry.date || "", entry.time || "", visibility].filter(Boolean).join(" · ");
+      const moodLine = [entry.date || "", entry.time || "", entry.title || "今天的心情"].filter(Boolean).join(" · ");
+      const feeling = Array.isArray(entry.tags) ? entry.tags.filter(Boolean).join("、") : "";
       const excerpt = locked ? "這篇文章需要解鎖密碼。" : shortTimelineExcerpt(entry.excerpt || "");
+      const feelingLine = [feeling, excerpt].filter(Boolean).join(" · ");
       return '<article class="entry" data-read-id="' + esc(entry.id) + '">'
         + (cover ? '<button class="cover-button" type="button" data-view-url="' + esc(cover) + '"><img class="cover" src="' + esc(cover) + '" alt=""></button>' : '<div class="cover"></div>')
         + '<div>'
-          + '<div class="entry-title">' + esc(entry.title || "今天的心情") + '</div>'
-          + '<div class="entry-meta">' + esc(meta) + '</div>'
-          + '<div class="entry-excerpt">' + esc(excerpt) + '</div>'
+          + '<div class="entry-title">' + esc(moodLine) + '</div>'
+          + '<div class="entry-excerpt">' + esc(feelingLine || "尚未填寫感受。") + '</div>'
           + '<div class="toolbar"><button type="button" data-read-button-id="' + esc(entry.id) + '">📖 閱讀全文</button><button type="button" data-edit-id="' + esc(entry.id) + '">✏️ 編輯</button><button class="danger" type="button" data-delete-id="' + esc(entry.id) + '">🗑️ 刪除</button></div>'
         + '</div>'
       + '</article>';
@@ -944,10 +953,6 @@
     const days = new Date(year, month + 1, 0).getDate();
     const byDate = entries.filter((entry) => entry.type !== "card" && !entry.cardOnly).reduce((map, entry) => {
       map.set(entry.date, (map.get(entry.date) || 0) + 1);
-      return map;
-    }, new Map());
-    const todoByDate = todos.reduce((map, todo) => {
-      map.set(todo.date, (map.get(todo.date) || 0) + 1);
       return map;
     }, new Map());
     const firstDay = new Date(year, month, 1).getDay();
@@ -964,10 +969,8 @@
       const isToday = date === localDateString();
       const count = byDate.get(date) || 0;
       const countBadge = count ? '<div><span class="entry-count-badge">' + esc(count > 9 ? "9+" : String(count)) + '</span></div>' : '';
-      const todoCount = todoByDate.get(date) || 0;
-      const todoBadge = todoCount ? '<div><span class="todo-count-badge">待' + esc(todoCount > 9 ? "9+" : String(todoCount)) + '</span></div>' : '';
       const todayLabel = isToday ? '<span class="today-label">今天</span>' : '';
-      return '<button type="button" class="day' + (isWeekend ? ' weekend' : '') + (count ? ' has-entry' : '') + (todoCount ? ' has-todo' : '') + (isToday ? ' today' : '') + (activeDate === date ? ' active' : '') + '" data-date="' + date + '">' + day + todayLabel + countBadge + todoBadge + '</button>';
+      return '<button type="button" class="day' + (isWeekend ? ' weekend' : '') + (count ? ' has-entry' : '') + (isToday ? ' today' : '') + (activeDate === date ? ' active' : '') + '" data-date="' + date + '">' + day + todayLabel + countBadge + '</button>';
     });
     calendarEl.innerHTML = head.concat(blanks, dayCells).join("");
   }
@@ -977,7 +980,6 @@
     const body = await fetch(apiUrl("/api/wife-journal/entries"), { cache: "no-store", headers: headers() }).then(readJson);
     entries = Array.isArray(body.entries) ? body.entries : [];
     syncJournalMonthControls();
-    await loadTodosForMonth(journalCalendarMonth());
     renderEntries();
     renderCalendar();
     syncCardTimelineFilters();
@@ -996,83 +998,10 @@
     syncJournalMonthControls();
     renderCalendar();
     renderEntries();
-    loadTodosForMonth(activeJournalMonth).catch((error) => {
-      todoStatus.className = "status error";
-      todoStatus.textContent = error.message;
-    });
-  }
-
-  async function loadTodosForMonth(ym) {
-    const body = await fetch(apiUrl("/api/wife-journal/todos?ym=" + encodeURIComponent(ym)), { cache: "no-store", headers: headers() }).then(readJson);
-    todos = Array.isArray(body.todos) ? body.todos : [];
-    activeTodoDate = "";
-    renderTodos();
-    renderCalendar();
   }
 
   function localDateString(date = new Date()) {
     return String(date.getFullYear()) + "-" + String(date.getMonth() + 1).padStart(2, "0") + "-" + String(date.getDate()).padStart(2, "0");
-  }
-
-  function resetTodoForm() {
-    todoForm.reset();
-    todoForm.elements.id.value = "";
-    todoForm.elements.date.value = activeTodoDate || localDateString();
-    todoSubmitBtn.textContent = "＋ 新增待辦";
-    todoCancelBtn.hidden = true;
-  }
-
-  function renderTodos() {
-    const remainingCount = todos.filter((todo) => !todo.completed).length;
-    todoSummaryCount.textContent = todos.length ? "（" + remainingCount + " 項未完成／共 " + todos.length + " 項）" : "（本月尚無）";
-    const visibleTodos = activeTodoDate ? todos.filter((todo) => todo.date === activeTodoDate) : todos;
-    if (!visibleTodos.length) {
-      todoList.innerHTML = '<p class="muted">' + (activeTodoDate ? esc(activeTodoDate) + ' 沒有待辦事項。' : '這個月還沒有待辦事項。') + '</p>';
-      return;
-    }
-    todoList.innerHTML = visibleTodos.map((todo) => '<div class="todo-item' + (todo.completed ? ' completed' : '') + '">' +
-      '<input class="todo-check" type="checkbox" data-todo-toggle="' + esc(todo.id) + '"' + (todo.completed ? ' checked' : '') + ' aria-label="完成待辦">' +
-      '<div><div class="todo-title">' + esc(todo.title) + '</div><span class="todo-date">' + esc(todo.date) + '</span></div>' +
-      '<div class="todo-actions"><button class="icon-button" type="button" data-todo-edit="' + esc(todo.id) + '" title="編輯待辦">✏️</button><button class="icon-button" type="button" data-todo-delete="' + esc(todo.id) + '" title="刪除待辦">🗑️</button></div>' +
-      '</div>').join("");
-  }
-
-  function editTodo(todoId) {
-    const todo = todos.find((item) => item.id === todoId);
-    if (!todo) return;
-    todoForm.elements.id.value = todo.id;
-    todoForm.elements.date.value = todo.date;
-    todoForm.elements.title.value = todo.title;
-    todoSubmitBtn.textContent = "💾 儲存修改";
-    todoCancelBtn.hidden = false;
-    todoForm.scrollIntoView({ behavior: "smooth", block: "nearest" });
-  }
-
-  async function saveTodo(event) {
-    event.preventDefault();
-    const data = Object.fromEntries(new FormData(todoForm).entries());
-    const todoId = String(data.id || "");
-    todoSubmitBtn.disabled = true;
-    todoStatus.className = "status";
-    todoStatus.textContent = todoId ? "更新待辦中..." : "新增待辦中...";
-    try {
-      const path = todoId ? "/api/wife-journal/todos/" + encodeURIComponent(journalCalendarMonth()) + "/" + encodeURIComponent(todoId) : "/api/wife-journal/todos";
-      await fetch(apiUrl(path), { method: todoId ? "PUT" : "POST", headers: headers({ "content-type": "application/json" }), body: JSON.stringify({ date: data.date, title: data.title, completed: false }) }).then(readJson);
-      todoStatus.className = "status ok";
-      todoStatus.textContent = todoId ? "待辦已更新 ✨" : "待辦已新增 ✨";
-      resetTodoForm();
-      await loadTodosForMonth(journalCalendarMonth());
-    } catch (error) {
-      todoStatus.className = "status error";
-      todoStatus.textContent = error.message;
-    } finally { todoSubmitBtn.disabled = false; }
-  }
-
-  async function toggleTodo(todoId, completed) {
-    try {
-      await fetch(apiUrl("/api/wife-journal/todos/" + encodeURIComponent(journalCalendarMonth()) + "/" + encodeURIComponent(todoId)), { method: "PUT", headers: headers({ "content-type": "application/json" }), body: JSON.stringify({ completed }) }).then(readJson);
-      await loadTodosForMonth(journalCalendarMonth());
-    } catch (error) { todoStatus.className = "status error"; todoStatus.textContent = error.message; }
   }
 
   function markdownBody(markdown) {
@@ -1133,12 +1062,11 @@
       url += query;
       const body = await fetch(url, { cache: "no-store", headers: headers() }).then(readJson);
       const loaded = body.entry || {};
-      const visibility = loaded.visibility === "password" || loaded.visibility === "locked" ? "上鎖" : "不上鎖";
       const media = Array.isArray(loaded.media) ? loaded.media : [];
       entryReaderGallery = media.map(photoGalleryItem).filter(Boolean);
       entryReaderContent.innerHTML = '<article class="reader-entry">'
         + '<div class="entry-title">' + esc(loaded.title || "今天的心情") + '</div>'
-        + '<div class="entry-meta">' + esc([loaded.date || "", loaded.time || "", visibility].filter(Boolean).join(" · ")) + '</div>'
+        + '<div class="entry-meta">' + esc([loaded.date || "", loaded.time || ""].filter(Boolean).join(" · ")) + '</div>'
         + (loaded.tags && loaded.tags.length ? '<div class="chip-row">' + loaded.tags.map((tag) => '<span class="chip">' + esc(tag) + '</span>').join("") + '</div>' : '')
         + '<div class="detail">' + esc(markdownBody(body.markdown || "")) + '</div>'
         + (media.length ? '<div class="edit-media-grid full" style="margin-top:14px">' + media.map(readMediaPreview).join("") + '</div>' : '')
@@ -1371,11 +1299,49 @@
     await loadCards();
   }
 
+  function normalizeLearningSubject(value) {
+    const subject = String(value || "").toLowerCase();
+    return learningSubjects.some((item) => item.id === subject) ? subject : "uncategorized";
+  }
+
+  function learningSubjectLabel(subject = activeLearningSubject) {
+    return learningSubjects.find((item) => item.id === normalizeLearningSubject(subject))?.label || "未分類";
+  }
+
+  function renderLearningSubjectTabs() {
+    const counts = Object.fromEntries(learningSubjects.map((subject) => [subject.id, 0]));
+    learningRecords.forEach((record) => { counts[normalizeLearningSubject(record.subject)] += 1; });
+    if (activeLearningSubject === "uncategorized" && !counts.uncategorized) activeLearningSubject = "chinese";
+    learningSubjectTabs.querySelectorAll("[data-learning-subject]").forEach((button) => {
+      const subject = button.dataset.learningSubject;
+      button.hidden = subject === "uncategorized" && !counts.uncategorized;
+      button.classList.toggle("active", subject === activeLearningSubject);
+      button.setAttribute("aria-selected", String(subject === activeLearningSubject));
+    });
+    learningSubjectTabs.querySelectorAll("[data-learning-count]").forEach((badge) => { badge.textContent = counts[badge.dataset.learningCount] || 0; });
+    const label = learningSubjectLabel();
+    learningListTitle.textContent = label + "筆記";
+    learningSearchInput.placeholder = "搜尋" + label + "的標題、內容或日期";
+  }
+
+  function selectLearningSubject(subject) {
+    const next = normalizeLearningSubject(subject);
+    if (next === "uncategorized" && !learningRecords.some((record) => normalizeLearningSubject(record.subject) === next)) return;
+    activeLearningSubject = next;
+    localStorage.setItem("emilyhome.learningSubject", activeLearningSubject);
+    learningSearchQuery = "";
+    learningSearchInput.value = "";
+    learningStatus.textContent = "";
+    resetLearningForm();
+    renderLearningSubjectTabs();
+    renderLearningEntries();
+  }
+
   function renderLearningEntries() {
     const query = learningSearchQuery.trim().toLowerCase();
-    const records = learningRecords.filter((record) => !query || [record.title, record.content, record.date].some((value) => String(value || "").toLowerCase().includes(query)));
+    const records = learningRecords.filter((record) => normalizeLearningSubject(record.subject) === activeLearningSubject && (!query || [record.title, record.content, record.date].some((value) => String(value || "").toLowerCase().includes(query))));
     if (!records.length) {
-      learningEntryList.innerHTML = '<p class="muted">' + (query ? '找不到相關學習日誌 🔍' : '目前還沒有學習日誌。') + '</p>';
+      learningEntryList.innerHTML = '<p class="muted">' + (query ? '找不到相關' + esc(learningSubjectLabel()) + '筆記 🔍' : '目前還沒有' + esc(learningSubjectLabel()) + '筆記。') + '</p>';
       return;
     }
     learningEntryList.innerHTML = records.map((record) => {
@@ -1391,13 +1357,15 @@
   async function loadLearningRecords() {
     learningEntryList.innerHTML = '<p class="muted">載入學習日誌中...</p>';
     const body = await fetch(apiUrl("/api/wife-journal/learning"), { cache: "no-store", headers: headers() }).then(readJson);
-    learningRecords = Array.isArray(body.records) ? body.records : [];
+    learningRecords = Array.isArray(body.records) ? body.records.map((record) => ({ ...record, subject: normalizeLearningSubject(record.subject) })) : [];
+    renderLearningSubjectTabs();
     renderLearningEntries();
   }
 
   function resetLearningForm() {
     learningForm.reset();
     learningForm.elements.id.value = "";
+    learningForm.elements.subject.value = activeLearningSubject === "uncategorized" ? "" : activeLearningSubject;
     learningForm.elements.date.value = localDateString();
     learningSubmitBtn.textContent = "📚 儲存學習日誌";
     learningCancelBtn.hidden = true;
@@ -1410,6 +1378,7 @@
     const record = learningRecords.find((item) => item.id === id);
     if (!record) return;
     learningForm.elements.id.value = record.id;
+    learningForm.elements.subject.value = normalizeLearningSubject(record.subject) === "uncategorized" ? "" : normalizeLearningSubject(record.subject);
     learningForm.elements.title.value = record.title || "";
     learningForm.elements.date.value = record.date || localDateString();
     learningForm.elements.content.value = record.content || "";
@@ -1437,7 +1406,7 @@
       } else {
         renderUploadStatuses(learningUploadStatus, files, "waiting");
         const uploadData = new FormData();
-        ["id", "title", "date", "content"].forEach((name) => uploadData.append(name, data.get(name) || ""));
+        ["id", "subject", "title", "date", "content"].forEach((name) => uploadData.append(name, data.get(name) || ""));
         files.forEach((file) => uploadData.append("media", file, file.name));
         const body = await fetch(apiUrl(recordId ? "/api/wife-journal/learning/" + encodeURIComponent(recordId) : "/api/wife-journal/learning"), { method: recordId ? "PUT" : "POST", headers: headers(), body: uploadData }).then(readJson);
         renderUploadStatuses(learningUploadStatus, files, "success");
@@ -1446,6 +1415,9 @@
       }
       learningStatus.className = "status ok";
       learningStatus.textContent = "學習日誌已儲存，照片已上傳 ✨";
+      activeLearningSubject = normalizeLearningSubject(data.get("subject"));
+      localStorage.setItem("emilyhome.learningSubject", activeLearningSubject);
+      renderLearningSubjectTabs();
       renderLearningEntries();
       resetLearningForm();
     } catch (error) {
@@ -1940,10 +1912,8 @@
     const button = event.target.closest("[data-date]");
     if (!button) return;
     activeDate = activeDate === button.dataset.date ? "" : button.dataset.date;
-    activeTodoDate = activeTodoDate === button.dataset.date ? "" : button.dataset.date;
     renderCalendar();
     renderEntries();
-    renderTodos();
   });
 
   journalYear.addEventListener("change", () => {
@@ -1953,30 +1923,6 @@
 
   journalMonth.addEventListener("change", () => {
     changeJournalMonth(journalMonth.value || journalCalendarMonth());
-  });
-
-  todoForm.addEventListener("submit", saveTodo);
-  todoCancelBtn.addEventListener("click", resetTodoForm);
-  todoRefreshBtn.addEventListener("click", () => loadTodosForMonth(journalCalendarMonth()).catch((error) => {
-    todoStatus.className = "status error";
-    todoStatus.textContent = error.message;
-  }));
-  todoList.addEventListener("change", (event) => {
-    const checkbox = event.target.closest("[data-todo-toggle]");
-    if (checkbox) toggleTodo(checkbox.dataset.todoToggle, checkbox.checked);
-  });
-  todoList.addEventListener("click", async (event) => {
-    const editButton = event.target.closest("[data-todo-edit]");
-    if (editButton) { editTodo(editButton.dataset.todoEdit); return; }
-    const deleteButton = event.target.closest("[data-todo-delete]");
-    if (!deleteButton) return;
-    const todo = todos.find((item) => item.id === deleteButton.dataset.todoDelete);
-    if (!todo || !window.confirm("確定要刪除這個待辦事項嗎？")) return;
-    deleteButton.disabled = true;
-    try {
-      await fetch(apiUrl("/api/wife-journal/todos/" + encodeURIComponent(journalCalendarMonth()) + "/" + encodeURIComponent(todo.id)), { method: "DELETE", headers: headers() }).then(readJson);
-      await loadTodosForMonth(journalCalendarMonth());
-    } catch (error) { todoStatus.className = "status error"; todoStatus.textContent = error.message; }
   });
 
   bodyCalendar.addEventListener("click", (event) => {
@@ -2114,11 +2060,18 @@
     toggleTokenInputBtn.setAttribute("aria-expanded", String(!nextHidden));
   });
   brandMenuBtn.addEventListener("click", () => {
+    playBrandVideo();
     if (logoNav.hidden) return;
     const open = !siteHeader.classList.contains("nav-open");
     siteHeader.classList.toggle("nav-open", open);
     brandMenuBtn.setAttribute("aria-expanded", open ? "true" : "false");
   });
+  if (brandVideo) {
+    brandVideo.addEventListener("loadedmetadata", () => playBrandVideo(), { once: true });
+    brandVideo.addEventListener("pointermove", () => {
+      if (brandVideo.paused || brandVideo.ended) playBrandVideo();
+    });
+  }
   document.getElementById("closeEntryReader").addEventListener("click", () => entryReaderDialog.close());
   entryReaderDialog.addEventListener("click", (event) => {
     if (event.target === entryReaderDialog) entryReaderDialog.close();
@@ -2187,6 +2140,10 @@
   });
   learningSearchInput.addEventListener("input", () => { learningSearchQuery = learningSearchInput.value; renderLearningEntries(); });
   learningSearchClearBtn.addEventListener("click", () => { learningSearchQuery = ""; learningSearchInput.value = ""; renderLearningEntries(); learningSearchInput.focus(); });
+  learningSubjectTabs.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-learning-subject]");
+    if (button) selectLearningSubject(button.dataset.learningSubject);
+  });
   learningForm.addEventListener("submit", saveLearningRecord);
   learningCancelBtn.addEventListener("click", resetLearningForm);
   learningForm.elements.media.addEventListener("change", () => renderUploadStatuses(learningUploadStatus, Array.from(learningForm.elements.media.files || []), "waiting"));
@@ -2228,7 +2185,6 @@
     if (!cardView.hidden) await ensureCardsLoaded();
     if (!bodyView.hidden) await loadBodyRecords();
     if (!clientView.hidden) await loadClientPeople();
-    if (!journalView.hidden) await loadTodosForMonth(journalCalendarMonth());
     if (!journalView.hidden && libraryPanel.open) await ensureLibrarySummary();
   });
   document.getElementById("lockAppBtn").addEventListener("click", () => {
@@ -2529,7 +2485,6 @@
   updateBodyTemplateFields();
   renderBodyCalendar();
   renderBodyRecords();
-  resetTodoForm();
   renderCardDrawFields();
   renderTagPicker();
   clientRecordForm.elements.date.valueAsDate = new Date();

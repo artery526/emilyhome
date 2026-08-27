@@ -250,18 +250,12 @@
     .learning-gallery button { border: 0; padding: 0; min-height: 0; background: transparent; }
     .learning-gallery img { width: 84px; height: 84px; object-fit: cover; border-radius: 8px; cursor: zoom-in; border: 1px solid var(--line); }
     .learning-search { display: grid; grid-template-columns: 1fr auto; gap: 8px; margin: 10px 0 12px; }
-    .todo-list { display: grid; gap: 6px; margin-top: 10px; }
-    .todo-card > summary { cursor: pointer; font-size: 16px; font-weight: 700; list-style-position: inside; }
-    .todo-panel-body { margin-top: 10px; }
-    .todo-summary-count { color: var(--muted, #718079); font-size: 12px; font-weight: 400; }
-    .todo-item { display: grid; grid-template-columns: auto 1fr auto; gap: 6px; align-items: start; padding: 6px 7px; border: 1px solid var(--line, #d8e1dc); border-radius: 8px; background: rgba(255,255,255,.72); font-size: 13px; }
-    .todo-item.completed { opacity: .62; }
-    .todo-item.completed .todo-title { text-decoration: line-through; }
-    .todo-check { width: 17px; height: 17px; margin-top: 1px; }
-    .todo-date { display: block; font-size: 11px; color: var(--muted, #718079); margin-top: 2px; }
-    .todo-actions { display: flex; gap: 2px; }
-    .todo-actions .icon-button { min-width: 28px; min-height: 28px; padding: 3px; font-size: 12px; }
-    .todo-count-badge { display: inline-block; margin-top: 3px; padding: 2px 5px; border-radius: 999px; background: #eef4ef; color: var(--sage, #4d7966); font-size: 11px; }
+    .learning-subject-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 14px 0 4px; }
+    .learning-subject-tab { display: flex; justify-content: center; align-items: center; gap: 6px; }
+    .learning-subject-tab.active { background: var(--sage); border-color: var(--sage); color: var(--paper); font-weight: 700; }
+    .learning-subject-count { min-width: 22px; padding: 1px 6px; border-radius: 999px; background: rgba(255,255,255,.16); font-size: 12px; }
+    .learning-list-heading { display: flex; justify-content: space-between; gap: 10px; align-items: center; margin-bottom: 12px; }
+    .learning-list-heading h3 { margin: 0; }
     .view-tab.active {
       background: var(--rose);
       border-color: var(--rose);
@@ -269,21 +263,36 @@
     }
     .view-tab-image {
       display: block;
-      width: 96px;
-      height: 29px;
+      width: 110px;
+      height: auto;
+      max-width: 100%;
       object-fit: contain;
       border-radius: 6px;
       mix-blend-mode: normal;
     }
-    .view-tab[data-view="journal"] {
-      min-height: 34px;
-      padding: 2px 6px;
-      background: rgba(255, 255, 255, .72);
-      border-color: var(--line);
+    .image-action-button {
+      min-height: 0;
+      padding: 0;
+      background: transparent;
+      border-color: transparent;
     }
-    .view-tab[data-view="journal"].active {
-      background: rgba(255, 255, 255, .86);
-      border-color: #cbd8d0;
+    .view-tab[data-view="journal"],
+    .view-tab[data-view="cards"],
+    .view-tab[data-view="body"],
+    .view-tab[data-view="clients"],
+    .view-tab[data-view="learning"] {
+      min-height: 0;
+      padding: 0;
+      background: transparent;
+      border-color: transparent;
+    }
+    .view-tab[data-view="journal"].active,
+    .view-tab[data-view="cards"].active,
+    .view-tab[data-view="body"].active,
+    .view-tab[data-view="clients"].active,
+    .view-tab[data-view="learning"].active {
+      background: transparent;
+      border-color: transparent;
       color: var(--ink);
     }
     .view-panel[hidden] { display: none; }
@@ -827,7 +836,8 @@
       background: transparent;
       cursor: pointer;
     }
-    .gate-hero img {
+    .gate-hero img,
+    .gate-hero video {
       width: min(520px, 82vw);
       height: auto;
       display: block;
@@ -924,12 +934,520 @@
         border-width: 1px;
       }
     }
+
+    /* Dark forest theme: keep warm accents for journal and calendar states. */
+    :root {
+      color-scheme: dark;
+      --ink: #e8f1e8;
+      --muted: #b4c8b8;
+      --line: #466653;
+      --paper: #0d2118;
+      --panel: #173729;
+      --sage: #6f9d7d;
+      --rose: #d07a91;
+      --mist: #244a38;
+      --danger: #f0a0a0;
+      --green: #5f8d70;
+    }
+    body {
+      background:
+        linear-gradient(90deg, rgba(8, 27, 18, .94), rgba(12, 39, 26, .82)),
+        url("background.png") center top / cover fixed,
+        var(--paper);
+      color: var(--ink);
+    }
+    header {
+      background: rgba(8, 29, 19, .82);
+      border-bottom-color: rgba(126, 169, 137, .24);
+    }
+    .brand-logo {
+      background: rgba(232, 241, 232, .08);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, .24);
+    }
+    .brand-logo img,
+    .gate-hero img,
+    .gate-hero video {
+      mix-blend-mode: normal;
+      opacity: .96;
+    }
+    .brand-logo {
+      aspect-ratio: 1497 / 444;
+      overflow: hidden;
+    }
+    .brand-logo video {
+      display: block;
+      width: 100%;
+      height: 100%;
+      border-radius: 8px;
+      object-fit: cover;
+      object-position: center;
+      background: #100b1b;
+    }
+    .card,
+    .entry,
+    .card-record,
+    .body-record,
+    .learning-entry,
+    .client-record {
+      background: rgba(23, 55, 41, .94);
+      border-color: var(--line);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, .24);
+    }
+    button,
+    input,
+    select,
+    textarea {
+      background: #1a3e2d;
+      border-color: #527363;
+      color: var(--ink);
+    }
+    button:hover,
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: #8eb59a;
+    }
+    button.ghost,
+    .icon-button {
+      background: #294e3b;
+      color: #e8f1e8;
+    }
+    button.primary {
+      background: #5f8d70;
+      border-color: #78a98a;
+      color: #f5fbf5;
+    }
+    button.danger {
+      background: #4c2933;
+      border-color: #8f5364;
+      color: #ffd5dc;
+    }
+    .tag {
+      background: #294e3b;
+      border-color: #527363;
+      color: #c7e0cc;
+    }
+    .tag.active,
+    .draw-mode button.active {
+      background: #6f9d7d;
+      border-color: #8eb59a;
+      color: #10261a;
+    }
+    .view-tab.active {
+      background: var(--rose);
+      border-color: var(--rose);
+      color: #fff5f7;
+    }
+    .view-tab[data-view="journal"],
+    .view-tab[data-view="cards"],
+    .view-tab[data-view="body"],
+    .view-tab[data-view="clients"],
+    .view-tab[data-view="learning"],
+    .view-tab[data-view="journal"].active,
+    .view-tab[data-view="cards"].active,
+    .view-tab[data-view="body"].active,
+    .view-tab[data-view="clients"].active,
+    .view-tab[data-view="learning"].active {
+      background: transparent;
+      border-color: transparent;
+    }
+    .entry-excerpt,
+    .entry-meta {
+      color: var(--muted);
+    }
+    .entry-count-badge {
+      background: var(--rose);
+      color: #fff5f7;
+      box-shadow: 0 3px 8px rgba(208, 122, 145, .3);
+    }
+    .day {
+      background: #1a3e2d;
+      border-color: var(--line);
+      color: var(--muted);
+    }
+    .day.weekend {
+      background: #4a2a34;
+      border-color: #865363;
+    }
+    .day.has-entry {
+      background: #47303c;
+      border-color: #8a5367;
+      color: #f0b8c5;
+    }
+    .day.today {
+      background: #5b4b28;
+      border-color: #c6a858;
+      color: #fff0b5;
+      box-shadow: inset 0 0 0 2px rgba(224, 190, 90, .3);
+    }
+    .today-label {
+      color: #f2cf70;
+    }
+    .day.active {
+      outline-color: #e39aaa;
+    }
+    .body-day.has-period {
+      background: #4d2b39;
+      border-color: #a35d74;
+    }
+    .body-day.has-asthma {
+      background: #224452;
+      border-color: #5e9ab0;
+    }
+    .body-day.has-period.has-asthma {
+      background: linear-gradient(135deg, #4d2b39 0 50%, #224452 50% 100%);
+    }
+    .card-draw-set,
+    .edit-media-card,
+    .upload-status-item {
+      background: #1a3e2d;
+      border-color: var(--line);
+    }
+    .card-thumb {
+      background: linear-gradient(150deg, #294e3b, #203d30);
+      border-color: #6a9277;
+      box-shadow: inset 0 1px 0 rgba(232, 241, 232, .16);
+    }
+    .chip {
+      background: #4a2a38;
+      border-color: #8b5367;
+      color: #f0b8c5;
+    }
+    .client-person-button.active {
+      background: #6f9d7d;
+      color: #10261a;
+    }
+    .lock-panel {
+      background: rgba(75, 43, 57, .82);
+      border-color: #8b5367;
+    }
+    .media-card,
+    .cover {
+      background: #294e3b;
+    }
+    .media-card.active {
+      border-color: #e39aaa;
+    }
+    .status.ok {
+      color: #a8d6b1;
+    }
+    .upload-status-item.ok {
+      background: #214834;
+      border-color: #5b966d;
+    }
+    .upload-status-item.error {
+      background: #4c2933;
+      border-color: #8f5364;
+    }
+    .upload-status-item.loading {
+      background: #4c4228;
+      border-color: #9b8650;
+    }
+    dialog.entry-reader,
+    dialog.photo-viewer {
+      background: #132d21;
+      border-color: #557866;
+      box-shadow: 0 26px 70px rgba(0, 0, 0, .52);
+    }
+    dialog.entry-reader::backdrop,
+    dialog.photo-viewer::backdrop {
+      background: rgba(2, 12, 7, .72);
+    }
+    .reader-top {
+      background: #1a3e2d;
+      border-bottom-color: var(--line);
+    }
+    .photo-viewer .toolbar {
+      background: #173729;
+    }
+    .photo-counter,
+    .weekday,
+    .section-head p,
+    .muted,
+    label,
+    .status {
+      color: var(--muted);
+    }
+    .edit-media-card label,
+    .upload-status-item strong {
+      color: var(--ink);
+    }
+
+    /* Night purple-gold preview palette. */
+    :root {
+      --ink: #f5efe2;
+      --muted: #c9bdab;
+      --line: #66516f;
+      --paper: #100b1b;
+      --panel: #21172b;
+      --sage: #b89552;
+      --rose: #c77c9d;
+      --mist: #332442;
+      --danger: #f0a1a1;
+      --green: #a78b55;
+    }
+    body {
+      background:
+        linear-gradient(90deg, rgba(13, 8, 25, .95), rgba(28, 12, 39, .84)),
+        url("background.png") center top / cover fixed,
+        var(--paper);
+      color: var(--ink);
+    }
+    header {
+      background: rgba(10, 6, 20, .86);
+      border-bottom-color: rgba(212, 177, 93, .28);
+    }
+    .brand-logo {
+      background: rgba(245, 239, 226, .08);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, .34);
+    }
+    .card,
+    .entry,
+    .card-record,
+    .body-record,
+    .learning-entry,
+    .client-record {
+      background: rgba(33, 23, 43, .95);
+      border-color: var(--line);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, .32);
+    }
+    button,
+    input,
+    select,
+    textarea {
+      background: #281b35;
+      border-color: #6f5c78;
+      color: var(--ink);
+    }
+    button:hover,
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: #d7b86a;
+    }
+    button.ghost,
+    .icon-button {
+      background: #342647;
+      color: #f5efe2;
+    }
+    button.primary {
+      background: #a78649;
+      border-color: #d7b86a;
+      color: #1b1222;
+    }
+    button.danger {
+      background: #512c43;
+      border-color: #956078;
+      color: #ffd7e2;
+    }
+    .tag {
+      background: #342647;
+      border-color: #6f5c78;
+      color: #e6ca83;
+    }
+    .tag.active,
+    .draw-mode button.active {
+      background: #b89552;
+      border-color: #e2c678;
+      color: #20152a;
+    }
+    .view-tab.active {
+      background: var(--rose);
+      border-color: var(--rose);
+      color: #fff3f6;
+    }
+    .entry-excerpt,
+    .entry-meta,
+    .photo-counter,
+    .weekday,
+    .section-head p,
+    .muted,
+    label,
+    .status {
+      color: var(--muted);
+    }
+    .entry-count-badge {
+      background: var(--rose);
+      color: #fff3f6;
+      box-shadow: 0 3px 8px rgba(199, 124, 157, .34);
+    }
+    .day {
+      background: #281b35;
+      border-color: var(--line);
+      color: var(--muted);
+    }
+    .day.weekend {
+      background: #45263e;
+      border-color: #8d526f;
+    }
+    .day.has-entry {
+      background: #3d294b;
+      border-color: #8f648f;
+      color: #e2b5d0;
+    }
+    .day.today {
+      background: #5b4923;
+      border-color: #d2ad58;
+      color: #ffedaa;
+      box-shadow: inset 0 0 0 2px rgba(226, 198, 120, .3);
+    }
+    .today-label {
+      color: #f1cf70;
+    }
+    .day.active {
+      outline-color: #e1b7ca;
+    }
+    .body-day.has-period {
+      background: #4c2b43;
+      border-color: #a56382;
+    }
+    .body-day.has-asthma {
+      background: #213f4f;
+      border-color: #6094a8;
+    }
+    .body-day.has-period.has-asthma {
+      background: linear-gradient(135deg, #4c2b43 0 50%, #213f4f 50% 100%);
+    }
+    .card-draw-set,
+    .edit-media-card,
+    .upload-status-item {
+      background: #281b35;
+      border-color: var(--line);
+    }
+    .card-thumb {
+      background: linear-gradient(150deg, #3e2d58, #291c42);
+      border-color: #b89455;
+      box-shadow: inset 0 1px 0 rgba(245, 239, 226, .16);
+    }
+    .chip {
+      background: #4a2a43;
+      border-color: #98617b;
+      color: #f0bfd2;
+    }
+    .client-person-button.active {
+      background: #b89552;
+      color: #20152a;
+    }
+    .lock-panel {
+      background: rgba(75, 35, 65, .84);
+      border-color: #98617b;
+    }
+    .media-card,
+    .cover {
+      background: #342647;
+    }
+    .media-card.active {
+      border-color: #e1b7ca;
+    }
+    .status.ok {
+      color: #b9d9ae;
+    }
+    .upload-status-item.ok {
+      background: #244632;
+      border-color: #5b966d;
+    }
+    .upload-status-item.error {
+      background: #512c43;
+      border-color: #956078;
+    }
+    .upload-status-item.loading {
+      background: #5b4923;
+      border-color: #a98e4f;
+    }
+    dialog.entry-reader,
+    dialog.photo-viewer {
+      background: #191024;
+      border-color: #7b6688;
+      box-shadow: 0 26px 70px rgba(0, 0, 0, .62);
+    }
+    dialog.entry-reader::backdrop,
+    dialog.photo-viewer::backdrop {
+      background: rgba(3, 1, 10, .78);
+    }
+    .reader-top {
+      background: #281b35;
+      border-bottom-color: var(--line);
+    }
+    .photo-viewer .toolbar {
+      background: #21172b;
+    }
+    .image-action-button,
+    .image-action-button:hover {
+      background: transparent;
+      border-color: transparent;
+    }
+    @media (min-width: 901px) {
+      .view-tabs {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        grid-template-rows: repeat(2, auto);
+        grid-auto-flow: row;
+        justify-items: center;
+        align-items: center;
+        column-gap: 8px;
+        row-gap: 2px;
+        width: min(760px, calc(100vw - 32px));
+        max-width: 0;
+        max-height: 0;
+      }
+      header.nav-open .view-tabs {
+        max-width: min(760px, calc(100vw - 32px));
+        max-height: 150px;
+      }
+      .view-tabs #refreshBtn {
+        grid-column: 2;
+        margin-left: 0;
+      }
+      .view-tabs #lockAppBtn {
+        grid-column: 3;
+      }
+    }
+    @media (max-width: 900px) {
+      header {
+        z-index: 10;
+      }
+      .view-tabs {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        width: 100%;
+        max-width: none;
+        max-height: 0;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-rows: repeat(5, auto);
+        grid-auto-flow: column;
+        gap: 8px;
+        padding: 0 16px;
+        overflow: hidden;
+        background: rgba(19, 10, 29, .98);
+        border-bottom: 1px solid #6f5c78;
+        box-shadow: 0 14px 28px rgba(0, 0, 0, .38);
+        transform: translateY(-10px);
+        transition: max-height .24s ease, padding .24s ease, opacity .2s ease, transform .2s ease;
+      }
+      header.nav-open .view-tabs {
+        max-height: 520px;
+        padding: 14px 16px 18px;
+        transform: translateY(0);
+      }
+      .view-tabs > button {
+        width: 100%;
+        min-width: 0;
+      }
+      .view-tabs .view-tab-image {
+        width: 120px;
+        max-width: 100%;
+        margin: 0 auto;
+      }
+    }
   </style>
 </head>
 <body>
   <header id="siteHeader">
     <button class="brand-button" type="button" id="brandMenuBtn" aria-expanded="false" aria-controls="logoNav">
-      <h1 class="brand-logo"><img src="cssindex.png" alt="Emily's Home"></h1>
+      <h1 class="brand-logo"><video id="brandVideo" autoplay muted playsinline preload="auto" aria-label="Emily's Home 動態 Logo"><source src="logo.mp4" type="video/mp4"></video></h1>
     </button>
     <button class="icon-button gate-settings-toggle" type="button" id="gateSettingsBtn" aria-expanded="false" aria-controls="gateSettings" title="登入設定">⚙️</button>
     <div class="card gate-login-panel" id="gateSettings" hidden>
@@ -955,13 +1473,13 @@
       <p class="status" id="gateStatus"></p>
     </div>
     <div class="view-tabs" id="logoNav" hidden>
-      <button class="view-tab active" type="button" data-view="journal" aria-label="心情日記" title="心情日記"><img class="view-tab-image" src="diary.png" alt="心情日記"></button>
-      <button class="view-tab" type="button" data-view="cards">🔮 記錄卡牌</button>
-      <button class="view-tab" type="button" data-view="body">🌙 身體記錄</button>
-      <button class="view-tab" type="button" data-view="clients">✍️ 客戶記錄</button>
-      <button class="view-tab" type="button" data-view="learning">📚 學習日誌</button>
-      <button class="ghost" type="button" id="refreshBtn">🔄 重新整理</button>
-      <button class="ghost" type="button" id="lockAppBtn">🔒 鎖定</button>
+      <button class="view-tab active" type="button" data-view="journal" aria-label="心情日記" title="心情日記"><img class="view-tab-image" src="diary.png?v=20260826-2013" alt="心情日記"></button>
+      <button class="view-tab" type="button" data-view="cards" aria-label="記錄卡牌" title="記錄卡牌"><img class="view-tab-image" src="card.png?v=20260826-2020" alt="記錄卡牌"></button>
+      <button class="view-tab" type="button" data-view="body" aria-label="身體記錄" title="身體記錄"><img class="view-tab-image" src="body.png?v=20260826-2039" alt="身體記錄"></button>
+      <button class="view-tab" type="button" data-view="clients" aria-label="客戶記錄" title="客戶記錄"><img class="view-tab-image" src="Customer.png?v=20260826-2042" alt="客戶記錄"></button>
+      <button class="view-tab" type="button" data-view="learning" aria-label="學習日誌" title="學習日誌"><img class="view-tab-image" src="learning.png?v=20260826-2046" alt="學習日誌"></button>
+      <button class="ghost image-action-button" type="button" id="refreshBtn" aria-label="重新整理" title="重新整理"><img class="view-tab-image" src="refresh.png?v=20260826-2050" alt="重新整理"></button>
+      <button class="ghost image-action-button" type="button" id="lockAppBtn" aria-label="鎖定" title="鎖定"><img class="view-tab-image" src="lock.png?v=20260826-2054" alt="鎖定"></button>
     </div>
   </header>
 
@@ -969,7 +1487,7 @@
     <section class="gate" id="gate">
       <div class="gate-hero">
         <button class="gate-hero-button" type="button" id="gateHeroLoginBtn" title="進入秘密小花園">
-          <img src="front.png" alt="">
+          <video id="loginVideo" autoplay muted playsinline preload="auto" aria-label="進入秘密小花園動態圖案"><source src="logoin.mp4" type="video/mp4"></video>
         </button>
       </div>
     </section>
@@ -977,7 +1495,7 @@
     <section class="app" id="app" hidden>
       <section class="view-panel" id="journalView">
       <div class="grid">
-        <section class="card span-8">
+        <section class="card span-12 journal-calendar-card">
           <h3 id="calendarTitle">🌙 本月月曆</h3>
           <div class="library-controls">
             <select id="journalYear"></select>
@@ -985,21 +1503,6 @@
           </div>
           <div class="calendar" id="calendar"></div>
         </section>
-        <details class="card span-4 todo-card" id="todoCard">
-          <summary>📋 待辦事項 <span class="todo-summary-count" id="todoSummaryCount"></span></summary>
-          <div class="todo-panel-body">
-            <div class="panel-heading"><span class="muted">本月待辦</span><button class="icon-button" type="button" id="todoRefreshBtn" title="重新載入待辦">🔄</button></div>
-            <form id="todoForm" class="form-grid" style="margin-top:10px">
-              <input type="hidden" name="id">
-              <label class="full">日期<input name="date" type="date" required></label>
-              <label class="full">事項<input name="title" placeholder="今天要完成什麼？" required></label>
-              <button class="primary full" type="submit" id="todoSubmitBtn">＋ 新增待辦</button>
-              <button class="ghost full" type="button" id="todoCancelBtn" hidden>取消編輯</button>
-            </form>
-            <p class="status" id="todoStatus"></p>
-            <div class="todo-list" id="todoList"><p class="muted">載入中...</p></div>
-          </div>
-        </details>
         <section class="card span-12" id="createCard">
           <h3 id="entryFormTitle">💌 新增心情日記</h3>
           <form id="entryForm" class="form-grid entry-form">
@@ -1222,12 +1725,19 @@
               <h3>📚 學習日誌</h3>
               <button class="icon-button" type="button" id="learningSearchBtn" aria-expanded="false" aria-controls="learningSearchPanel" title="搜尋學習日誌">🔍</button>
             </div>
+            <div class="learning-subject-tabs" id="learningSubjectTabs" role="tablist" aria-label="學習科目">
+              <button class="learning-subject-tab" type="button" data-learning-subject="chinese" role="tab">國文 <span class="learning-subject-count" data-learning-count="chinese">0</span></button>
+              <button class="learning-subject-tab" type="button" data-learning-subject="english" role="tab">英文 <span class="learning-subject-count" data-learning-count="english">0</span></button>
+              <button class="learning-subject-tab" type="button" data-learning-subject="law" role="tab">法律 <span class="learning-subject-count" data-learning-count="law">0</span></button>
+              <button class="learning-subject-tab" type="button" data-learning-subject="uncategorized" role="tab" hidden>未分類 <span class="learning-subject-count" data-learning-count="uncategorized">0</span></button>
+            </div>
             <div class="learning-search" id="learningSearchPanel" hidden>
               <input id="learningSearchInput" type="search" placeholder="搜尋標題、內容或日期">
               <button class="ghost" type="button" id="learningSearchClearBtn">清除</button>
             </div>
             <form id="learningForm" class="form-grid" style="margin-top:14px">
               <input type="hidden" name="id">
+              <label>科目<select name="subject" required><option value="" disabled>請選擇科目</option><option value="chinese">國文</option><option value="english">英文</option><option value="law">法律</option></select></label>
               <label>標題<input name="title" required placeholder="今天學到了什麼？"></label>
               <label>日期<input name="date" type="date" required></label>
               <label class="full">學習內容<textarea name="content" rows="7" required placeholder="記錄筆記、心得或下一步"></textarea></label>
@@ -1240,6 +1750,7 @@
             <p class="status" id="learningStatus"></p>
           </section>
           <section class="card span-12">
+            <div class="learning-list-heading"><h3 id="learningListTitle">國文筆記</h3></div>
             <div class="learning-entry-list" id="learningEntryList"><p class="muted">載入中...</p></div>
           </section>
         </div>
@@ -1273,6 +1784,6 @@
     </div>
   </dialog>
 
-  <script src="scripts/emilyhome.js?v=20260822-journal-video-layout"></script>
+  <script src="scripts/emilyhome.js?v=20260826-logo-video"></script>
 </body>
 </html>

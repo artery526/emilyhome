@@ -19,7 +19,7 @@ Deploy flow:
 
 ```powershell
 git -C D:\emilyhome status --short --branch
-git -C D:\emilyhome add index.html scripts\emilyhome.js docs README.md
+git -C D:\emilyhome add index.html scripts\emilyhome.js README README.md
 git -C D:\emilyhome commit -m "Describe the change"
 git -C D:\emilyhome push origin main
 ```

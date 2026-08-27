@@ -42,7 +42,7 @@ Emily workshop                                -> confirm exact folder first
 4. Run the relevant local check.
 5. Publish or sync the changed system.
 6. Verify both "code deployed" and "live behavior" separately.
-7. Record important design decisions in `docs/decisions.md` when the behavior becomes a rule.
+7. Record important design decisions in `README/decisions.md` when the behavior becomes a rule.
 
 ## Publication Rules
 

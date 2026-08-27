@@ -51,6 +51,14 @@ Emily's Home is a private journal and card-record frontend. It is not the same s
 - The body record page supports month lookup, calendar markers, create, and delete.
 - Body records can be locked with a view password stored in `Emily卡牌空間` -> `身體記錄設定` row `lockPassword`; leaving it blank disables the lock.
 
+## Learning Records
+
+- Learning records use one ArkOS data source with a `subject` field rather than separate APIs or storage roots.
+- The first subjects are `chinese` (國文), `english` (英文), and `law` (法律).
+- The frontend shows one subject at a time and searches only within the active subject; there is no mixed default timeline.
+- Records created before subject support appear under `uncategorized` (未分類) until they are edited and assigned a subject.
+- The browser remembers the last active subject in `emilyhome.learningSubject`.
+
 ## Branding
 
 - Page title is `Emily's Home`.
