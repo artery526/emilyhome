@@ -88,6 +88,7 @@
     { id: "chinese", label: "國文" },
     { id: "english", label: "英文" },
     { id: "law", label: "法律" },
+    { id: "social", label: "社會" },
     { id: "uncategorized", label: "未分類" },
   ];
   const entryUploadBatchSize = 12;
@@ -101,7 +102,7 @@
   let learningRecords = [];
   let learningSearchOpen = false;
   let learningSearchQuery = "";
-  let activeLearningSubject = ["chinese", "english", "law", "uncategorized"].includes(localStorage.getItem("emilyhome.learningSubject")) ? localStorage.getItem("emilyhome.learningSubject") : "chinese";
+  let activeLearningSubject = ["chinese", "english", "law", "social", "uncategorized"].includes(localStorage.getItem("emilyhome.learningSubject")) ? localStorage.getItem("emilyhome.learningSubject") : "chinese";
   let photoZoom = 1;
   let activeClientId = "";
   let activeDate = "";
