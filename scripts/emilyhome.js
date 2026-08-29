@@ -86,7 +86,8 @@
   const threePositions = ["過去 / 起點", "現在 / 核心", "未來 / 提醒"];
   const learningSubjects = [
     { id: "chinese", label: "國文" },
-    { id: "english", label: "英文" },
+    { id: "english-vocabulary", label: "英文單字" },
+    { id: "english-grammar", label: "英文文法" },
     { id: "law", label: "法律" },
     { id: "social", label: "社會" },
     { id: "uncategorized", label: "未分類" },
@@ -103,7 +104,7 @@
   const learningExpandedIds = new Set();
   let learningSearchOpen = false;
   let learningSearchQuery = "";
-  let activeLearningSubject = ["chinese", "english", "law", "social", "uncategorized"].includes(localStorage.getItem("emilyhome.learningSubject")) ? localStorage.getItem("emilyhome.learningSubject") : "chinese";
+  let activeLearningSubject = ["chinese", "english-vocabulary", "english-grammar", "law", "social", "uncategorized"].includes(localStorage.getItem("emilyhome.learningSubject")) ? localStorage.getItem("emilyhome.learningSubject") : "chinese";
   let photoZoom = 1;
   let activeClientId = "";
   let activeDate = "";

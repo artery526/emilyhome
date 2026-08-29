@@ -54,7 +54,8 @@ Emily's Home is a private journal and card-record frontend. It is not the same s
 ## Learning Records
 
 - Learning records use one ArkOS data source with a `subject` field rather than separate APIs or storage roots.
-- The subjects are `chinese` (國文), `english` (英文), `law` (法律), and `social` (社會).
+- The subjects are `chinese` (國文), `english-vocabulary` (英文單字), `english-grammar` (英文文法), `law` (法律), and `social` (社會).
+- Legacy records with the retired `english` subject are normalized to `uncategorized` until manually reassigned.
 - The frontend shows one subject at a time and searches only within the active subject; there is no mixed default timeline.
 - Records created before subject support appear under `uncategorized` (未分類) until they are edited and assigned a subject.
 - The browser remembers the last active subject in `emilyhome.learningSubject`.

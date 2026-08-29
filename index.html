@@ -1728,7 +1728,8 @@
             </div>
             <div class="learning-subject-tabs" id="learningSubjectTabs" role="tablist" aria-label="學習科目">
               <button class="learning-subject-tab" type="button" data-learning-subject="chinese" role="tab">國文 <span class="learning-subject-count" data-learning-count="chinese">0</span></button>
-              <button class="learning-subject-tab" type="button" data-learning-subject="english" role="tab">英文 <span class="learning-subject-count" data-learning-count="english">0</span></button>
+              <button class="learning-subject-tab" type="button" data-learning-subject="english-vocabulary" role="tab">英文單字 <span class="learning-subject-count" data-learning-count="english-vocabulary">0</span></button>
+              <button class="learning-subject-tab" type="button" data-learning-subject="english-grammar" role="tab">英文文法 <span class="learning-subject-count" data-learning-count="english-grammar">0</span></button>
               <button class="learning-subject-tab" type="button" data-learning-subject="law" role="tab">法律 <span class="learning-subject-count" data-learning-count="law">0</span></button>
               <button class="learning-subject-tab" type="button" data-learning-subject="social" role="tab">社會 <span class="learning-subject-count" data-learning-count="social">0</span></button>
               <button class="learning-subject-tab" type="button" data-learning-subject="uncategorized" role="tab" hidden>未分類 <span class="learning-subject-count" data-learning-count="uncategorized">0</span></button>
@@ -1739,7 +1740,7 @@
             </div>
             <form id="learningForm" class="form-grid" style="margin-top:14px">
               <input type="hidden" name="id">
-              <label>科目<select name="subject" required><option value="" disabled>請選擇科目</option><option value="chinese">國文</option><option value="english">英文</option><option value="law">法律</option><option value="social">社會</option></select></label>
+              <label>科目<select name="subject" required><option value="" disabled>請選擇科目</option><option value="chinese">國文</option><option value="english-vocabulary">英文單字</option><option value="english-grammar">英文文法</option><option value="law">法律</option><option value="social">社會</option></select></label>
               <label>標題<input name="title" required placeholder="今天學到了什麼？"></label>
               <label>日期<input name="date" type="date" required></label>
               <label class="full">學習內容<textarea name="content" rows="7" required placeholder="記錄筆記、心得或下一步"></textarea></label>
