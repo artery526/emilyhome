@@ -100,6 +100,7 @@
   let clientPeople = [];
   let clientRecords = [];
   let learningRecords = [];
+  const learningExpandedIds = new Set();
   let learningSearchOpen = false;
   let learningSearchQuery = "";
   let activeLearningSubject = ["chinese", "english", "law", "social", "uncategorized"].includes(localStorage.getItem("emilyhome.learningSubject")) ? localStorage.getItem("emilyhome.learningSubject") : "chinese";
@@ -1346,13 +1347,19 @@
       return;
     }
     learningEntryList.innerHTML = records.map((record) => {
+      const expanded = learningExpandedIds.has(record.id);
       const media = (record.media || []).map(photoGalleryItem).filter(Boolean);
       return '<article class="learning-entry" data-learning-id="' + esc(record.id) + '">' +
-        '<div class="learning-entry-heading"><div><strong>' + esc(record.title) + '</strong><div class="entry-meta">' + esc(record.date) + '</div></div><button class="ghost" type="button" data-learning-edit="' + esc(record.id) + '">✏️ 編輯</button></div>' +
-        '<div class="learning-entry-content">' + esc(record.content) + '</div>' +
-        (media.length ? '<div class="learning-gallery">' + media.map((item, index) => '<button type="button" data-learning-photo="' + esc(record.id) + '" data-learning-photo-index="' + index + '"><img src="' + esc(item.thumbnailUrl || item.url) + '" alt="學習附件" loading="lazy"></button>').join("") + '</div>' : '') +
+        '<div class="learning-entry-heading"><div><strong>' + esc(record.title) + '</strong><div class="entry-meta">' + esc(record.date) + '</div></div><div class="learning-entry-actions"><button class="ghost" type="button" data-learning-toggle="' + esc(record.id) + '" aria-expanded="' + String(expanded) + '">' + (expanded ? '收合' : '展開') + '</button><button class="ghost" type="button" data-learning-edit="' + esc(record.id) + '">✏️ 編輯</button></div></div>' +
+        (expanded ? '<div class="learning-entry-content">' + esc(record.content) + '</div>' + (media.length ? '<div class="learning-gallery">' + media.map((item, index) => '<button type="button" data-learning-photo="' + esc(record.id) + '" data-learning-photo-index="' + index + '"><img src="' + esc(item.thumbnailUrl || item.url) + '" alt="學習附件" loading="lazy"></button>').join("") + '</div>' : '') : '') +
       '</article>';
     }).join("");
+  }
+
+  function toggleLearningRecord(id) {
+    if (learningExpandedIds.has(id)) learningExpandedIds.delete(id);
+    else learningExpandedIds.add(id);
+    renderLearningEntries();
   }
 
   async function loadLearningRecords() {
@@ -2149,6 +2156,8 @@
   learningCancelBtn.addEventListener("click", resetLearningForm);
   learningForm.elements.media.addEventListener("change", () => renderUploadStatuses(learningUploadStatus, Array.from(learningForm.elements.media.files || []), "waiting"));
   learningEntryList.addEventListener("click", (event) => {
+    const toggleButton = event.target.closest("[data-learning-toggle]");
+    if (toggleButton) { toggleLearningRecord(toggleButton.dataset.learningToggle); return; }
     const editButton = event.target.closest("[data-learning-edit]");
     if (editButton) { editLearningRecord(editButton.dataset.learningEdit); return; }
     const photoButton = event.target.closest("[data-learning-photo]");
