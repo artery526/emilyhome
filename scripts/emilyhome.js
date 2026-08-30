@@ -205,7 +205,6 @@
   const learningSearchInput = document.getElementById("learningSearchInput");
   const learningSearchClearBtn = document.getElementById("learningSearchClearBtn");
   const learningAddBtn = document.getElementById("learningAddBtn");
-  const learningDatePicker = document.getElementById("learningDatePicker");
   const learningDateInput = document.getElementById("learningDateInput");
   const learningDateBtn = document.getElementById("learningDateBtn");
   const learningSubjectSelect = document.getElementById("learningSubjectSelect");
@@ -1333,16 +1332,6 @@
     learningDateBtn.title = "選擇記錄日期：" + label;
   }
 
-  function openLearningDatePicker() {
-    if (typeof learningDateInput.showPicker === "function") {
-      try { learningDateInput.showPicker(); return; } catch (_error) { /* fallback to focus below */ }
-    }
-    learningDateInput.focus();
-    learningDateInput.click();
-  }
-
-  if (learningDatePicker && typeof learningDateInput.showPicker !== "function") learningDatePicker.classList.add("native-input");
-
   function renderLearningGlobalSearchResults() {
     const query = learningGlobalSearchInput.value.trim().toLowerCase();
     if (!query) {
@@ -2232,7 +2221,6 @@
     renderLearningSubjectSelect();
     renderLearningEntries();
   });
-  learningDateBtn.addEventListener("click", openLearningDatePicker);
   learningDateInput.addEventListener("input", updateLearningDateDisplay);
   learningDateInput.addEventListener("change", updateLearningDateDisplay);
   learningSearchInput.addEventListener("input", () => { learningSearchQuery = learningSearchInput.value; renderLearningEntries(); });
