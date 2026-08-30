@@ -207,8 +207,7 @@
   const learningAddBtn = document.getElementById("learningAddBtn");
   const learningDateInput = document.getElementById("learningDateInput");
   const learningDateBtn = document.getElementById("learningDateBtn");
-  const learningDateDisplay = document.getElementById("learningDateDisplay");
-  const learningSubjectTabs = document.getElementById("learningSubjectTabs");
+  const learningSubjectSelect = document.getElementById("learningSubjectSelect");
   const learningListTitle = document.getElementById("learningListTitle");
   const clientPeopleList = document.getElementById("clientPeopleList");
   const clientSearchInput = document.getElementById("clientSearchInput");
@@ -1328,7 +1327,9 @@
   }
 
   function updateLearningDateDisplay() {
-    learningDateDisplay.textContent = learningDateLabel(learningDateInput.value);
+    const label = learningDateLabel(learningDateInput.value);
+    learningDateBtn.setAttribute("aria-label", "選擇記錄日期：" + label);
+    learningDateBtn.title = "選擇記錄日期：" + label;
   }
 
   function openLearningDatePicker() {
@@ -1353,17 +1354,11 @@
     learningGlobalSearchResults.innerHTML = records.map((record) => '<button class="learning-global-result" type="button" data-learning-global-id="' + esc(record.id) + '"><strong>' + esc(record.title || "未命名筆記") + '</strong><small>' + esc(learningSubjectLabel(record.subject) + " · " + learningDateLabel(record.date)) + '</small></button>').join("");
   }
 
-  function renderLearningSubjectTabs() {
+  function renderLearningSubjectSelect() {
     const counts = Object.fromEntries(learningSubjects.map((subject) => [subject.id, 0]));
     learningRecords.forEach((record) => { counts[normalizeLearningSubject(record.subject)] += 1; });
-    if (activeLearningSubject === "uncategorized" && !counts.uncategorized) activeLearningSubject = "chinese";
-    learningSubjectTabs.querySelectorAll("[data-learning-subject]").forEach((button) => {
-      const subject = button.dataset.learningSubject;
-      button.hidden = subject === "uncategorized" && !counts.uncategorized;
-      button.classList.toggle("active", subject === activeLearningSubject);
-      button.setAttribute("aria-selected", String(subject === activeLearningSubject));
-    });
-    learningSubjectTabs.querySelectorAll("[data-learning-count]").forEach((badge) => { badge.textContent = counts[badge.dataset.learningCount] || 0; });
+    learningSubjectSelect.innerHTML = learningSubjects.map((subject) => '<option value="' + esc(subject.id) + '">' + esc(subject.label) + '（' + counts[subject.id] + '）</option>').join("");
+    learningSubjectSelect.value = activeLearningSubject;
     const label = learningSubjectLabel();
     learningListTitle.textContent = label + "筆記";
     learningSearchInput.placeholder = "搜尋" + label + "的標題、內容或日期";
@@ -1382,14 +1377,13 @@
 
   function selectLearningSubject(subject) {
     const next = normalizeLearningSubject(subject);
-    if (next === "uncategorized" && !learningRecords.some((record) => normalizeLearningSubject(record.subject) === next)) return;
     activeLearningSubject = next;
     localStorage.setItem("emilyhome.learningSubject", activeLearningSubject);
     learningSearchQuery = "";
     learningSearchInput.value = "";
     learningStatus.textContent = "";
     setLearningPage("subject");
-    renderLearningSubjectTabs();
+    renderLearningSubjectSelect();
     renderLearningEntries();
   }
 
@@ -1398,7 +1392,7 @@
     localStorage.setItem("emilyhome.learningSubject", activeLearningSubject);
     resetLearningForm();
     setLearningPage("compose");
-    renderLearningSubjectTabs();
+    renderLearningSubjectSelect();
     learningForm.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
@@ -1429,7 +1423,7 @@
     learningEntryList.innerHTML = '<p class="muted">載入學習日誌中...</p>';
     const body = await fetch(apiUrl("/api/wife-journal/learning"), { cache: "no-store", headers: headers() }).then(readJson);
     learningRecords = Array.isArray(body.records) ? body.records.map((record) => ({ ...record, subject: normalizeLearningSubject(record.subject) })) : [];
-    renderLearningSubjectTabs();
+    renderLearningSubjectSelect();
     setLearningPage("compose");
     resetLearningForm();
     renderLearningEntries();
@@ -1460,7 +1454,7 @@
     activeLearningSubject = normalizeLearningSubject(record.subject);
     localStorage.setItem("emilyhome.learningSubject", activeLearningSubject);
     setLearningPage("compose");
-    renderLearningSubjectTabs();
+    renderLearningSubjectSelect();
     learningSubmitBtn.textContent = "💾 儲存學習日誌編輯";
     learningCancelBtn.hidden = false;
     const media = (record.media || []).map(photoGalleryItem).filter(Boolean);
@@ -1496,7 +1490,7 @@
       learningStatus.textContent = "學習日誌已儲存，照片已上傳 ✨";
       activeLearningSubject = normalizeLearningSubject(data.get("subject"));
       localStorage.setItem("emilyhome.learningSubject", activeLearningSubject);
-      renderLearningSubjectTabs();
+      renderLearningSubjectSelect();
       renderLearningEntries();
       resetLearningForm();
     } catch (error) {
@@ -2232,7 +2226,7 @@
     learningSearchInput.value = "";
     learningGlobalSearchDialog.close();
     setLearningPage("subject");
-    renderLearningSubjectTabs();
+    renderLearningSubjectSelect();
     renderLearningEntries();
   });
   learningDateBtn.addEventListener("click", openLearningDatePicker);
@@ -2241,10 +2235,7 @@
   learningSearchInput.addEventListener("input", () => { learningSearchQuery = learningSearchInput.value; renderLearningEntries(); });
   learningSearchClearBtn.addEventListener("click", () => { learningSearchQuery = ""; learningSearchInput.value = ""; renderLearningEntries(); learningSearchInput.focus(); });
   learningAddBtn.addEventListener("click", () => openLearningComposer());
-  learningSubjectTabs.addEventListener("click", (event) => {
-    const button = event.target.closest("[data-learning-subject]");
-    if (button) selectLearningSubject(button.dataset.learningSubject);
-  });
+  learningSubjectSelect.addEventListener("change", () => selectLearningSubject(learningSubjectSelect.value));
   learningForm.addEventListener("submit", saveLearningRecord);
   learningCancelBtn.addEventListener("click", resetLearningForm);
   learningForm.elements.media.addEventListener("change", () => renderUploadStatuses(learningUploadStatus, Array.from(learningForm.elements.media.files || []), "waiting"));

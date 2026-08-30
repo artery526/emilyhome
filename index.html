@@ -248,6 +248,8 @@
     .learning-entry-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
     .learning-date-input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
     .learning-date-button { white-space: nowrap; }
+    .learning-heading-actions { display: flex; align-items: center; gap: 8px; }
+    .learning-subject-select { width: auto; min-width: 150px; max-width: 52vw; padding: 8px 28px 8px 10px; font-size: 13px; }
     .learning-global-results { display: grid; gap: 8px; margin-top: 12px; }
     .learning-global-result { display: grid; gap: 3px; width: 100%; text-align: left; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; }
     .learning-global-result small { color: var(--muted); }
@@ -1731,21 +1733,16 @@
           <section class="card span-12">
             <div class="panel-heading">
               <h3>📚 學習日誌</h3>
-              <button class="icon-button" type="button" id="learningGlobalSearchBtn" title="搜尋全部學習筆記" aria-label="搜尋全部學習筆記">🔍</button>
-            </div>
-            <div class="learning-subject-tabs" id="learningSubjectTabs" role="tablist" aria-label="學習科目">
-              <button class="learning-subject-tab" type="button" data-learning-subject="chinese" role="tab">國文 <span class="learning-subject-count" data-learning-count="chinese">0</span></button>
-              <button class="learning-subject-tab" type="button" data-learning-subject="english-vocabulary" role="tab">英文單字 <span class="learning-subject-count" data-learning-count="english-vocabulary">0</span></button>
-              <button class="learning-subject-tab" type="button" data-learning-subject="english-grammar" role="tab">英文文法 <span class="learning-subject-count" data-learning-count="english-grammar">0</span></button>
-              <button class="learning-subject-tab" type="button" data-learning-subject="law" role="tab">法律 <span class="learning-subject-count" data-learning-count="law">0</span></button>
-              <button class="learning-subject-tab" type="button" data-learning-subject="social" role="tab">社會 <span class="learning-subject-count" data-learning-count="social">0</span></button>
-              <button class="learning-subject-tab" type="button" data-learning-subject="uncategorized" role="tab" hidden>未分類 <span class="learning-subject-count" data-learning-count="uncategorized">0</span></button>
+              <div class="learning-heading-actions">
+                <select id="learningSubjectSelect" class="learning-subject-select" aria-label="選擇學習科目"></select>
+                <button class="icon-button" type="button" id="learningGlobalSearchBtn" title="搜尋全部學習筆記" aria-label="搜尋全部學習筆記">🔍</button>
+              </div>
             </div>
           </section>
           <section class="card span-12" id="learningComposerCard">
             <div class="panel-heading">
               <h3>📝 新增學習筆記</h3>
-              <button class="icon-button learning-date-button" type="button" id="learningDateBtn" title="選擇記錄日期">📅 <span id="learningDateDisplay">選擇日期</span></button>
+              <button class="icon-button learning-date-button" type="button" id="learningDateBtn" title="選擇記錄日期" aria-label="選擇記錄日期">📅</button>
             </div>
             <form id="learningForm" class="form-grid" style="margin-top:14px">
               <input type="hidden" name="id">
