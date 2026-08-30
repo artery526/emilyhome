@@ -246,6 +246,11 @@
     .learning-entry { border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: #fff; }
     .learning-entry-heading { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
     .learning-entry-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+    .learning-date-input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+    .learning-date-button { white-space: nowrap; }
+    .learning-global-results { display: grid; gap: 8px; margin-top: 12px; }
+    .learning-global-result { display: grid; gap: 3px; width: 100%; text-align: left; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; }
+    .learning-global-result small { color: var(--muted); }
     .learning-entry-content { white-space: pre-wrap; line-height: 1.7; margin-top: 8px; }
     .learning-gallery { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
     .learning-gallery button { border: 0; padding: 0; min-height: 0; background: transparent; }
@@ -854,6 +859,8 @@
     @media (max-width: 900px) {
       .span-4, .span-5, .span-7, .span-8 { grid-column: span 12; }
       .form-grid, .library-controls, .card-draw-set { grid-template-columns: 1fr; }
+      #learningForm { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      #learningForm > label.full { grid-column: 1 / -1; }
       .entry-form {
         grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 10px;
@@ -1724,6 +1731,7 @@
           <section class="card span-12">
             <div class="panel-heading">
               <h3>📚 學習日誌</h3>
+              <button class="icon-button" type="button" id="learningGlobalSearchBtn" title="搜尋全部學習筆記" aria-label="搜尋全部學習筆記">🔍</button>
             </div>
             <div class="learning-subject-tabs" id="learningSubjectTabs" role="tablist" aria-label="學習科目">
               <button class="learning-subject-tab" type="button" data-learning-subject="chinese" role="tab">國文 <span class="learning-subject-count" data-learning-count="chinese">0</span></button>
@@ -1737,12 +1745,13 @@
           <section class="card span-12" id="learningComposerCard">
             <div class="panel-heading">
               <h3>📝 新增學習筆記</h3>
+              <button class="icon-button learning-date-button" type="button" id="learningDateBtn" title="選擇記錄日期">📅 <span id="learningDateDisplay">選擇日期</span></button>
             </div>
             <form id="learningForm" class="form-grid" style="margin-top:14px">
               <input type="hidden" name="id">
+              <input class="learning-date-input" id="learningDateInput" name="date" type="date" required aria-label="記錄日期">
               <label>科目<select name="subject" required><option value="" disabled>請選擇科目</option><option value="chinese">國文</option><option value="english-vocabulary">英文單字</option><option value="english-grammar">英文文法</option><option value="law">法律</option><option value="social">社會</option></select></label>
               <label>標題<input name="title" required placeholder="今天學到了什麼？"></label>
-              <label>日期<input name="date" type="date" required></label>
               <label class="full">學習內容<textarea name="content" rows="7" required placeholder="記錄筆記、心得或下一步"></textarea></label>
               <label class="upload-field full">上傳照片<input name="media" type="file" accept="image/*,.heic,.heif" multiple></label>
               <div class="full upload-status-list" id="learningUploadStatus"></div>
@@ -1764,6 +1773,19 @@
       </section>
     </section>
   </main>
+
+  <dialog class="entry-reader learning-search-dialog" id="learningGlobalSearchDialog">
+    <div class="reader-shell">
+      <div class="reader-top">
+        <h3>🔍 搜尋全部學習筆記</h3>
+        <button class="ghost" type="button" id="closeLearningGlobalSearch">關閉</button>
+      </div>
+      <div class="reader-content">
+        <input id="learningGlobalSearchInput" type="search" placeholder="輸入關鍵字搜尋所有科目">
+        <div class="learning-global-results" id="learningGlobalSearchResults"><p class="muted">輸入關鍵字開始搜尋。</p></div>
+      </div>
+    </div>
+  </dialog>
 
   <dialog class="entry-reader" id="entryReaderDialog">
     <div class="reader-shell">

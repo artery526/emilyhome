@@ -186,6 +186,11 @@
   const bodyView = document.getElementById("bodyView");
   const clientView = document.getElementById("clientView");
   const learningView = document.getElementById("learningView");
+  const learningGlobalSearchBtn = document.getElementById("learningGlobalSearchBtn");
+  const learningGlobalSearchDialog = document.getElementById("learningGlobalSearchDialog");
+  const learningGlobalSearchInput = document.getElementById("learningGlobalSearchInput");
+  const learningGlobalSearchResults = document.getElementById("learningGlobalSearchResults");
+  const closeLearningGlobalSearch = document.getElementById("closeLearningGlobalSearch");
   const learningComposerCard = document.getElementById("learningComposerCard");
   const learningListCard = document.getElementById("learningListCard");
   const learningForm = document.getElementById("learningForm");
@@ -200,6 +205,9 @@
   const learningSearchInput = document.getElementById("learningSearchInput");
   const learningSearchClearBtn = document.getElementById("learningSearchClearBtn");
   const learningAddBtn = document.getElementById("learningAddBtn");
+  const learningDateInput = document.getElementById("learningDateInput");
+  const learningDateBtn = document.getElementById("learningDateBtn");
+  const learningDateDisplay = document.getElementById("learningDateDisplay");
   const learningSubjectTabs = document.getElementById("learningSubjectTabs");
   const learningListTitle = document.getElementById("learningListTitle");
   const clientPeopleList = document.getElementById("clientPeopleList");
@@ -1315,6 +1323,36 @@
     return learningSubjects.find((item) => item.id === normalizeLearningSubject(subject))?.label || "未分類";
   }
 
+  function learningDateLabel(value) {
+    return /^\d{4}-\d{2}-\d{2}$/.test(String(value || "")) ? String(value).slice(2).replace(/-/g, "/") : "選擇日期";
+  }
+
+  function updateLearningDateDisplay() {
+    learningDateDisplay.textContent = learningDateLabel(learningDateInput.value);
+  }
+
+  function openLearningDatePicker() {
+    if (typeof learningDateInput.showPicker === "function") {
+      try { learningDateInput.showPicker(); return; } catch (_error) { /* fallback to focus below */ }
+    }
+    learningDateInput.focus();
+    learningDateInput.click();
+  }
+
+  function renderLearningGlobalSearchResults() {
+    const query = learningGlobalSearchInput.value.trim().toLowerCase();
+    if (!query) {
+      learningGlobalSearchResults.innerHTML = '<p class="muted">輸入關鍵字開始搜尋。</p>';
+      return;
+    }
+    const records = learningRecords.filter((record) => [record.title, record.content, record.date, learningDateLabel(record.date), learningSubjectLabel(record.subject)].some((value) => String(value || "").toLowerCase().includes(query)));
+    if (!records.length) {
+      learningGlobalSearchResults.innerHTML = '<p class="muted">找不到符合的學習筆記。</p>';
+      return;
+    }
+    learningGlobalSearchResults.innerHTML = records.map((record) => '<button class="learning-global-result" type="button" data-learning-global-id="' + esc(record.id) + '"><strong>' + esc(record.title || "未命名筆記") + '</strong><small>' + esc(learningSubjectLabel(record.subject) + " · " + learningDateLabel(record.date)) + '</small></button>').join("");
+  }
+
   function renderLearningSubjectTabs() {
     const counts = Object.fromEntries(learningSubjects.map((subject) => [subject.id, 0]));
     learningRecords.forEach((record) => { counts[normalizeLearningSubject(record.subject)] += 1; });
@@ -1393,6 +1431,7 @@
     learningRecords = Array.isArray(body.records) ? body.records.map((record) => ({ ...record, subject: normalizeLearningSubject(record.subject) })) : [];
     renderLearningSubjectTabs();
     setLearningPage("compose");
+    resetLearningForm();
     renderLearningEntries();
   }
 
@@ -1401,6 +1440,7 @@
     learningForm.elements.id.value = "";
     learningForm.elements.subject.value = activeLearningSubject === "uncategorized" ? "" : activeLearningSubject;
     learningForm.elements.date.value = localDateString();
+    updateLearningDateDisplay();
     learningSubmitBtn.textContent = "📚 儲存學習日誌";
     learningCancelBtn.hidden = true;
     learningUploadStatus.innerHTML = "";
@@ -1415,6 +1455,7 @@
     learningForm.elements.subject.value = normalizeLearningSubject(record.subject) === "uncategorized" ? "" : normalizeLearningSubject(record.subject);
     learningForm.elements.title.value = record.title || "";
     learningForm.elements.date.value = record.date || localDateString();
+    updateLearningDateDisplay();
     learningForm.elements.content.value = record.content || "";
     activeLearningSubject = normalizeLearningSubject(record.subject);
     localStorage.setItem("emilyhome.learningSubject", activeLearningSubject);
@@ -2176,6 +2217,27 @@
     learningSearchBtn.setAttribute("aria-expanded", String(learningSearchOpen));
     if (learningSearchOpen) learningSearchInput.focus();
   });
+  learningGlobalSearchBtn.addEventListener("click", () => { learningGlobalSearchDialog.showModal(); learningGlobalSearchInput.value = ""; renderLearningGlobalSearchResults(); learningGlobalSearchInput.focus(); });
+  closeLearningGlobalSearch.addEventListener("click", () => learningGlobalSearchDialog.close());
+  learningGlobalSearchInput.addEventListener("input", renderLearningGlobalSearchResults);
+  learningGlobalSearchResults.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-learning-global-id]");
+    if (!button) return;
+    const record = learningRecords.find((item) => item.id === button.dataset.learningGlobalId);
+    if (!record) return;
+    activeLearningSubject = normalizeLearningSubject(record.subject);
+    localStorage.setItem("emilyhome.learningSubject", activeLearningSubject);
+    learningExpandedIds.add(record.id);
+    learningSearchQuery = "";
+    learningSearchInput.value = "";
+    learningGlobalSearchDialog.close();
+    setLearningPage("subject");
+    renderLearningSubjectTabs();
+    renderLearningEntries();
+  });
+  learningDateBtn.addEventListener("click", openLearningDatePicker);
+  learningDateInput.addEventListener("input", updateLearningDateDisplay);
+  learningDateInput.addEventListener("change", updateLearningDateDisplay);
   learningSearchInput.addEventListener("input", () => { learningSearchQuery = learningSearchInput.value; renderLearningEntries(); });
   learningSearchClearBtn.addEventListener("click", () => { learningSearchQuery = ""; learningSearchInput.value = ""; renderLearningEntries(); learningSearchInput.focus(); });
   learningAddBtn.addEventListener("click", () => openLearningComposer());
