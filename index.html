@@ -1724,7 +1724,6 @@
           <section class="card span-12">
             <div class="panel-heading">
               <h3>📚 學習日誌</h3>
-              <button class="icon-button" type="button" id="learningSearchBtn" aria-expanded="false" aria-controls="learningSearchPanel" title="搜尋學習日誌">🔍</button>
             </div>
             <div class="learning-subject-tabs" id="learningSubjectTabs" role="tablist" aria-label="學習科目">
               <button class="learning-subject-tab" type="button" data-learning-subject="chinese" role="tab">國文 <span class="learning-subject-count" data-learning-count="chinese">0</span></button>
@@ -1734,9 +1733,10 @@
               <button class="learning-subject-tab" type="button" data-learning-subject="social" role="tab">社會 <span class="learning-subject-count" data-learning-count="social">0</span></button>
               <button class="learning-subject-tab" type="button" data-learning-subject="uncategorized" role="tab" hidden>未分類 <span class="learning-subject-count" data-learning-count="uncategorized">0</span></button>
             </div>
-            <div class="learning-search" id="learningSearchPanel" hidden>
-              <input id="learningSearchInput" type="search" placeholder="搜尋標題、內容或日期">
-              <button class="ghost" type="button" id="learningSearchClearBtn">清除</button>
+          </section>
+          <section class="card span-12" id="learningComposerCard">
+            <div class="panel-heading">
+              <h3>📝 新增學習筆記</h3>
             </div>
             <form id="learningForm" class="form-grid" style="margin-top:14px">
               <input type="hidden" name="id">
@@ -1752,8 +1752,12 @@
             </form>
             <p class="status" id="learningStatus"></p>
           </section>
-          <section class="card span-12">
-            <div class="learning-list-heading"><h3 id="learningListTitle">國文筆記</h3></div>
+          <section class="card span-12" id="learningListCard" hidden>
+            <div class="learning-list-heading"><h3 id="learningListTitle">國文筆記</h3><div class="learning-entry-actions"><button class="icon-button" type="button" id="learningSearchBtn" aria-expanded="false" aria-controls="learningSearchPanel" title="搜尋目前科目筆記">🔍</button><button class="icon-button" type="button" id="learningAddBtn" title="新增筆記">📝</button></div></div>
+            <div class="learning-search" id="learningSearchPanel" hidden>
+              <input id="learningSearchInput" type="search" placeholder="搜尋標題、內容或日期">
+              <button class="ghost" type="button" id="learningSearchClearBtn">清除</button>
+            </div>
             <div class="learning-entry-list" id="learningEntryList"><p class="muted">載入中...</p></div>
           </section>
         </div>

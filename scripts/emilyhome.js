@@ -102,6 +102,7 @@
   let clientRecords = [];
   let learningRecords = [];
   const learningExpandedIds = new Set();
+  let learningPage = "compose";
   let learningSearchOpen = false;
   let learningSearchQuery = "";
   let activeLearningSubject = ["chinese", "english-vocabulary", "english-grammar", "law", "social", "uncategorized"].includes(localStorage.getItem("emilyhome.learningSubject")) ? localStorage.getItem("emilyhome.learningSubject") : "chinese";
@@ -185,6 +186,8 @@
   const bodyView = document.getElementById("bodyView");
   const clientView = document.getElementById("clientView");
   const learningView = document.getElementById("learningView");
+  const learningComposerCard = document.getElementById("learningComposerCard");
+  const learningListCard = document.getElementById("learningListCard");
   const learningForm = document.getElementById("learningForm");
   const learningEntryList = document.getElementById("learningEntryList");
   const learningStatus = document.getElementById("learningStatus");
@@ -196,6 +199,7 @@
   const learningSearchPanel = document.getElementById("learningSearchPanel");
   const learningSearchInput = document.getElementById("learningSearchInput");
   const learningSearchClearBtn = document.getElementById("learningSearchClearBtn");
+  const learningAddBtn = document.getElementById("learningAddBtn");
   const learningSubjectTabs = document.getElementById("learningSubjectTabs");
   const learningListTitle = document.getElementById("learningListTitle");
   const clientPeopleList = document.getElementById("clientPeopleList");
@@ -1327,6 +1331,17 @@
     learningSearchInput.placeholder = "搜尋" + label + "的標題、內容或日期";
   }
 
+  function setLearningPage(page) {
+    learningPage = page === "subject" ? "subject" : "compose";
+    learningComposerCard.hidden = learningPage !== "compose";
+    learningListCard.hidden = learningPage !== "subject";
+    if (learningPage !== "subject") {
+      learningSearchOpen = false;
+      learningSearchPanel.hidden = true;
+      learningSearchBtn.setAttribute("aria-expanded", "false");
+    }
+  }
+
   function selectLearningSubject(subject) {
     const next = normalizeLearningSubject(subject);
     if (next === "uncategorized" && !learningRecords.some((record) => normalizeLearningSubject(record.subject) === next)) return;
@@ -1335,9 +1350,18 @@
     learningSearchQuery = "";
     learningSearchInput.value = "";
     learningStatus.textContent = "";
-    resetLearningForm();
+    setLearningPage("subject");
     renderLearningSubjectTabs();
     renderLearningEntries();
+  }
+
+  function openLearningComposer(subject = activeLearningSubject) {
+    activeLearningSubject = normalizeLearningSubject(subject);
+    localStorage.setItem("emilyhome.learningSubject", activeLearningSubject);
+    resetLearningForm();
+    setLearningPage("compose");
+    renderLearningSubjectTabs();
+    learningForm.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   function renderLearningEntries() {
@@ -1368,6 +1392,7 @@
     const body = await fetch(apiUrl("/api/wife-journal/learning"), { cache: "no-store", headers: headers() }).then(readJson);
     learningRecords = Array.isArray(body.records) ? body.records.map((record) => ({ ...record, subject: normalizeLearningSubject(record.subject) })) : [];
     renderLearningSubjectTabs();
+    setLearningPage("compose");
     renderLearningEntries();
   }
 
@@ -1391,6 +1416,10 @@
     learningForm.elements.title.value = record.title || "";
     learningForm.elements.date.value = record.date || localDateString();
     learningForm.elements.content.value = record.content || "";
+    activeLearningSubject = normalizeLearningSubject(record.subject);
+    localStorage.setItem("emilyhome.learningSubject", activeLearningSubject);
+    setLearningPage("compose");
+    renderLearningSubjectTabs();
     learningSubmitBtn.textContent = "💾 儲存學習日誌編輯";
     learningCancelBtn.hidden = false;
     const media = (record.media || []).map(photoGalleryItem).filter(Boolean);
@@ -2149,6 +2178,7 @@
   });
   learningSearchInput.addEventListener("input", () => { learningSearchQuery = learningSearchInput.value; renderLearningEntries(); });
   learningSearchClearBtn.addEventListener("click", () => { learningSearchQuery = ""; learningSearchInput.value = ""; renderLearningEntries(); learningSearchInput.focus(); });
+  learningAddBtn.addEventListener("click", () => openLearningComposer());
   learningSubjectTabs.addEventListener("click", (event) => {
     const button = event.target.closest("[data-learning-subject]");
     if (button) selectLearningSubject(button.dataset.learningSubject);
