@@ -205,6 +205,7 @@
   const learningSearchInput = document.getElementById("learningSearchInput");
   const learningSearchClearBtn = document.getElementById("learningSearchClearBtn");
   const learningAddBtn = document.getElementById("learningAddBtn");
+  const learningDatePicker = document.getElementById("learningDatePicker");
   const learningDateInput = document.getElementById("learningDateInput");
   const learningDateBtn = document.getElementById("learningDateBtn");
   const learningSubjectSelect = document.getElementById("learningSubjectSelect");
@@ -1339,6 +1340,8 @@
     learningDateInput.focus();
     learningDateInput.click();
   }
+
+  if (learningDatePicker && typeof learningDateInput.showPicker !== "function") learningDatePicker.classList.add("native-input");
 
   function renderLearningGlobalSearchResults() {
     const query = learningGlobalSearchInput.value.trim().toLowerCase();
