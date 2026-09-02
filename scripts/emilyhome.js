@@ -1358,13 +1358,10 @@
 
   function setLearningPage(page) {
     learningPage = page === "subject" ? "subject" : "compose";
-    learningComposerCard.hidden = learningPage !== "compose";
-    learningListCard.hidden = learningPage !== "subject";
-    if (learningPage !== "subject") {
-      learningSearchOpen = false;
-      learningSearchPanel.hidden = true;
-      learningSearchBtn.setAttribute("aria-expanded", "false");
-    }
+    // The composer and filtered article list stay visible together so editing
+    // or saving a note never forces the user to navigate back to the list.
+    learningComposerCard.hidden = false;
+    learningListCard.hidden = false;
   }
 
   function selectLearningSubject(subject) {
