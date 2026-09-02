@@ -1744,11 +1744,15 @@
           <section class="card span-12" id="learningComposerCard">
             <div class="panel-heading">
               <h3>📝 新增學習筆記</h3>
-              <label class="learning-date-picker" id="learningDatePicker" for="learningDateInput">
-                <span class="icon-button learning-date-button" id="learningDateBtn" title="選擇記錄日期" aria-label="選擇記錄日期" role="button">📅</span>
-                <input class="learning-date-input" id="learningDateInput" name="date" form="learningForm" type="date" required aria-label="記錄日期">
-              </label>
+              <div class="learning-heading-actions">
+                <button class="ghost" type="button" id="learningComposerToggle" aria-expanded="false" aria-controls="learningComposerBody">展開</button>
+                <label class="learning-date-picker" id="learningDatePicker" for="learningDateInput">
+                  <span class="icon-button learning-date-button" id="learningDateBtn" title="選擇記錄日期" aria-label="選擇記錄日期" role="button">📅</span>
+                  <input class="learning-date-input" id="learningDateInput" name="date" form="learningForm" type="date" required aria-label="記錄日期">
+                </label>
+              </div>
             </div>
+            <div id="learningComposerBody" class="learning-composer-body" hidden>
             <form id="learningForm" class="form-grid" style="margin-top:14px">
               <input type="hidden" name="id">
               <label>科目<select name="subject" required><option value="" disabled>請選擇科目</option><option value="chinese">國文</option><option value="english-vocabulary">英文單字</option><option value="english-grammar">英文文法</option><option value="law">法律</option><option value="social">社會</option></select></label>
@@ -1761,6 +1765,7 @@
               <button class="ghost" type="button" id="learningCancelBtn" hidden>取消編輯</button>
             </form>
             <p class="status" id="learningStatus"></p>
+            </div>
           </section>
           <section class="card span-12" id="learningListCard" hidden>
             <div class="learning-list-heading"><h3 id="learningListTitle">國文筆記</h3><div class="learning-entry-actions"><button class="icon-button" type="button" id="learningSearchBtn" aria-expanded="false" aria-controls="learningSearchPanel" title="搜尋目前科目筆記">🔍</button><button class="icon-button" type="button" id="learningAddBtn" title="新增筆記">📝</button></div></div>

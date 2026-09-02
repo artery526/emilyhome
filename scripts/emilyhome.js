@@ -193,6 +193,8 @@
   const learningGlobalSearchResults = document.getElementById("learningGlobalSearchResults");
   const closeLearningGlobalSearch = document.getElementById("closeLearningGlobalSearch");
   const learningComposerCard = document.getElementById("learningComposerCard");
+  const learningComposerToggle = document.getElementById("learningComposerToggle");
+  const learningComposerBody = document.getElementById("learningComposerBody");
   const learningListCard = document.getElementById("learningListCard");
   const learningForm = document.getElementById("learningForm");
   const learningEntryList = document.getElementById("learningEntryList");
@@ -1367,6 +1369,13 @@
     learningListCard.hidden = false;
   }
 
+  function setLearningComposerExpanded(expanded) {
+    const isExpanded = Boolean(expanded);
+    learningComposerBody.hidden = !isExpanded;
+    learningComposerToggle.setAttribute("aria-expanded", String(isExpanded));
+    learningComposerToggle.textContent = isExpanded ? "收起" : "展開";
+  }
+
   function selectLearningSubject(subject) {
     const next = normalizeLearningSubject(subject);
     activeLearningSubject = next;
@@ -1384,6 +1393,7 @@
     localStorage.setItem("emilyhome.learningSubject", activeLearningSubject);
     resetLearningForm();
     setLearningPage("compose");
+    setLearningComposerExpanded(true);
     renderLearningSubjectSelect();
     learningForm.scrollIntoView({ behavior: "smooth", block: "start" });
   }
@@ -1418,6 +1428,7 @@
     renderLearningSubjectSelect();
     setLearningPage("compose");
     resetLearningForm();
+    setLearningComposerExpanded(false);
     renderLearningEntries();
   }
 
@@ -1453,6 +1464,7 @@
     learningEditMedia.hidden = !media.length;
     learningEditMedia.innerHTML = media.map((item, index) => '<button class="media-card" type="button" data-learning-edit-photo="' + index + '"><img src="' + esc(item.thumbnailUrl || item.url) + '" alt="學習附件"></button>').join("");
     learningForm.scrollIntoView({ behavior: "smooth", block: "start" });
+    setLearningComposerExpanded(true);
   }
 
   async function saveLearningRecord(event) {
@@ -1485,6 +1497,7 @@
       renderLearningSubjectSelect();
       renderLearningEntries();
       resetLearningForm();
+      setLearningComposerExpanded(false);
     } catch (error) {
       learningStatus.className = "status error";
       learningStatus.textContent = error.message || "學習日誌儲存失敗";
@@ -2226,9 +2239,10 @@
   learningSearchInput.addEventListener("input", () => { learningSearchQuery = learningSearchInput.value; renderLearningEntries(); });
   learningSearchClearBtn.addEventListener("click", () => { learningSearchQuery = ""; learningSearchInput.value = ""; renderLearningEntries(); learningSearchInput.focus(); });
   learningAddBtn.addEventListener("click", () => openLearningComposer());
+  learningComposerToggle.addEventListener("click", () => setLearningComposerExpanded(learningComposerBody.hidden));
   learningSubjectSelect.addEventListener("change", () => selectLearningSubject(learningSubjectSelect.value));
   learningForm.addEventListener("submit", saveLearningRecord);
-  learningCancelBtn.addEventListener("click", resetLearningForm);
+  learningCancelBtn.addEventListener("click", () => { resetLearningForm(); setLearningComposerExpanded(false); });
   learningForm.elements.media.addEventListener("change", () => renderUploadStatuses(learningUploadStatus, Array.from(learningForm.elements.media.files || []), "waiting"));
   learningEntryList.addEventListener("click", (event) => {
     const toggleButton = event.target.closest("[data-learning-toggle]");
