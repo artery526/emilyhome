@@ -92,6 +92,7 @@
     { id: "social", label: "社會" },
     { id: "uncategorized", label: "未分類" },
   ];
+  const learningAllSubjectsId = "all";
   const entryUploadBatchSize = 12;
   const selectedLibraryImages = new Map();
   let entries = [];
@@ -105,7 +106,7 @@
   let learningPage = "compose";
   let learningSearchOpen = false;
   let learningSearchQuery = "";
-  let activeLearningSubject = ["chinese", "english-vocabulary", "english-grammar", "law", "social", "uncategorized"].includes(localStorage.getItem("emilyhome.learningSubject")) ? localStorage.getItem("emilyhome.learningSubject") : "chinese";
+  let activeLearningSubject = [learningAllSubjectsId, "chinese", "english-vocabulary", "english-grammar", "law", "social", "uncategorized"].includes(localStorage.getItem("emilyhome.learningSubject")) ? localStorage.getItem("emilyhome.learningSubject") : "chinese";
   let photoZoom = 1;
   let activeClientId = "";
   let activeDate = "";
@@ -1315,10 +1316,12 @@
 
   function normalizeLearningSubject(value) {
     const subject = String(value || "").toLowerCase();
+    if (subject === learningAllSubjectsId) return learningAllSubjectsId;
     return learningSubjects.some((item) => item.id === subject) ? subject : "uncategorized";
   }
 
   function learningSubjectLabel(subject = activeLearningSubject) {
+    if (normalizeLearningSubject(subject) === learningAllSubjectsId) return "全部科目";
     return learningSubjects.find((item) => item.id === normalizeLearningSubject(subject))?.label || "未分類";
   }
 
@@ -1349,7 +1352,7 @@
   function renderLearningSubjectSelect() {
     const counts = Object.fromEntries(learningSubjects.map((subject) => [subject.id, 0]));
     learningRecords.forEach((record) => { counts[normalizeLearningSubject(record.subject)] += 1; });
-    learningSubjectSelect.innerHTML = learningSubjects.map((subject) => '<option value="' + esc(subject.id) + '">' + esc(subject.label) + '（' + counts[subject.id] + '）</option>').join("");
+    learningSubjectSelect.innerHTML = ['<option value="all">全部科目（' + learningRecords.length + '）</option>'].concat(learningSubjects.map((subject) => '<option value="' + esc(subject.id) + '">' + esc(subject.label) + '（' + counts[subject.id] + '）</option>')).join("");
     learningSubjectSelect.value = activeLearningSubject;
     const label = learningSubjectLabel();
     learningListTitle.textContent = label + "筆記";
@@ -1387,7 +1390,7 @@
 
   function renderLearningEntries() {
     const query = learningSearchQuery.trim().toLowerCase();
-    const records = learningRecords.filter((record) => normalizeLearningSubject(record.subject) === activeLearningSubject && (!query || [record.title, record.content, record.date].some((value) => String(value || "").toLowerCase().includes(query))));
+    const records = learningRecords.filter((record) => (activeLearningSubject === learningAllSubjectsId || normalizeLearningSubject(record.subject) === activeLearningSubject) && (!query || [record.title, record.content, record.date, learningSubjectLabel(record.subject)].some((value) => String(value || "").toLowerCase().includes(query))));
     if (!records.length) {
       learningEntryList.innerHTML = '<p class="muted">' + (query ? '找不到相關' + esc(learningSubjectLabel()) + '筆記 🔍' : '目前還沒有' + esc(learningSubjectLabel()) + '筆記。') + '</p>';
       return;
@@ -1396,7 +1399,7 @@
       const expanded = learningExpandedIds.has(record.id);
       const media = (record.media || []).map(photoGalleryItem).filter(Boolean);
       return '<article class="learning-entry" data-learning-id="' + esc(record.id) + '">' +
-        '<div class="learning-entry-heading"><div><strong>' + esc(record.title) + '</strong><div class="entry-meta">' + esc(record.date) + '</div></div><div class="learning-entry-actions"><button class="ghost" type="button" data-learning-toggle="' + esc(record.id) + '" aria-expanded="' + String(expanded) + '">' + (expanded ? '收合' : '展開') + '</button><button class="ghost" type="button" data-learning-edit="' + esc(record.id) + '">✏️ 編輯</button></div></div>' +
+        '<div class="learning-entry-heading"><div><strong>' + esc(record.title) + '</strong><div class="entry-meta">' + esc(learningSubjectLabel(record.subject) + " · " + record.date) + '</div></div><div class="learning-entry-actions"><button class="ghost" type="button" data-learning-toggle="' + esc(record.id) + '" aria-expanded="' + String(expanded) + '">' + (expanded ? '收合' : '展開') + '</button><button class="ghost" type="button" data-learning-edit="' + esc(record.id) + '">✏️ 編輯</button></div></div>' +
         (expanded ? '<div class="learning-entry-content">' + esc(record.content) + '</div>' + (media.length ? '<div class="learning-gallery">' + media.map((item, index) => '<button type="button" data-learning-photo="' + esc(record.id) + '" data-learning-photo-index="' + index + '"><img src="' + esc(item.thumbnailUrl || item.url) + '" alt="學習附件" loading="lazy"></button>').join("") + '</div>' : '') : '') +
       '</article>';
     }).join("");
@@ -1421,7 +1424,7 @@
   function resetLearningForm() {
     learningForm.reset();
     learningForm.elements.id.value = "";
-    learningForm.elements.subject.value = activeLearningSubject === "uncategorized" ? "" : activeLearningSubject;
+    learningForm.elements.subject.value = ["uncategorized", learningAllSubjectsId].includes(activeLearningSubject) ? "" : activeLearningSubject;
     learningForm.elements.date.value = localDateString();
     updateLearningDateDisplay();
     learningSubmitBtn.textContent = "📚 儲存學習日誌";
