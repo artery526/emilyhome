@@ -1462,7 +1462,10 @@
     learningCancelBtn.hidden = false;
     const media = (record.media || []).map(photoGalleryItem).filter(Boolean);
     learningEditMedia.hidden = !media.length;
-    learningEditMedia.innerHTML = media.map((item, index) => '<button class="media-card" type="button" data-learning-edit-photo="' + index + '"><img src="' + esc(item.thumbnailUrl || item.url) + '" alt="學習附件"></button>').join("");
+    learningEditMedia.innerHTML = media.map((item, index) => {
+      const key = item.libraryId || item.legacyLibraryId || item.fileName || item.url || item.originalUrl || item.thumbnailUrl || "";
+      return '<div class="edit-media-card"><button class="media-card" type="button" data-learning-edit-photo="' + index + '"><img src="' + esc(item.thumbnailUrl || item.url) + '" alt="學習附件"></button><label><input type="checkbox" name="removeMedia" value="' + esc(key) + '"> 移除附件</label></div>';
+    }).join("");
     learningForm.scrollIntoView({ behavior: "smooth", block: "start" });
     setLearningComposerExpanded(true);
   }
@@ -1484,6 +1487,7 @@
         renderUploadStatuses(learningUploadStatus, files, "waiting");
         const uploadData = new FormData();
         ["id", "subject", "title", "date", "content"].forEach((name) => uploadData.append(name, data.get(name) || ""));
+        data.getAll("removeMedia").forEach((key) => uploadData.append("removeMedia", key));
         files.forEach((file) => uploadData.append("media", file, file.name));
         const body = await fetch(apiUrl(recordId ? "/api/wife-journal/learning/" + encodeURIComponent(recordId) : "/api/wife-journal/learning"), { method: recordId ? "PUT" : "POST", headers: headers(), body: uploadData }).then(readJson);
         renderUploadStatuses(learningUploadStatus, files, "success");
