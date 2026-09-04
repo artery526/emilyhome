@@ -1410,7 +1410,7 @@
       const media = (record.media || []).map(photoGalleryItem).filter(Boolean);
       return '<article class="learning-entry" data-learning-id="' + esc(record.id) + '">' +
         '<div class="learning-entry-heading"><div><strong>' + esc(record.title) + '</strong><div class="entry-meta">' + esc(learningSubjectLabel(record.subject) + " · " + record.date) + '</div></div><div class="learning-entry-actions"><button class="icon-button learning-entry-icon" type="button" data-learning-toggle="' + esc(record.id) + '" aria-expanded="' + String(expanded) + '" aria-label="' + (expanded ? '收合文章內容' : '展開文章內容') + '" title="' + (expanded ? '收合文章內容' : '展開文章內容') + '">📃</button><button class="icon-button learning-entry-icon" type="button" data-learning-edit="' + esc(record.id) + '" aria-label="編輯文章" title="編輯文章">✏️</button></div></div>' +
-        (expanded ? '<div class="learning-entry-content">' + esc(record.content) + '</div>' + (media.length ? '<div class="learning-gallery">' + media.map((item, index) => '<button type="button" data-learning-photo="' + esc(record.id) + '" data-learning-photo-index="' + index + '"><img src="' + esc(item.thumbnailUrl || item.url) + '" alt="學習附件" loading="lazy"></button>').join("") + '</div>' : '') : '') +
+        (expanded ? '<div class="learning-entry-content">' + esc(record.content) + '</div>' + (media.length ? '<div class="learning-gallery">' + media.map((item, index) => '<button type="button" data-learning-photo="' + esc(record.id) + '" data-learning-photo-index="' + index + '"><img src="' + esc(item.thumb || item.thumbnailUrl || item.url) + '" alt="學習附件" loading="lazy"></button>').join("") + '</div>' : '') : '') +
       '</article>';
     }).join("");
   }
@@ -1464,7 +1464,7 @@
     learningEditMedia.hidden = !media.length;
     learningEditMedia.innerHTML = media.map((item, index) => {
       const key = item.libraryId || item.legacyLibraryId || item.fileName || item.url || item.originalUrl || item.thumbnailUrl || "";
-      return '<div class="edit-media-card"><button class="media-card" type="button" data-learning-edit-photo="' + index + '"><img src="' + esc(item.thumbnailUrl || item.url) + '" alt="學習附件"></button><label><input type="checkbox" name="removeMedia" value="' + esc(key) + '"> 移除附件</label></div>';
+      return '<div class="edit-media-card"><button class="media-card" type="button" data-learning-edit-photo="' + index + '"><img src="' + esc(item.thumb || item.thumbnailUrl || item.url) + '" alt="學習附件"></button><label><input type="checkbox" name="removeMedia" value="' + esc(key) + '"> 移除附件</label></div>';
     }).join("");
     learningForm.scrollIntoView({ behavior: "smooth", block: "start" });
     setLearningComposerExpanded(true);
