@@ -1059,7 +1059,7 @@
     if (!item || item.type === "audio") return null;
     const url = mediaUrl(item.originalUrl || item.thumbnailUrl || "", item.updatedAt || key);
     const thumb = mediaUrl(item.thumbnailUrl || item.originalUrl || "", item.updatedAt || key);
-    return url ? { url, thumb, type: item.type || "photo" } : null;
+    return url ? { ...item, url, thumb, type: item.type || "photo" } : null;
   }
 
   async function openReadEntry(id) {
