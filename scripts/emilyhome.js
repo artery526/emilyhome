@@ -90,7 +90,9 @@
     { id: "uncategorized", label: "未分類" },
   ];
   const learningAllSubjectsId = "all";
-  const entryUploadBatchSize = 12;
+  // iPhone videos are large; send one attachment per request so a combined
+  // multipart body cannot exceed the upstream Pages/API request-size limit.
+  const entryUploadBatchSize = 1;
   const selectedLibraryImages = new Map();
   let entries = [];
   let cards = [];
