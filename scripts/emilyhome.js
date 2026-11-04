@@ -477,6 +477,25 @@
     }).then(readJson);
   }
 
+  async function uploadJournalFileInChunks(file) {
+    const chunkSize = 5 * 1024 * 1024;
+    const uploadId = window.crypto && window.crypto.randomUUID
+      ? window.crypto.randomUUID().replace(/-/g, "")
+      : (Date.now().toString(16) + Math.random().toString(16).slice(2)).padEnd(32, "0").slice(0, 32);
+    const chunkCount = Math.ceil(file.size / chunkSize);
+    for (let index = 0; index < chunkCount; index += 1) {
+      statusEl.textContent = "影片分段上傳中：「" + file.name + "」 " + (index + 1) + " / " + chunkCount;
+      const chunk = file.slice(index * chunkSize, Math.min(file.size, (index + 1) * chunkSize));
+      const response = await fetch(apiUrl("/api/wife-journal/uploads/" + uploadId + "/" + index), {
+        method: "PUT",
+        headers: headers({ "content-type": "application/octet-stream" }),
+        body: chunk,
+      }).then(readJson);
+      if (!response.uploaded) throw new Error("影片分段上傳失敗：「" + file.name + "」");
+    }
+    return { id: uploadId, name: file.name, type: file.type || "video/quicktime", size: file.size, chunkCount };
+  }
+
   async function saveJournalEntryWithBatchedMedia(editId, uploadFiles) {
     const batches = chunkFiles(uploadFiles, entryUploadBatchSize);
     let entryId = editId;
@@ -492,10 +511,20 @@
       if (batches.length > 1) {
         statusEl.textContent = "附件分批上傳中：" + (index + 1) + " / " + batches.length;
       }
-      const data = entryFormData(files, {
+      const chunkedMedia = [];
+      const regularFiles = [];
+      for (const file of files) {
+        if (String(file.type || "").startsWith("video/") && file.size > 8 * 1024 * 1024) {
+          chunkedMedia.push(await uploadJournalFileInChunks(file));
+        } else {
+          regularFiles.push(file);
+        }
+      }
+      const data = entryFormData(regularFiles, {
         includeLibraryImages: index === 0,
         includeRemoveMedia: index === 0,
       });
+      if (chunkedMedia.length) data.append("chunkedMedia", JSON.stringify(chunkedMedia));
       body = await saveJournalEntryBatch(entryId, data);
       if (!firstData) firstData = data;
       if (!entryId) {
