@@ -128,6 +128,7 @@
   let bodyLoaded = false;
   let apiBase = localStorage.getItem("emilyhome.apiBase") || defaultApiBase;
   let apiToken = localStorage.getItem("emilyhome.token") || "";
+  const wifeJournalMediaObjectUrls = new Map();
   let sheetToken = localStorage.getItem("emilyhome.sheetToken") || "";
 
   const gate = document.getElementById("gate");
@@ -431,10 +432,27 @@
 
   function mediaUrl(url, version) {
     if (!url) return "";
+    if (/^blob:/i.test(url)) return url;
     const absolute = /^https?:\/\//i.test(url) ? url : apiUrl(url);
     const params = ["v=" + encodeURIComponent(version || Date.now())];
     if (apiToken) params.push("readToken=" + encodeURIComponent(apiToken));
     return absolute + (absolute.indexOf("?") >= 0 ? "&" : "?") + params.join("&");
+  }
+
+  async function wifeJournalMediaObjectUrl(url) {
+    if (!url) return "";
+    const absolute = /^https?:\/\//i.test(url) ? url : apiUrl(url);
+    if (wifeJournalMediaObjectUrls.has(absolute)) return wifeJournalMediaObjectUrls.get(absolute);
+    const response = await fetch(absolute, { cache: "no-store", headers: headers() });
+    if (!response.ok) throw new Error("附件讀取失敗（" + response.status + "）");
+    const objectUrl = URL.createObjectURL(await response.blob());
+    wifeJournalMediaObjectUrls.set(absolute, objectUrl);
+    while (wifeJournalMediaObjectUrls.size > 24) {
+      const oldest = wifeJournalMediaObjectUrls.keys().next().value;
+      URL.revokeObjectURL(wifeJournalMediaObjectUrls.get(oldest));
+      wifeJournalMediaObjectUrls.delete(oldest);
+    }
+    return objectUrl;
   }
 
   function selectedUploadFiles(sourceForm) {
@@ -1064,6 +1082,9 @@
 
   function readMediaPreview(item, index) {
     const key = item.libraryId || item.legacyLibraryId || item.fileName || item.url || item.originalUrl || item.thumbnailUrl || "";
+    if (item.attachmentReadError) {
+      return '<p class="status error">' + esc(item.attachmentReadError) + '</p>';
+    }
     if (item.type === "audio") {
       return '<div class="edit-media-card">'
         + '<label>語音 ' + (index + 1) + '</label>'
@@ -1108,13 +1129,29 @@
       const body = await fetch(url, { cache: "no-store", headers: headers() }).then(readJson);
       const loaded = body.entry || {};
       const media = Array.isArray(loaded.media) ? loaded.media : [];
-      entryReaderGallery = media.map(photoGalleryItem).filter(Boolean);
+      const displayMedia = await Promise.all(media.map(async (item) => {
+        if (item && item.localAttachment && item.type === "photo") {
+          const originalPath = item.originalUrl || item.url || item.thumbnailUrl || "";
+          const thumbnailPath = item.thumbnailUrl || originalPath;
+          try {
+            return {
+              ...item,
+              originalUrl: await wifeJournalMediaObjectUrl(originalPath),
+              thumbnailUrl: await wifeJournalMediaObjectUrl(thumbnailPath),
+            };
+          } catch (error) {
+            return { ...item, attachmentReadError: error.message };
+          }
+        }
+        return item;
+      }));
+      entryReaderGallery = displayMedia.map(photoGalleryItem).filter(Boolean);
       entryReaderContent.innerHTML = '<article class="reader-entry">'
         + '<div class="entry-title">' + esc(loaded.title || "今天的心情") + '</div>'
         + '<div class="entry-meta">' + esc([loaded.date || "", loaded.time || ""].filter(Boolean).join(" · ")) + '</div>'
         + (loaded.tags && loaded.tags.length ? '<div class="chip-row">' + loaded.tags.map((tag) => '<span class="chip">' + esc(tag) + '</span>').join("") + '</div>' : '')
         + '<div class="detail">' + esc(markdownBody(body.markdown || "")) + '</div>'
-        + (media.length ? '<div class="edit-media-grid full" style="margin-top:14px">' + media.map(readMediaPreview).join("") + '</div>' : '')
+        + (displayMedia.length ? '<div class="edit-media-grid full" style="margin-top:14px">' + displayMedia.map(readMediaPreview).join("") + '</div>' : '')
         + '<div class="toolbar"><button type="button" data-edit-id="' + esc(loaded.id) + '">✏️ 編輯</button></div>'
       + '</article>';
     } catch (error) {
