@@ -473,8 +473,15 @@
   }
 
   function selectedUploadFiles(sourceForm) {
+    const seen = new Set();
     return Array.from(sourceForm.querySelectorAll('input[type="file"][name="media"]'))
-      .flatMap((input) => Array.from(input.files || []));
+      .flatMap((input) => Array.from(input.files || []))
+      .filter((file) => {
+        const key = [file.name, file.size, file.lastModified || 0, file.type].join("\u0000");
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
   }
 
   function chunkFiles(files, size) {
