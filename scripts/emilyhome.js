@@ -455,6 +455,23 @@
     return objectUrl;
   }
 
+  async function wifeJournalDisplayMedia(media) {
+    return Promise.all((Array.isArray(media) ? media : []).map(async (item) => {
+      if (!item || !item.localAttachment || item.type !== "photo") return item;
+      const originalPath = item.originalUrl || item.url || item.thumbnailUrl || "";
+      const thumbnailPath = item.thumbnailUrl || originalPath;
+      try {
+        return {
+          ...item,
+          originalUrl: await wifeJournalMediaObjectUrl(originalPath),
+          thumbnailUrl: await wifeJournalMediaObjectUrl(thumbnailPath),
+        };
+      } catch (error) {
+        return { ...item, attachmentReadError: error.message };
+      }
+    }));
+  }
+
   function selectedUploadFiles(sourceForm) {
     return Array.from(sourceForm.querySelectorAll('input[type="file"][name="media"]'))
       .flatMap((input) => Array.from(input.files || []));
@@ -1129,22 +1146,7 @@
       const body = await fetch(url, { cache: "no-store", headers: headers() }).then(readJson);
       const loaded = body.entry || {};
       const media = Array.isArray(loaded.media) ? loaded.media : [];
-      const displayMedia = await Promise.all(media.map(async (item) => {
-        if (item && item.localAttachment && item.type === "photo") {
-          const originalPath = item.originalUrl || item.url || item.thumbnailUrl || "";
-          const thumbnailPath = item.thumbnailUrl || originalPath;
-          try {
-            return {
-              ...item,
-              originalUrl: await wifeJournalMediaObjectUrl(originalPath),
-              thumbnailUrl: await wifeJournalMediaObjectUrl(thumbnailPath),
-            };
-          } catch (error) {
-            return { ...item, attachmentReadError: error.message };
-          }
-        }
-        return item;
-      }));
+      const displayMedia = await wifeJournalDisplayMedia(media);
       entryReaderGallery = displayMedia.map(photoGalleryItem).filter(Boolean);
       entryReaderContent.innerHTML = '<article class="reader-entry">'
         + '<div class="entry-title">' + esc(loaded.title || "今天的心情") + '</div>'
@@ -1204,6 +1206,10 @@
 
   function mediaPreview(item, index) {
     const key = item.libraryId || item.legacyLibraryId || item.fileName || item.url || item.originalUrl || item.thumbnailUrl || "";
+    if (item.attachmentReadError) {
+      return '<div class="edit-media-card"><p class="status error">' + esc(item.attachmentReadError) + '</p>'
+        + '<label><input type="checkbox" name="removeMedia" value="' + esc(key) + '"> 移除照片</label></div>';
+    }
     if (item.type === "audio") {
       return '<div class="edit-media-card">'
         + '<label><input type="checkbox" name="removeMedia" value="' + esc(key) + '"> 移除語音 ' + (index + 1) + '</label>'
@@ -1253,7 +1259,7 @@
       form.elements.entryPassword.value = "";
       form.elements.tags.value = (loaded.tags || []).join(",");
       form.elements.content.value = markdownBody(body.markdown || "");
-      const media = Array.isArray(loaded.media) ? loaded.media : [];
+      const media = await wifeJournalDisplayMedia(loaded.media);
       entryEditMedia.hidden = false;
       entryEditMedia.innerHTML = '<h3>照片與語音</h3><div class="edit-media-grid">'
         + (media.map(mediaPreview).join("") || '<p class="muted">沒有附件</p>')
