@@ -417,9 +417,8 @@
     }
     .entry {
       display: grid;
-      grid-template-columns: 74px 1fr;
-      gap: 12px;
-      align-items: center;
+      grid-template-columns: minmax(0, 1fr);
+      align-items: start;
       border: 1px solid var(--line);
       background: #fff;
       border-radius: 8px;
@@ -428,20 +427,6 @@
     }
     .entry button {
       cursor: pointer;
-    }
-    .cover {
-      width: 74px;
-      height: 74px;
-      border-radius: 8px;
-      object-fit: cover;
-      background: var(--mist);
-    }
-    .cover-button {
-      border: 0;
-      padding: 0;
-      min-height: 0;
-      border-radius: 8px;
-      background: transparent;
     }
     .entry-title {
       font-weight: 700;
@@ -1144,8 +1129,7 @@
       background: rgba(75, 43, 57, .82);
       border-color: #8b5367;
     }
-    .media-card,
-    .cover {
+    .media-card {
       background: #294e3b;
     }
     .media-card.active {
@@ -1355,8 +1339,7 @@
       background: rgba(75, 35, 65, .84);
       border-color: #98617b;
     }
-    .media-card,
-    .cover {
+    .media-card {
       background: #342647;
     }
     .media-card.active {
@@ -1827,6 +1810,6 @@
     </div>
   </dialog>
 
-  <script src="scripts/emilyhome.js?v=20261116-timeline-direct-read"></script>
+  <script src="scripts/emilyhome.js?v=20261116-timeline-no-thumbnails"></script>
 </body>
 </html>

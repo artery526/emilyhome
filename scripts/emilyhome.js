@@ -1027,14 +1027,12 @@
       return;
     }
     entryListEl.innerHTML = visibleEntries.map((entry) => {
-      const cover = mediaUrl(entry.coverImageUrl, entry.updatedAt || entry.id);
       const locked = entry.visibility === "password" || entry.visibility === "locked";
       const moodLine = [entry.date || "", entry.time || "", entry.title || "今天的心情"].filter(Boolean).join(" · ");
       const feeling = Array.isArray(entry.tags) ? entry.tags.filter(Boolean).join("、") : "";
       const excerpt = locked ? "這篇文章需要解鎖密碼。" : shortTimelineExcerpt(entry.excerpt || "");
       const feelingLine = [feeling, excerpt].filter(Boolean).join(" · ");
       return '<article class="entry" data-read-id="' + esc(entry.id) + '">'
-        + (cover ? '<button class="cover-button" type="button" data-view-url="' + esc(cover) + '"><img class="cover" src="' + esc(cover) + '" alt=""></button>' : '<div class="cover"></div>')
         + '<div>'
           + '<div class="entry-title">' + esc(moodLine) + '</div>'
           + '<div class="entry-excerpt">' + esc(feelingLine || "尚未填寫感受。") + '</div>'
@@ -2131,11 +2129,6 @@
   });
 
   entryListEl.addEventListener("click", (event) => {
-    const viewButton = event.target.closest("[data-view-url]");
-    if (viewButton) {
-      openPhoto(viewButton.dataset.viewUrl);
-      return;
-    }
     const button = event.target.closest("[data-edit-id]");
     if (button) {
       openEditEntry(button.dataset.editId);
