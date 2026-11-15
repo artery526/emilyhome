@@ -163,6 +163,15 @@
     .entry-form {
       grid-template-columns: repeat(4, minmax(0, 1fr));
     }
+    .entry-form-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .entry-form-heading h3 { margin: 0; }
+    .entry-form-toggle { flex: 0 0 42px; width: 42px; min-height: 42px; font-size: 22px; }
     .entry-form .title-field,
     .entry-form .full {
       grid-column: 1 / -1;
@@ -217,7 +226,6 @@
       pointer-events: auto;
       transform: translateY(-50%) translateX(0);
     }
-    .view-tabs #refreshBtn { margin-left: 0; }
     .client-people-list, .client-record-list { display: grid; gap: 10px; }
     .client-person-row { display: grid; grid-template-columns: 1fr auto; gap: 6px; align-items: center; }
     .client-person-button { width: 100%; text-align: left; display: flex; justify-content: space-between; gap: 10px; }
@@ -936,7 +944,6 @@
         max-height: 150px;
         transform: translateY(0);
       }
-      .view-tabs #refreshBtn { margin-left: 0; }
       .media-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 10px;
@@ -1408,13 +1415,6 @@
         max-width: min(760px, calc(100vw - 32px));
         max-height: 150px;
       }
-      .view-tabs #refreshBtn {
-        grid-column: 2;
-        margin-left: 0;
-      }
-      .view-tabs #lockAppBtn {
-        grid-column: 3;
-      }
     }
     @media (max-width: 900px) {
       header {
@@ -1492,7 +1492,6 @@
       <button class="view-tab" type="button" data-view="body" aria-label="身體記錄" title="身體記錄"><img class="view-tab-image" src="body.png?v=20260826-2039" alt="身體記錄"></button>
       <button class="view-tab" type="button" data-view="clients" aria-label="客戶記錄" title="客戶記錄"><img class="view-tab-image" src="Customer.png?v=20260826-2042" alt="客戶記錄"></button>
       <button class="view-tab" type="button" data-view="learning" aria-label="學習日誌" title="學習日誌"><img class="view-tab-image" src="learning.png?v=20260826-2046" alt="學習日誌"></button>
-      <button class="ghost image-action-button" type="button" id="refreshBtn" aria-label="重新整理" title="重新整理"><img class="view-tab-image" src="refresh.png?v=20260826-2050" alt="重新整理"></button>
       <button class="ghost image-action-button" type="button" id="lockAppBtn" aria-label="鎖定" title="鎖定"><img class="view-tab-image" src="lock.png?v=20260826-2054" alt="鎖定"></button>
     </div>
   </header>
@@ -1518,7 +1517,11 @@
           <div class="calendar" id="calendar"></div>
         </section>
         <section class="card span-12" id="createCard">
-          <h3 id="entryFormTitle">💌 新增心情日記</h3>
+          <div class="entry-form-heading">
+            <h3 id="entryFormTitle">💌 新增心情日記</h3>
+            <button class="icon-button" type="button" id="entryFormToggle" aria-expanded="false" aria-controls="entryFormPanel" aria-label="展開新增心情日記" title="展開新增心情日記">＋</button>
+          </div>
+          <div id="entryFormPanel" hidden>
           <form id="entryForm" class="form-grid entry-form">
             <label class="title-field">標題<input name="title" placeholder="主題是?"></label>
             <label class="date-field">日期<input name="date" type="date" required></label>
@@ -1542,6 +1545,7 @@
             <button class="primary full" type="submit" id="entrySubmitBtn">🧸 記錄</button>
             <button class="ghost full" type="button" id="cancelEntryEditBtn" hidden>取消編輯，回到新增日記</button>
           </form>
+          </div>
           <p class="status" id="formStatus"></p>
         </section>
         <section class="card span-12">
@@ -1821,6 +1825,6 @@
     </div>
   </dialog>
 
-  <script src="scripts/emilyhome.js?v=20261116-newest-photo-first"></script>
+  <script src="scripts/emilyhome.js?v=20261116-collapsible-journal-form"></script>
 </body>
 </html>

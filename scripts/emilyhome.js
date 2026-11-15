@@ -157,6 +157,8 @@
   const createCard = document.getElementById("createCard");
   const form = document.getElementById("entryForm");
   const entryFormTitle = document.getElementById("entryFormTitle");
+  const entryFormPanel = document.getElementById("entryFormPanel");
+  const entryFormToggle = document.getElementById("entryFormToggle");
   const entrySubmitBtn = document.getElementById("entrySubmitBtn");
   const cancelEntryEditBtn = document.getElementById("cancelEntryEditBtn");
   const statusEl = document.getElementById("formStatus");
@@ -331,6 +333,7 @@
 
   function resetEntryFormMode(message, className) {
     form.reset();
+    setEntryFormExpanded(false);
     delete form.dataset.entryId;
     delete form.dataset.originalVisibility;
     entryFormTitle.textContent = "💌 新增心情日記";
@@ -348,6 +351,15 @@
       statusEl.className = className || "status";
       statusEl.textContent = message;
     }
+  }
+
+  function setEntryFormExpanded(expanded) {
+    const isExpanded = Boolean(expanded);
+    entryFormPanel.hidden = !isExpanded;
+    entryFormToggle.textContent = isExpanded ? "−" : "＋";
+    entryFormToggle.setAttribute("aria-expanded", String(isExpanded));
+    entryFormToggle.setAttribute("aria-label", isExpanded ? "收起新增心情日記" : "展開新增心情日記");
+    entryFormToggle.title = isExpanded ? "收起新增心情日記" : "展開新增心情日記";
   }
 
   function journalPasswordSyncText(result) {
@@ -1238,6 +1250,7 @@
   }
 
   async function openEditEntry(id) {
+    setEntryFormExpanded(true);
     statusEl.className = "status";
     statusEl.textContent = "讀取編輯內容中... 📖";
     createCard.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -2215,6 +2228,10 @@
     createCard.scrollIntoView({ behavior: "smooth", block: "start" });
   });
 
+  entryFormToggle.addEventListener("click", () => {
+    setEntryFormExpanded(entryFormPanel.hidden);
+  });
+
   document.getElementById("connectBtn").addEventListener("click", connect);
   gateHeroLoginBtn.addEventListener("click", connectFromHero);
   document.getElementById("gateSettingsBtn").addEventListener("click", () => toggleSettingsPanel("gateSettingsBtn", "gateSettings"));
@@ -2362,15 +2379,6 @@
   bodyForm.elements.type.addEventListener("change", updateBodyTemplateFields);
   bodyImageInput.addEventListener("change", () => {
     renderUploadStatuses(bodyImageStatus, Array.from(bodyImageInput.files || []), "waiting");
-  });
-  document.getElementById("refreshBtn").addEventListener("click", async () => {
-    siteHeader.classList.remove("nav-open");
-    brandMenuBtn.setAttribute("aria-expanded", "false");
-    await loadEntries();
-    if (!cardView.hidden) await ensureCardsLoaded();
-    if (!bodyView.hidden) await loadBodyRecords();
-    if (!clientView.hidden) await loadClientPeople();
-    if (!journalView.hidden && libraryPanel.open) await ensureLibrarySummary();
   });
   document.getElementById("lockAppBtn").addEventListener("click", () => {
     showGate("已鎖定 Emily's Home，請重新連線 🔒", false);
