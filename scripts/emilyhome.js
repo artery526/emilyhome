@@ -439,14 +439,15 @@
     return absolute + (absolute.indexOf("?") >= 0 ? "&" : "?") + params.join("&");
   }
 
-  async function wifeJournalMediaObjectUrl(url) {
+  async function wifeJournalMediaObjectUrl(url, version) {
     if (!url) return "";
     const absolute = /^https?:\/\//i.test(url) ? url : apiUrl(url);
-    if (wifeJournalMediaObjectUrls.has(absolute)) return wifeJournalMediaObjectUrls.get(absolute);
+    const cacheKey = absolute + (version ? "|" + String(version) : "");
+    if (wifeJournalMediaObjectUrls.has(cacheKey)) return wifeJournalMediaObjectUrls.get(cacheKey);
     const response = await fetch(absolute, { cache: "no-store", headers: headers() });
     if (!response.ok) throw new Error("附件讀取失敗（" + response.status + "）");
     const objectUrl = URL.createObjectURL(await response.blob());
-    wifeJournalMediaObjectUrls.set(absolute, objectUrl);
+    wifeJournalMediaObjectUrls.set(cacheKey, objectUrl);
     while (wifeJournalMediaObjectUrls.size > 24) {
       const oldest = wifeJournalMediaObjectUrls.keys().next().value;
       URL.revokeObjectURL(wifeJournalMediaObjectUrls.get(oldest));
@@ -455,7 +456,8 @@
     return objectUrl;
   }
 
-  async function wifeJournalDisplayMedia(media) {
+  async function wifeJournalDisplayMedia(media, version) {
+    const cacheVersion = version || Date.now();
     return Promise.all((Array.isArray(media) ? media : []).map(async (item) => {
       if (!item || !item.localAttachment || item.type !== "photo") return item;
       const originalPath = item.originalUrl || item.url || item.thumbnailUrl || "";
@@ -463,8 +465,8 @@
       try {
         return {
           ...item,
-          originalUrl: await wifeJournalMediaObjectUrl(originalPath),
-          thumbnailUrl: await wifeJournalMediaObjectUrl(thumbnailPath),
+          originalUrl: await wifeJournalMediaObjectUrl(originalPath, cacheVersion),
+          thumbnailUrl: await wifeJournalMediaObjectUrl(thumbnailPath, cacheVersion),
         };
       } catch (error) {
         return { ...item, attachmentReadError: error.message };
@@ -473,15 +475,8 @@
   }
 
   function selectedUploadFiles(sourceForm) {
-    const seen = new Set();
     return Array.from(sourceForm.querySelectorAll('input[type="file"][name="media"]'))
-      .flatMap((input) => Array.from(input.files || []))
-      .filter((file) => {
-        const key = [file.name, file.size, file.lastModified || 0, file.type].join("\u0000");
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
-      });
+      .flatMap((input) => Array.from(input.files || []));
   }
 
   function chunkFiles(files, size) {
@@ -1153,7 +1148,7 @@
       const body = await fetch(url, { cache: "no-store", headers: headers() }).then(readJson);
       const loaded = body.entry || {};
       const media = Array.isArray(loaded.media) ? loaded.media : [];
-      const displayMedia = await wifeJournalDisplayMedia(media);
+      const displayMedia = await wifeJournalDisplayMedia(media, loaded.updatedAt);
       entryReaderGallery = displayMedia.map(photoGalleryItem).filter(Boolean);
       entryReaderContent.innerHTML = '<article class="reader-entry">'
         + '<div class="entry-title">' + esc(loaded.title || "今天的心情") + '</div>'
@@ -1266,7 +1261,7 @@
       form.elements.entryPassword.value = "";
       form.elements.tags.value = (loaded.tags || []).join(",");
       form.elements.content.value = markdownBody(body.markdown || "");
-      const media = await wifeJournalDisplayMedia(loaded.media);
+      const media = await wifeJournalDisplayMedia(loaded.media, loaded.updatedAt);
       entryEditMedia.hidden = false;
       entryEditMedia.innerHTML = '<h3>照片與語音</h3><div class="edit-media-grid">'
         + (media.map(mediaPreview).join("") || '<p class="muted">沒有附件</p>')
@@ -2168,6 +2163,11 @@
     }
     if (!event.target.matches('input[type="file"][name="media"]')) return;
     renderUploadStatuses(entryUploadStatus, selectedUploadFiles(form), "waiting");
+  });
+
+  form.addEventListener("click", (event) => {
+    const fileInput = event.target.closest('input[type="file"][name="media"]');
+    if (fileInput) fileInput.value = "";
   });
 
   form.addEventListener("click", (event) => {
