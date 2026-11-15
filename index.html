@@ -604,6 +604,7 @@
       gap: 8px;
       margin-bottom: 10px;
     }
+    .journal-month-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .body-month-controls {
       grid-template-columns: 1fr 1fr;
     }
@@ -873,6 +874,7 @@
     @media (max-width: 900px) {
       .span-4, .span-5, .span-7, .span-8 { grid-column: span 12; }
       .form-grid, .library-controls, .card-draw-set { grid-template-columns: 1fr; }
+      .journal-month-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       #learningForm { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       #learningForm > label.full { grid-column: 1 / -1; }
       .entry-form {
@@ -1510,7 +1512,7 @@
       <div class="grid">
         <section class="card span-12 journal-calendar-card">
           <h3 id="calendarTitle">🌙 本月月曆</h3>
-          <div class="library-controls">
+          <div class="library-controls journal-month-controls">
             <select id="journalYear"></select>
             <select id="journalMonth"></select>
           </div>
@@ -1825,6 +1827,6 @@
     </div>
   </dialog>
 
-  <script src="scripts/emilyhome.js?v=20261116-collapsible-journal-form"></script>
+  <script src="scripts/emilyhome.js?v=20261116-mobile-month-select"></script>
 </body>
 </html>
