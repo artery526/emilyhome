@@ -474,6 +474,10 @@
     }));
   }
 
+  function newestJournalMediaFirst(media) {
+    return (Array.isArray(media) ? media : []).slice().reverse();
+  }
+
   function selectedUploadFiles(sourceForm) {
     return Array.from(sourceForm.querySelectorAll('input[type="file"][name="media"]'))
       .flatMap((input) => Array.from(input.files || []));
@@ -1148,7 +1152,7 @@
       const body = await fetch(url, { cache: "no-store", headers: headers() }).then(readJson);
       const loaded = body.entry || {};
       const media = Array.isArray(loaded.media) ? loaded.media : [];
-      const displayMedia = await wifeJournalDisplayMedia(media, loaded.updatedAt);
+      const displayMedia = newestJournalMediaFirst(await wifeJournalDisplayMedia(media, loaded.updatedAt));
       entryReaderGallery = displayMedia.map(photoGalleryItem).filter(Boolean);
       entryReaderContent.innerHTML = '<article class="reader-entry">'
         + '<div class="entry-title">' + esc(loaded.title || "今天的心情") + '</div>'
@@ -1261,7 +1265,7 @@
       form.elements.entryPassword.value = "";
       form.elements.tags.value = (loaded.tags || []).join(",");
       form.elements.content.value = markdownBody(body.markdown || "");
-      const media = await wifeJournalDisplayMedia(loaded.media, loaded.updatedAt);
+      const media = newestJournalMediaFirst(await wifeJournalDisplayMedia(loaded.media, loaded.updatedAt));
       entryEditMedia.hidden = false;
       entryEditMedia.innerHTML = '<h3>照片與語音</h3><div class="edit-media-grid">'
         + (media.map(mediaPreview).join("") || '<p class="muted">沒有附件</p>')
