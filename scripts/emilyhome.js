@@ -137,6 +137,7 @@
   const brandMenuBtn = document.getElementById("brandMenuBtn");
   const brandVideo = document.getElementById("brandVideo");
   const logoNav = document.getElementById("logoNav");
+  const appLockBtn = document.getElementById("lockAppBtn");
   const gateSettingsBtn = document.getElementById("gateSettingsBtn");
   const gateSettings = document.getElementById("gateSettings");
   const toggleTokenInputBtn = document.getElementById("toggleTokenInputBtn");
@@ -645,6 +646,7 @@
     gate.hidden = true;
     app.hidden = false;
     logoNav.hidden = false;
+    appLockBtn.hidden = false;
     gateSettings.hidden = true;
     gateSettingsBtn.hidden = true;
     gateSettingsBtn.setAttribute("aria-expanded", "false");
@@ -661,6 +663,7 @@
     app.hidden = true;
     gate.hidden = false;
     logoNav.hidden = true;
+    appLockBtn.hidden = true;
     gateSettingsBtn.hidden = false;
     gateSettings.hidden = true;
     gateSettingsBtn.setAttribute("aria-expanded", "false");
@@ -2368,7 +2371,7 @@
   bodyImageInput.addEventListener("change", () => {
     renderUploadStatuses(bodyImageStatus, Array.from(bodyImageInput.files || []), "waiting");
   });
-  document.getElementById("lockAppBtn").addEventListener("click", () => {
+  appLockBtn.addEventListener("click", () => {
     showGate("已鎖定 Emily's Home，請重新連線 🔒", false);
   });
   document.querySelectorAll("[data-view]").forEach((button) => {
