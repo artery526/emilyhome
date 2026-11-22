@@ -162,7 +162,6 @@
   const submitEntryComposerBtn = document.getElementById("submitEntryComposerBtn");
   const form = document.getElementById("entryForm");
   const entryFormTitle = document.getElementById("entryFormTitle");
-  const entrySubmitBtn = document.getElementById("entrySubmitBtn");
   const cancelEntryEditBtn = document.getElementById("cancelEntryEditBtn");
   const statusEl = document.getElementById("formStatus");
   const entryUploadStatus = document.getElementById("entryUploadStatus");
@@ -339,7 +338,8 @@
     delete form.dataset.entryId;
     delete form.dataset.originalVisibility;
     entryFormTitle.textContent = "💌 新增心情日記";
-    entrySubmitBtn.textContent = "🧸 記錄";
+    submitEntryComposerBtn.setAttribute("aria-label", "記錄心情日記");
+    submitEntryComposerBtn.title = "記錄心情日記";
     cancelEntryEditBtn.hidden = true;
     entryEditMedia.hidden = true;
     entryEditMedia.innerHTML = "";
@@ -1297,7 +1297,8 @@
       form.dataset.entryId = loaded.id || id;
       form.dataset.originalVisibility = loaded.visibility || "normal";
       entryFormTitle.textContent = "✏️ 編輯心情日記";
-      entrySubmitBtn.textContent = "🧸 儲存編輯";
+      submitEntryComposerBtn.setAttribute("aria-label", "儲存心情日記編輯");
+      submitEntryComposerBtn.title = "儲存心情日記編輯";
       cancelEntryEditBtn.hidden = false;
       form.elements.title.value = loaded.title || "";
       form.elements.date.value = loaded.date || "";
@@ -2213,7 +2214,7 @@
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
-    const button = form.querySelector("button[type='submit']");
+    const button = submitEntryComposerBtn;
     const uploadFiles = selectedUploadFiles(form);
     renderUploadStatuses(entryUploadStatus, uploadFiles, "loading");
     button.disabled = true;
@@ -2238,7 +2239,8 @@
       renderUploadStatuses(entryUploadStatus, uploadFiles, "error", "上傳失敗");
     } finally {
       button.disabled = false;
-      button.textContent = form.dataset.entryId ? "🧸 儲存編輯" : "🧸 記錄";
+      button.setAttribute("aria-label", form.dataset.entryId ? "儲存心情日記編輯" : "記錄心情日記");
+      button.title = form.dataset.entryId ? "儲存心情日記編輯" : "記錄心情日記";
     }
   });
 
@@ -2249,11 +2251,6 @@
 
   openEntryComposerBtn.addEventListener("click", openEntryComposer);
   closeEntryComposerBtn.addEventListener("click", () => entryComposerDialog.close());
-  submitEntryComposerBtn.addEventListener("click", () => {
-    if (typeof form.requestSubmit === "function") form.requestSubmit();
-    else entrySubmitBtn.click();
-  });
-
   document.getElementById("connectBtn").addEventListener("click", connect);
   gateHeroLoginBtn.addEventListener("click", connectFromHero);
   document.getElementById("gateSettingsBtn").addEventListener("click", () => toggleSettingsPanel("gateSettingsBtn", "gateSettings"));

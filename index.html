@@ -1787,7 +1787,7 @@
       <div class="reader-top">
         <h3 id="entryFormTitle">💌 新增心情日記</h3>
         <div class="entry-composer-actions">
-          <button class="primary composer-submit-shortcut" type="button" id="submitEntryComposerBtn" aria-label="記錄心情日記" title="記錄心情日記">✅</button>
+          <button class="primary composer-submit-shortcut" type="submit" form="entryForm" id="submitEntryComposerBtn" aria-label="記錄心情日記" title="記錄心情日記">✅</button>
           <button class="ghost" type="button" id="closeEntryComposerBtn">關閉</button>
         </div>
       </div>
@@ -1813,7 +1813,6 @@
             <label class="upload-field">上傳照片或影片<input name="media" type="file" accept="image/*,video/*,.heic,.heif" multiple></label>
             <label class="upload-field">語音備忘<input name="media" type="file" accept="audio/*,.m4a,.mp3,.wav,.webm" multiple></label>
             <div class="upload-status-list full" id="entryUploadStatus"></div>
-            <button class="primary full" type="submit" id="entrySubmitBtn">🧸 記錄</button>
             <button class="ghost full" type="button" id="cancelEntryEditBtn" hidden>取消編輯，回到新增日記</button>
           </form>
           <p class="status" id="formStatus"></p>
@@ -1861,6 +1860,6 @@
     </div>
   </dialog>
 
-  <script src="scripts/emilyhome.js?v=20261122-journal-composer-header-actions-v1"></script>
+  <script src="scripts/emilyhome.js?v=20261122-single-journal-submit-action-v1"></script>
 </body>
 </html>
