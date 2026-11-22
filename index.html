@@ -78,6 +78,14 @@
       z-index: 2;
       font-size: 19px;
     }
+    .icon-button.app-entry-add-button {
+      background: #b89552;
+      border-color: #e2c56b;
+      color: #24172e;
+      box-shadow: 0 0 14px rgba(226, 197, 107, .42);
+    }
+    .entry-composer-actions { display: flex; align-items: center; gap: 8px; }
+    .composer-submit-shortcut { min-width: 44px; padding: 8px 12px; font-size: 22px; }
     .gate-login-panel {
       position: absolute;
       left: 50%;
@@ -936,12 +944,16 @@
         top: 14px;
       }
       .app-lock-button {
-        right: 16px;
-        top: 14px;
+        left: 12px;
+        right: auto;
+        top: 50%;
+        transform: translateY(-50%);
       }
       .app-entry-add-button {
-        right: 16px;
-        top: 64px;
+        left: auto;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
       }
       .view-tabs {
         position: static;
@@ -1479,7 +1491,7 @@
       <h1 class="brand-logo"><video id="brandVideo" autoplay muted playsinline preload="auto" aria-label="Emily's Home 動態 Logo"><source src="logo.mp4" type="video/mp4"></video></h1>
     </button>
     <button class="icon-button app-lock-button" type="button" id="lockAppBtn" aria-label="返回登入畫面" title="返回登入畫面" hidden>🔒</button>
-    <button class="icon-button app-entry-add-button" type="button" id="openEntryComposerBtn" aria-label="新增心情日記" title="新增心情日記" hidden>➕</button>
+    <button class="icon-button app-entry-add-button" type="button" id="openEntryComposerBtn" aria-label="新增心情日記" title="新增心情日記" hidden>📝</button>
     <button class="icon-button gate-settings-toggle" type="button" id="gateSettingsBtn" aria-expanded="false" aria-controls="gateSettings" title="登入設定">⚙️</button>
     <div class="card gate-login-panel" id="gateSettings" hidden>
       <div class="gate-heading">
@@ -1774,7 +1786,10 @@
     <div class="reader-shell">
       <div class="reader-top">
         <h3 id="entryFormTitle">💌 新增心情日記</h3>
-        <button class="ghost" type="button" id="closeEntryComposerBtn">關閉</button>
+        <div class="entry-composer-actions">
+          <button class="primary composer-submit-shortcut" type="button" id="submitEntryComposerBtn" aria-label="記錄心情日記" title="記錄心情日記">✅</button>
+          <button class="ghost" type="button" id="closeEntryComposerBtn">關閉</button>
+        </div>
       </div>
       <div class="reader-content">
         <section class="card span-12">
@@ -1846,6 +1861,6 @@
     </div>
   </dialog>
 
-  <script src="scripts/emilyhome.js?v=20261122-journal-overview-calendar-title-v1"></script>
+  <script src="scripts/emilyhome.js?v=20261122-journal-composer-header-actions-v1"></script>
 </body>
 </html>

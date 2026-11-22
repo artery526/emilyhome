@@ -159,6 +159,7 @@
   const entryComposerDialog = document.getElementById("entryComposerDialog");
   const openEntryComposerBtn = document.getElementById("openEntryComposerBtn");
   const closeEntryComposerBtn = document.getElementById("closeEntryComposerBtn");
+  const submitEntryComposerBtn = document.getElementById("submitEntryComposerBtn");
   const form = document.getElementById("entryForm");
   const entryFormTitle = document.getElementById("entryFormTitle");
   const entrySubmitBtn = document.getElementById("entrySubmitBtn");
@@ -2248,6 +2249,10 @@
 
   openEntryComposerBtn.addEventListener("click", openEntryComposer);
   closeEntryComposerBtn.addEventListener("click", () => entryComposerDialog.close());
+  submitEntryComposerBtn.addEventListener("click", () => {
+    if (typeof form.requestSubmit === "function") form.requestSubmit();
+    else entrySubmitBtn.click();
+  });
 
   document.getElementById("connectBtn").addEventListener("click", connect);
   gateHeroLoginBtn.addEventListener("click", connectFromHero);
