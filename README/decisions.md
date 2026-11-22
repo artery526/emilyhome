@@ -23,7 +23,7 @@ Emily's Home is a private journal and card-record frontend. It is not the same s
 
 - First screen prioritizes timeline and month calendar.
 - Mood score and mood field were removed.
-- Photos, voice, and quick tags are part of mood journal creation/editing.
+- Photos, videos, and quick tags are available in mood journal creation/editing. Existing voice attachments remain readable and removable, but new voice uploads are not offered.
 - Timeline entries support edit and delete.
 - Entry delete removes the journal entry and that entry's uploaded/synced attachments, but should not delete original NAS Photos library images that were only inserted.
 
