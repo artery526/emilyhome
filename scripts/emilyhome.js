@@ -149,6 +149,7 @@
   const tokenInput = document.getElementById("tokenInput");
   const entryListEl = document.getElementById("entryList");
   const timelineSearchBtn = document.getElementById("timelineSearchBtn");
+  const timelineHeadingTitle = document.getElementById("timelineHeadingTitle");
   const timelineSearchPanel = document.getElementById("timelineSearchPanel");
   const timelineSearchInput = document.getElementById("timelineSearchInput");
   const timelineSearchClearBtn = document.getElementById("timelineSearchClearBtn");
@@ -1041,6 +1042,7 @@
   }
 
   function renderEntries() {
+    timelineHeadingTitle.textContent = activeDate ? "💡文章回顧" : "🌿日記總覽";
     const visibleEntries = entriesForTimeline();
     if (!visibleEntries.length) {
       const emptyText = timelineSearchQuery.trim()
