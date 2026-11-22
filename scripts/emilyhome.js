@@ -665,6 +665,7 @@
     app.hidden = false;
     logoNav.hidden = false;
     appLockBtn.hidden = false;
+    openEntryComposerBtn.hidden = false;
     gateSettings.hidden = true;
     gateSettingsBtn.hidden = true;
     gateSettingsBtn.setAttribute("aria-expanded", "false");
@@ -682,6 +683,7 @@
     gate.hidden = false;
     logoNav.hidden = true;
     appLockBtn.hidden = true;
+    openEntryComposerBtn.hidden = true;
     gateSettingsBtn.hidden = false;
     gateSettings.hidden = true;
     gateSettingsBtn.setAttribute("aria-expanded", "false");

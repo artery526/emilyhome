@@ -71,6 +71,13 @@
       z-index: 2;
       font-size: 19px;
     }
+    .app-entry-add-button {
+      position: absolute;
+      right: calc(50% + 154px);
+      top: 68px;
+      z-index: 2;
+      font-size: 19px;
+    }
     .gate-login-panel {
       position: absolute;
       left: 50%;
@@ -932,6 +939,10 @@
         right: 16px;
         top: 14px;
       }
+      .app-entry-add-button {
+        right: 16px;
+        top: 64px;
+      }
       .view-tabs {
         position: static;
         left: auto;
@@ -1468,6 +1479,7 @@
       <h1 class="brand-logo"><video id="brandVideo" autoplay muted playsinline preload="auto" aria-label="Emily's Home 動態 Logo"><source src="logo.mp4" type="video/mp4"></video></h1>
     </button>
     <button class="icon-button app-lock-button" type="button" id="lockAppBtn" aria-label="返回登入畫面" title="返回登入畫面" hidden>🔒</button>
+    <button class="icon-button app-entry-add-button" type="button" id="openEntryComposerBtn" aria-label="新增心情日記" title="新增心情日記" hidden>➕</button>
     <button class="icon-button gate-settings-toggle" type="button" id="gateSettingsBtn" aria-expanded="false" aria-controls="gateSettings" title="登入設定">⚙️</button>
     <div class="card gate-login-panel" id="gateSettings" hidden>
       <div class="gate-heading">
@@ -1497,7 +1509,6 @@
       <button class="view-tab" type="button" data-view="body" aria-label="身體記錄" title="身體記錄"><img class="view-tab-image" src="body.png?v=20260826-2039" alt="身體記錄"></button>
       <button class="view-tab" type="button" data-view="clients" aria-label="客戶記錄" title="客戶記錄"><img class="view-tab-image" src="Customer.png?v=20260826-2042" alt="客戶記錄"></button>
       <button class="view-tab" type="button" data-view="learning" aria-label="學習日誌" title="學習日誌"><img class="view-tab-image" src="learning.png?v=20260826-2046" alt="學習日誌"></button>
-      <button class="icon-button" type="button" id="openEntryComposerBtn" aria-label="新增心情日記" title="新增心情日記">➕</button>
     </div>
   </header>
 
@@ -1835,6 +1846,6 @@
     </div>
   </dialog>
 
-  <script src="scripts/emilyhome.js?v=20261122-journal-composer-dialog-v1"></script>
+  <script src="scripts/emilyhome.js?v=20261122-journal-composer-lock-stack-v1"></script>
 </body>
 </html>
