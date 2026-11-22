@@ -337,7 +337,7 @@
     form.reset();
     delete form.dataset.entryId;
     delete form.dataset.originalVisibility;
-    entryFormTitle.textContent = "💌 新增心情日記";
+    entryFormTitle.textContent = "💌新增日記";
     submitEntryComposerBtn.setAttribute("aria-label", "記錄心情日記");
     submitEntryComposerBtn.title = "記錄心情日記";
     cancelEntryEditBtn.hidden = true;
