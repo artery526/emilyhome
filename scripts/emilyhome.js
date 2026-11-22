@@ -1130,7 +1130,7 @@
     if (item.type === "video") {
       return '<div class="edit-media-card">'
         + '<label>影片 ' + (index + 1) + '</label>'
-        + '<video controls playsinline src="' + esc(mediaUrl(item.originalUrl || item.url || "", (item.updatedAt || key) + "-video-range-v2")) + '"></video>'
+        + '<video controls playsinline src="' + esc(mediaUrl(item.originalUrl || item.url || "", (item.updatedAt || key) + "-video-range-v3")) + '"></video>'
       + '</div>';
     }
     const thumb = mediaUrl(item.thumbnailUrl || item.originalUrl, item.updatedAt || key);
@@ -1236,7 +1236,7 @@
       + '</div>';
     }
     if (item.type === "video") {
-      const videoUrl = mediaUrl(item.originalUrl || item.url || "", (item.updatedAt || key) + "-video-range-v2");
+      const videoUrl = mediaUrl(item.originalUrl || item.url || "", (item.updatedAt || key) + "-video-range-v3");
       return '<div class="edit-media-card">'
         + '<label><input type="checkbox" name="removeMedia" value="' + esc(key) + '"> 移除影片 ' + (index + 1) + '</label>'
         + '<video controls playsinline src="' + esc(videoUrl) + '"></video>'
