@@ -487,7 +487,11 @@
         try {
           return { ...item, playbackUrl: await wifeJournalVideoPlaybackUrl(item.originalUrl || item.url, cacheVersion) };
         } catch (error) {
-          return { ...item, attachmentReadError: "影片播放連結取得失敗（" + error.message + "）" };
+          try {
+            return { ...item, playbackUrl: await wifeJournalMediaObjectUrl(item.originalUrl || item.url, cacheVersion) };
+          } catch (readError) {
+            return { ...item, attachmentReadError: "影片讀取失敗（" + readError.message + "）" };
+          }
         }
       }
       if (!item || !item.localAttachment || item.type !== "photo") return item;
