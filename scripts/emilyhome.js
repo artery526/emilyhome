@@ -1117,6 +1117,11 @@
     renderEntries();
   }
 
+  function scrollToTimelineDate() {
+    const target = entryListEl.querySelector(".entry") || entryListEl;
+    requestAnimationFrame(() => target.scrollIntoView({ behavior: "smooth", block: "start" }));
+  }
+
   function localDateString(date = new Date()) {
     return String(date.getFullYear()) + "-" + String(date.getMonth() + 1).padStart(2, "0") + "-" + String(date.getDate()).padStart(2, "0");
   }
@@ -2105,6 +2110,7 @@
     activeDate = activeDate === button.dataset.date ? "" : button.dataset.date;
     renderCalendar();
     renderEntries();
+    if (activeDate) scrollToTimelineDate();
   });
 
   journalYear.addEventListener("change", () => {
