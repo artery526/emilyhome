@@ -694,6 +694,12 @@
       overflow: auto;
       padding: 16px;
     }
+    .entry-composer-dialog {
+      width: min(980px, calc(100vw - 28px));
+      max-height: min(90vh, 900px);
+    }
+    .entry-composer-dialog .reader-shell { max-height: min(90vh, 900px); }
+    .entry-composer-dialog .reader-content { padding: 14px; }
     .reader-entry .detail {
       margin-top: 12px;
       font-size: 18px;
@@ -1162,12 +1168,14 @@
       border-color: #9b8650;
     }
     dialog.entry-reader,
+    dialog.entry-composer-dialog,
     dialog.photo-viewer {
       background: #132d21;
       border-color: #557866;
       box-shadow: 0 26px 70px rgba(0, 0, 0, .52);
     }
     dialog.entry-reader::backdrop,
+    dialog.entry-composer-dialog::backdrop,
     dialog.photo-viewer::backdrop {
       background: rgba(2, 12, 7, .72);
     }
@@ -1489,6 +1497,7 @@
       <button class="view-tab" type="button" data-view="body" aria-label="身體記錄" title="身體記錄"><img class="view-tab-image" src="body.png?v=20260826-2039" alt="身體記錄"></button>
       <button class="view-tab" type="button" data-view="clients" aria-label="客戶記錄" title="客戶記錄"><img class="view-tab-image" src="Customer.png?v=20260826-2042" alt="客戶記錄"></button>
       <button class="view-tab" type="button" data-view="learning" aria-label="學習日誌" title="學習日誌"><img class="view-tab-image" src="learning.png?v=20260826-2046" alt="學習日誌"></button>
+      <button class="icon-button" type="button" id="openEntryComposerBtn" aria-label="新增心情日記" title="新增心情日記">➕</button>
     </div>
   </header>
 
@@ -1511,38 +1520,6 @@
             <select id="journalMonth"></select>
           </div>
           <div class="calendar" id="calendar"></div>
-        </section>
-        <section class="card span-12" id="createCard">
-          <div class="entry-form-heading">
-            <h3 id="entryFormTitle">💌 新增心情日記</h3>
-            <button class="icon-button" type="button" id="entryFormToggle" aria-expanded="false" aria-controls="entryFormPanel" aria-label="展開新增心情日記" title="展開新增心情日記">＋</button>
-          </div>
-          <div id="entryFormPanel" hidden>
-          <form id="entryForm" class="form-grid entry-form">
-            <label class="title-field">標題<input name="title" placeholder="主題是?"></label>
-            <label class="date-field">日期<input name="date" type="date" required></label>
-            <label class="time-field">時間<input name="time" type="time" step="60"></label>
-            <label class="privacy-field">文章權限
-              <select name="visibility">
-                <option value="normal">不上鎖</option>
-                <option value="password">上鎖</option>
-              </select>
-            </label>
-            <label class="password-field" hidden>解鎖密碼<input name="entryPassword" type="password" placeholder="選擇上鎖時填寫，會同步到試算表"></label>
-            <label class="full">快速標籤
-              <input name="tags" id="tagsInput" placeholder="可手動補標籤，用逗號分隔">
-            </label>
-            <div class="tag-row full" id="tagPicker"></div>
-            <label class="full">日記內容<textarea name="content" required placeholder="今天發生什麼？我想留下什麼？"></textarea></label>
-            <div class="full" id="entryEditMedia" hidden></div>
-            <label class="upload-field">上傳照片或影片<input name="media" type="file" accept="image/*,video/*,.heic,.heif" multiple></label>
-            <label class="upload-field">語音備忘<input name="media" type="file" accept="audio/*,.m4a,.mp3,.wav,.webm" multiple></label>
-            <div class="upload-status-list full" id="entryUploadStatus"></div>
-            <button class="primary full" type="submit" id="entrySubmitBtn">🧸 記錄</button>
-            <button class="ghost full" type="button" id="cancelEntryEditBtn" hidden>取消編輯，回到新增日記</button>
-          </form>
-          </div>
-          <p class="status" id="formStatus"></p>
         </section>
         <section class="card span-12">
           <div class="timeline-heading">
@@ -1782,6 +1759,43 @@
     </section>
   </main>
 
+  <dialog class="entry-reader entry-composer-dialog" id="entryComposerDialog">
+    <div class="reader-shell">
+      <div class="reader-top">
+        <h3 id="entryFormTitle">💌 新增心情日記</h3>
+        <button class="ghost" type="button" id="closeEntryComposerBtn">關閉</button>
+      </div>
+      <div class="reader-content">
+        <section class="card span-12">
+          <form id="entryForm" class="form-grid entry-form">
+            <label class="title-field">標題<input name="title" placeholder="主題是?"></label>
+            <label class="date-field">日期<input name="date" type="date" required></label>
+            <label class="time-field">時間<input name="time" type="time" step="60"></label>
+            <label class="privacy-field">文章權限
+              <select name="visibility">
+                <option value="normal">不上鎖</option>
+                <option value="password">上鎖</option>
+              </select>
+            </label>
+            <label class="password-field" hidden>解鎖密碼<input name="entryPassword" type="password" placeholder="選擇上鎖時填寫，會同步到試算表"></label>
+            <label class="full">快速標籤
+              <input name="tags" id="tagsInput" placeholder="可手動補標籤，用逗號分隔">
+            </label>
+            <div class="tag-row full" id="tagPicker"></div>
+            <label class="full">日記內容<textarea name="content" required placeholder="今天發生什麼？我想留下什麼？"></textarea></label>
+            <div class="full" id="entryEditMedia" hidden></div>
+            <label class="upload-field">上傳照片或影片<input name="media" type="file" accept="image/*,video/*,.heic,.heif" multiple></label>
+            <label class="upload-field">語音備忘<input name="media" type="file" accept="audio/*,.m4a,.mp3,.wav,.webm" multiple></label>
+            <div class="upload-status-list full" id="entryUploadStatus"></div>
+            <button class="primary full" type="submit" id="entrySubmitBtn">🧸 記錄</button>
+            <button class="ghost full" type="button" id="cancelEntryEditBtn" hidden>取消編輯，回到新增日記</button>
+          </form>
+          <p class="status" id="formStatus"></p>
+        </section>
+      </div>
+    </div>
+  </dialog>
+
   <dialog class="entry-reader learning-search-dialog" id="learningGlobalSearchDialog">
     <div class="reader-shell">
       <div class="reader-top">
@@ -1821,6 +1835,6 @@
     </div>
   </dialog>
 
-  <script src="scripts/emilyhome.js?v=20261122-calendar-video-fallback-v1"></script>
+  <script src="scripts/emilyhome.js?v=20261122-journal-composer-dialog-v1"></script>
 </body>
 </html>

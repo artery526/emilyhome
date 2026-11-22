@@ -155,11 +155,11 @@
   const calendarEl = document.getElementById("calendar");
   const journalYear = document.getElementById("journalYear");
   const journalMonth = document.getElementById("journalMonth");
-  const createCard = document.getElementById("createCard");
+  const entryComposerDialog = document.getElementById("entryComposerDialog");
+  const openEntryComposerBtn = document.getElementById("openEntryComposerBtn");
+  const closeEntryComposerBtn = document.getElementById("closeEntryComposerBtn");
   const form = document.getElementById("entryForm");
   const entryFormTitle = document.getElementById("entryFormTitle");
-  const entryFormPanel = document.getElementById("entryFormPanel");
-  const entryFormToggle = document.getElementById("entryFormToggle");
   const entrySubmitBtn = document.getElementById("entrySubmitBtn");
   const cancelEntryEditBtn = document.getElementById("cancelEntryEditBtn");
   const statusEl = document.getElementById("formStatus");
@@ -334,7 +334,6 @@
 
   function resetEntryFormMode(message, className) {
     form.reset();
-    setEntryFormExpanded(false);
     delete form.dataset.entryId;
     delete form.dataset.originalVisibility;
     entryFormTitle.textContent = "💌 新增心情日記";
@@ -354,13 +353,10 @@
     }
   }
 
-  function setEntryFormExpanded(expanded) {
-    const isExpanded = Boolean(expanded);
-    entryFormPanel.hidden = !isExpanded;
-    entryFormToggle.textContent = isExpanded ? "−" : "＋";
-    entryFormToggle.setAttribute("aria-expanded", String(isExpanded));
-    entryFormToggle.setAttribute("aria-label", isExpanded ? "收起新增心情日記" : "展開新增心情日記");
-    entryFormToggle.title = isExpanded ? "收起新增心情日記" : "展開新增心情日記";
+  function openEntryComposer() {
+    resetEntryFormMode("", "status");
+    if (!entryComposerDialog.open) entryComposerDialog.showModal();
+    window.setTimeout(() => form.elements.title.focus(), 50);
   }
 
   function journalPasswordSyncText(result) {
@@ -1278,10 +1274,8 @@
   }
 
   async function openEditEntry(id) {
-    setEntryFormExpanded(true);
     statusEl.className = "status";
     statusEl.textContent = "讀取編輯內容中... 📖";
-    createCard.scrollIntoView({ behavior: "smooth", block: "start" });
     try {
       let url = apiUrl("/api/wife-journal/entries/" + encodeURIComponent(id));
       const entry = entries.find((item) => item.id === id);
@@ -1290,6 +1284,7 @@
         statusEl.textContent = "已取消開啟上鎖文章 🔐";
         return;
       }
+      if (!entryComposerDialog.open) entryComposerDialog.showModal();
       url += query;
       const body = await fetch(url, { cache: "no-store", headers: headers() }).then(readJson);
       const loaded = body.entry || {};
@@ -1317,7 +1312,6 @@
       updateEntryPasswordField(form);
       statusEl.className = "status ok";
       statusEl.textContent = "正在編輯：「" + (loaded.title || "心情日記") + "」✨";
-      createCard.scrollIntoView({ behavior: "smooth", block: "start" });
     } catch (error) {
       statusEl.className = "status error";
       statusEl.textContent = error.message;
@@ -2231,6 +2225,7 @@
       statusEl.textContent = (editId ? "已更新：" : "已記錄：") + body.entry.title + " ✨" + syncMessage;
       renderUploadStatuses(entryUploadStatus, uploadFiles, "ok");
       resetEntryFormMode(statusEl.textContent, "status ok");
+      entryComposerDialog.close();
       await loadEntries();
     } catch (error) {
       statusEl.className = "status error";
@@ -2244,12 +2239,11 @@
 
   cancelEntryEditBtn.addEventListener("click", () => {
     resetEntryFormMode("已取消編輯，回到新增心情日記 🧸");
-    createCard.scrollIntoView({ behavior: "smooth", block: "start" });
+    entryComposerDialog.close();
   });
 
-  entryFormToggle.addEventListener("click", () => {
-    setEntryFormExpanded(entryFormPanel.hidden);
-  });
+  openEntryComposerBtn.addEventListener("click", openEntryComposer);
+  closeEntryComposerBtn.addEventListener("click", () => entryComposerDialog.close());
 
   document.getElementById("connectBtn").addEventListener("click", connect);
   gateHeroLoginBtn.addEventListener("click", connectFromHero);
