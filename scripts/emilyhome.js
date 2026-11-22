@@ -254,7 +254,6 @@
   tokenInput.value = apiToken;
   sheetTokenInput.value = sheetToken;
   gateSheetTokenInput.value = sheetToken;
-  updateEntryPasswordField(form);
 
   function esc(value) {
     return String(value == null ? "" : value)
@@ -318,25 +317,9 @@
     button.setAttribute("aria-expanded", String(!nextHidden));
   }
 
-  function updateEntryPasswordField(targetForm) {
-    const visibility = targetForm.elements.visibility && targetForm.elements.visibility.value;
-    const passwordInput = targetForm.elements.entryPassword;
-    if (!passwordInput) return;
-    const locked = visibility === "password";
-    const originalVisibility = targetForm.dataset.originalVisibility || "";
-    const needsNewPassword = !targetForm.dataset.entryId || !["password", "locked"].includes(originalVisibility);
-    passwordInput.closest("label").hidden = !locked;
-    passwordInput.required = locked && needsNewPassword;
-    passwordInput.placeholder = locked
-      ? (needsNewPassword ? "輸入解鎖密碼，會同步到試算表" : "要更換密碼時再填寫")
-      : "選擇上鎖後填寫";
-    if (!locked) passwordInput.value = "";
-  }
-
   function resetEntryFormMode(message, className) {
     form.reset();
     delete form.dataset.entryId;
-    delete form.dataset.originalVisibility;
     entryFormTitle.textContent = "💌新增日記";
     submitEntryComposerBtn.setAttribute("aria-label", "記錄心情日記");
     submitEntryComposerBtn.title = "記錄心情日記";
@@ -346,7 +329,7 @@
     entryUploadStatus.innerHTML = "";
     form.elements.date.valueAsDate = new Date();
     form.elements.time.value = currentTime();
-    updateEntryPasswordField(form);
+    form.elements.visibility.value = "normal";
     selectedLibraryImages.clear();
     renderTagPicker();
     if (message) {
@@ -359,36 +342,6 @@
     resetEntryFormMode("", "status");
     if (!entryComposerDialog.open) entryComposerDialog.showModal();
     window.setTimeout(() => form.elements.title.focus(), 50);
-  }
-
-  function journalPasswordSyncText(result) {
-    if (!result || result.enabled === false || result.skipped) return "";
-    if (result.ok) return " 解鎖密碼已同步到試算表 🔐";
-    return " 但解鎖密碼沒有同步到試算表：" + (result.error || "未知錯誤");
-  }
-
-  async function syncJournalPasswordFromBrowser(entry, data, serverResult) {
-    const visibility = String(data.get("visibility") || entry.visibility || "normal");
-    const password = String(data.get("entryPassword") || "").trim();
-    if (visibility !== "password" || !password) return { skipped: true };
-    if (serverResult && serverResult.ok) return serverResult;
-    try {
-      const result = await sheetRequest("emilyJournalPasswordSave", {
-        entryId: entry.id || entry.slug || "",
-        date: data.get("date") || entry.date || "",
-        time: data.get("time") || entry.time || "",
-        title: data.get("title") || entry.title || "",
-        visibility,
-        password,
-      });
-      return { enabled: true, ok: true, data: result };
-    } catch (error) {
-      return {
-        enabled: true,
-        ok: false,
-        error: error.message,
-      };
-    }
   }
 
   function sheetRequest(action, params) {
@@ -1295,7 +1248,6 @@
       const loaded = body.entry || {};
       form.reset();
       form.dataset.entryId = loaded.id || id;
-      form.dataset.originalVisibility = loaded.visibility || "normal";
       entryFormTitle.textContent = "✏️ 編輯心情日記";
       submitEntryComposerBtn.setAttribute("aria-label", "儲存心情日記編輯");
       submitEntryComposerBtn.title = "儲存心情日記編輯";
@@ -1303,8 +1255,7 @@
       form.elements.title.value = loaded.title || "";
       form.elements.date.value = loaded.date || "";
       form.elements.time.value = loaded.time || "";
-      form.elements.visibility.value = loaded.visibility === "password" || loaded.visibility === "locked" ? "password" : "normal";
-      form.elements.entryPassword.value = "";
+      form.elements.visibility.value = "normal";
       form.elements.tags.value = (loaded.tags || []).join(",");
       form.elements.content.value = markdownBody(body.markdown || "");
       const media = newestJournalMediaFirst(await wifeJournalDisplayMedia(loaded.media, loaded.updatedAt));
@@ -1315,7 +1266,6 @@
       entryUploadStatus.innerHTML = "";
       selectedLibraryImages.clear();
       renderTagPicker();
-      updateEntryPasswordField(form);
       statusEl.className = "status ok";
       statusEl.textContent = "正在編輯：「" + (loaded.title || "心情日記") + "」✨";
     } catch (error) {
@@ -2193,10 +2143,6 @@
   });
 
   form.addEventListener("change", (event) => {
-    if (event.target.matches('[name="visibility"]')) {
-      updateEntryPasswordField(form);
-      return;
-    }
     if (!event.target.matches('input[type="file"][name="media"]')) return;
     renderUploadStatuses(entryUploadStatus, selectedUploadFiles(form), "waiting");
   });
@@ -2224,11 +2170,8 @@
     try {
       const result = await saveJournalEntryWithBatchedMedia(editId, uploadFiles);
       const body = result.body;
-      const data = result.data;
-      const passwordSheetSync = await syncJournalPasswordFromBrowser(body.entry || {}, data, body.passwordSheetSync);
-      const syncMessage = journalPasswordSyncText(passwordSheetSync);
       statusEl.className = "status ok";
-      statusEl.textContent = (editId ? "已更新：" : "已記錄：") + body.entry.title + " ✨" + syncMessage;
+      statusEl.textContent = (editId ? "已更新：" : "已記錄：") + body.entry.title + " ✨";
       renderUploadStatuses(entryUploadStatus, uploadFiles, "ok");
       resetEntryFormMode(statusEl.textContent, "status ok");
       entryComposerDialog.close();

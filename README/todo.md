@@ -14,7 +14,6 @@
 - Tag-based filtering.
 - Search across journal title/content/tags.
 - Dedicated card statistics view.
-- Optional per-entry password unlock UI that does not rely on browser prompt.
 - Mobile image viewer polish for journal detail/edit mode.
 
 ## Confirm Before Doing

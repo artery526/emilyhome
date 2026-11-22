@@ -16,7 +16,7 @@ Emily's Home is a private journal and card-record frontend. It is not the same s
 
 - The site shell may be public.
 - Journal records load only after protected ArkOS API access.
-- Individual entries can use normal, locked, or password visibility.
+- New and edited journal entries use `normal` visibility; the form no longer offers per-entry locking. Existing password-protected entries retain their current read protection until saved through edit.
 - Public frontend code must not contain write credentials for Google Sheets or NAS.
 
 ## Journal UI

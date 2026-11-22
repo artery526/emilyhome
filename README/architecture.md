@@ -60,7 +60,7 @@ Keep these boundaries:
 1. Site shell is static and public.
 2. Records and photos are requested only after API connection succeeds.
 3. ArkOS API requires admin access or local test token.
-4. Individual journal entries may still use `normal`, `locked`, or `password` visibility.
+4. New and edited journal entries use `normal` visibility; legacy password-protected entries keep their read protection until saved through edit.
 
 ## Card Database
 

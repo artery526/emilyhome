@@ -100,8 +100,8 @@ DELETE /api/wife-journal/entries/:id
 規則：
 
 - 一般心情日記與卡牌紀錄分開；前端以 `type`、`cardOnly`、`cardDraw` 分類。
-- 每篇文章可使用 `normal`、`locked` 或 `password` visibility。
-- 密碼文章閱讀時才要求密碼，不把密碼寫入 GitHub Pages。
+- 新增與編輯表單固定使用 `normal`，不再提供文章上鎖設定；既有密碼文章仍沿用原本的閱讀驗證，編輯儲存時會改為一般文章。
+- 文章密碼不寫入 GitHub Pages。
 - 照片／語音附件由前端分批上傳，目前每批最多 12 個檔案。
 - 使用 NAS Photos 既有照片時保存引用；移除日記引用不應刪除原始 Photos 影像。
 - 文章刪除與附件刪除是有影響的操作，執行前要確認是否為「移除文章附件」或「刪除 NAS 原檔」。

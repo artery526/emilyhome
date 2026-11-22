@@ -199,12 +199,10 @@
       grid-column: 1 / -1;
     }
     .entry-form .title-field {
-      grid-column: span 2;
+      grid-column: 1 / -1;
     }
     .entry-form .date-field,
-    .entry-form .time-field,
-    .entry-form .privacy-field,
-    .entry-form .password-field {
+    .entry-form .time-field {
       grid-column: span 2;
     }
     .full { grid-column: 1 / -1; }
@@ -908,12 +906,10 @@
         grid-column: 1 / -1;
       }
       .entry-form .title-field {
-        grid-column: span 2;
+        grid-column: 1 / -1;
       }
       .entry-form .date-field,
-      .entry-form .time-field,
-      .entry-form .privacy-field,
-      .entry-form .password-field {
+      .entry-form .time-field {
         grid-column: span 2;
       }
       .entry-form .upload-field {
@@ -1795,15 +1791,9 @@
         <section class="card span-12">
           <form id="entryForm" class="form-grid entry-form">
             <label class="title-field">標題<input name="title" placeholder="主題是?"></label>
+            <input type="hidden" name="visibility" value="normal">
             <label class="date-field">日期<input name="date" type="date" required></label>
             <label class="time-field">時間<input name="time" type="time" step="60"></label>
-            <label class="privacy-field">文章權限
-              <select name="visibility">
-                <option value="normal">不上鎖</option>
-                <option value="password">上鎖</option>
-              </select>
-            </label>
-            <label class="password-field" hidden>解鎖密碼<input name="entryPassword" type="password" placeholder="選擇上鎖時填寫，會同步到試算表"></label>
             <label class="full">快速標籤
               <input name="tags" id="tagsInput" placeholder="可手動補標籤，用逗號分隔">
             </label>
@@ -1860,6 +1850,6 @@
     </div>
   </dialog>
 
-  <script src="scripts/emilyhome.js?v=20261122-journal-title-update-v1"></script>
+  <script src="scripts/emilyhome.js?v=20261122-journal-no-lock-wide-title-v1"></script>
 </body>
 </html>
