@@ -469,9 +469,27 @@
     return objectUrl;
   }
 
+  async function wifeJournalVideoPlaybackUrl(url, version) {
+    const response = await fetch(apiUrl("/api/wife-journal/media-playback-url"), {
+      method: "POST",
+      cache: "no-store",
+      headers: headers({ "Content-Type": "application/json" }),
+      body: JSON.stringify({ url }),
+    }).then(readJson);
+    const signedUrl = apiUrl(response.url || "");
+    return signedUrl + (signedUrl.includes("?") ? "&" : "?") + "v=" + encodeURIComponent(version || Date.now());
+  }
+
   async function wifeJournalDisplayMedia(media, version) {
     const cacheVersion = version || Date.now();
     return Promise.all((Array.isArray(media) ? media : []).map(async (item) => {
+      if (item && item.type === "video" && String(item.originalUrl || item.url || "").includes("/media/wife-journal/")) {
+        try {
+          return { ...item, playbackUrl: await wifeJournalVideoPlaybackUrl(item.originalUrl || item.url, cacheVersion) };
+        } catch (error) {
+          return { ...item, attachmentReadError: "影片播放連結取得失敗（" + error.message + "）" };
+        }
+      }
       if (!item || !item.localAttachment || item.type !== "photo") return item;
       const originalPath = item.originalUrl || item.url || item.thumbnailUrl || "";
       const thumbnailPath = item.thumbnailUrl || originalPath;
@@ -1130,7 +1148,7 @@
     if (item.type === "video") {
       return '<div class="edit-media-card">'
         + '<label>影片 ' + (index + 1) + '</label>'
-        + '<video controls playsinline src="' + esc(mediaUrl(item.originalUrl || item.url || "", (item.updatedAt || key) + "-video-range-v3")) + '"></video>'
+        + '<video controls playsinline src="' + esc(item.playbackUrl || mediaUrl(item.originalUrl || item.url || "", (item.updatedAt || key) + "-video-auth-v4")) + '"></video>'
       + '</div>';
     }
     const thumb = mediaUrl(item.thumbnailUrl || item.originalUrl, item.updatedAt || key);
@@ -1236,7 +1254,7 @@
       + '</div>';
     }
     if (item.type === "video") {
-      const videoUrl = mediaUrl(item.originalUrl || item.url || "", (item.updatedAt || key) + "-video-range-v3");
+      const videoUrl = item.playbackUrl || mediaUrl(item.originalUrl || item.url || "", (item.updatedAt || key) + "-video-auth-v4");
       return '<div class="edit-media-card">'
         + '<label><input type="checkbox" name="removeMedia" value="' + esc(key) + '"> 移除影片 ' + (index + 1) + '</label>'
         + '<video controls playsinline src="' + esc(videoUrl) + '"></video>'
